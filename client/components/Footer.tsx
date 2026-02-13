@@ -2,10 +2,13 @@
 import React from 'react';
 import { Instagram, Mail, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
-
+import { usePathname } from 'next/navigation';
 export default function Footer() {
     const currentYear = new Date().getFullYear();
-
+    const pathname = usePathname();
+    if (pathname?.startsWith('/admin')) {
+        return null;
+    }
     return (
         <footer className="bg-black text-white py-16 px-6">
             <div className="container mx-auto flex flex-col items-center">
@@ -17,7 +20,6 @@ export default function Footer() {
                         className="h-14 w-auto object-contain brightness-0 invert"
                     />
                 </div>
-
                 {/* Social Icons Section */}
                 <div className="flex items-center gap-8 mb-12">
                     <a
@@ -46,7 +48,6 @@ export default function Footer() {
                         <Mail className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
                     </a>
                 </div>
-
                 {/* Copyright Section */}
                 <div className="text-center opacity-40">
                     <p className="text-[10px] md:text-sm tracking-[0.2em] font-light">
