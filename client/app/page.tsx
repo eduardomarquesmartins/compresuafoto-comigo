@@ -42,8 +42,8 @@ export default function LandingPage() {
             className="text-center mb-20"
           >
             <h1 className="text-4xl md:text-6xl font-normal text-slate-900 mb-6 tracking-tight">
-              SUA FOTO DO EVENTO <br />
-              <span className="text-brand">ENTREGUE DIRETO PARA VOCÊ </span>
+              COMPRE SUA FOTO <br />
+              <span className="text-brand">COMIGO </span>
             </h1>
             <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
                 Na & Conti Marketing Digital, tecnologia e inovação se unem para conectar você aos melhores momentos dos eventos que participou.
