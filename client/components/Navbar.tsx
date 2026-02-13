@@ -37,7 +37,7 @@ export default function Navbar() {
         <div className="fixed top-6 left-0 right-0 z-[100] flex justify-center px-4">
             <nav className={`
                 w-full max-w-5xl rounded-full transition-all duration-500
-                ${scrolled ? 'bg-white/70 backdrop-blur-xl shadow-lg border-white/40 border py-2' : 'bg-white/40 backdrop-blur-md border-white/20 border py-4'}
+                ${scrolled ? 'bg-white/80 backdrop-blur-xl shadow-lg border-white/40 border py-2' : 'bg-white/60 backdrop-blur-md border-white/30 border py-4'}
                 px-6 flex items-center justify-between
             `}>
                 {/* Logo Section */}
@@ -87,8 +87,8 @@ export default function Navbar() {
                             </div>
                         </div>
                     ) : (
-                        <Link href="/login" className="bg-black text-white px-8 py-2 rounded-full font-medium hover:bg-brand transition-all shadow-md active:scale-95">
-                            Entrar
+                        <Link href="/login" className="bg-black text-white px-8 py-2 rounded-full font-normal uppercase tracking-wider hover:bg-brand transition-all shadow-md active:scale-95">
+                            ENTRAR
                         </Link>
                     )}
                 </div>
@@ -116,16 +116,16 @@ export default function Navbar() {
                             {user ? (
                                 <>
                                     <div className="h-px w-10 bg-gray-200"></div>
-                                    <span className="text-lg font-medium text-brand">Olá, {user.name}</span>
+                                    <span className="text-lg font-normal text-brand uppercase tracking-tight">Olá, {user.name}</span>
                                     {user.role === 'ADMIN' && (
-                                        <Link href="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium text-foreground hover:text-brand">Painel Admin</Link>
+                                        <Link href="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand uppercase tracking-tight">Painel Admin</Link>
                                     )}
-                                    <Link href="/my-orders" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium text-foreground hover:text-brand">Meus Pedidos</Link>
-                                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium text-foreground hover:text-brand">Configurações</Link>
-                                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-xl font-medium text-red-500 pt-4">Sair</button>
+                                    <Link href="/my-orders" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand uppercase tracking-tight">Meus Pedidos</Link>
+                                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand uppercase tracking-tight">Configurações</Link>
+                                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-xl font-normal text-red-500 pt-4 uppercase tracking-tight">Sair</button>
                                 </>
                             ) : (
-                                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="bg-black text-white px-10 py-3 rounded-full font-medium">Entrar</Link>
+                                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="bg-black text-white px-10 py-3 rounded-full font-normal uppercase tracking-wider">ENTRAR</Link>
                             )}
                         </motion.div>
                     )}

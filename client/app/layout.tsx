@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 import Footer from "@/components/Footer";
+import BackgroundWrapper from "@/components/BackgroundWrapper";
 
 export default function RootLayout({
   children,
@@ -29,12 +30,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${montserrat.variable} font-sans antialiased text-foreground bg-background`}>
         <GoogleWrapper>
-          <div className="flex flex-col min-h-screen">
+          <BackgroundWrapper>
             <div className="flex-grow">
               {children}
             </div>
             <Footer />
-          </div>
+          </BackgroundWrapper>
           <CartDrawer />
         </GoogleWrapper>
       </body>

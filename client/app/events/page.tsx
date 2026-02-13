@@ -42,20 +42,20 @@ export default function AllEventsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-brand selection:text-white">
+        <>
             <Navbar />
 
-            <div className="pt-32 pb-20 px-6">
+            <div className="pt-48 pb-20 px-6 relative z-30">
                 <div className="container mx-auto">
                     <header className="mb-16 text-center">
                         <motion.span
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="inline-block px-4 py-1.5 bg-brand/5 text-brand rounded-full text-sm font-medium tracking-wider uppercase mb-4"
+                            className="inline-block px-6 py-2 bg-brand/10 text-brand rounded-full text-sm font-bold tracking-widest uppercase mb-4"
                         >
                             GALERIA DE EVENTOS
                         </motion.span>
-                        <p className="text-slate-500 font-light text-lg">Escolha um evento abaixo para encontrar suas fotos.</p>
+                        <p className="text-slate-800 font-normal text-xl">Escolha um evento abaixo para encontrar suas fotos.</p>
                     </header>
 
                     {loading ? (
@@ -64,7 +64,7 @@ export default function AllEventsPage() {
                         </div>
                     ) : (
                         <motion.div
-                            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+                            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
                             initial="hidden"
                             animate="visible"
                             variants={{
@@ -82,18 +82,19 @@ export default function AllEventsPage() {
                                             hidden: { opacity: 0, y: 20 },
                                             visible: { opacity: 1, y: 0 }
                                         }}
+                                        className="bg-white/[0.2] backdrop-blur-xl rounded-[2.5rem] p-4 border border-white/40 shadow-xl hover:shadow-brand/20 transition-all duration-500 hover:-translate-y-2 group"
                                     >
-                                        <div className="relative aspect-[4/3] rounded-3xl overflow-hidden mb-5 border border-black/5 group-hover:border-brand/30 transition-all duration-500 shadow-sm group-hover:shadow-2xl group-hover:-translate-y-2">
+                                        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-5 shadow-sm">
                                             <img
                                                 src={getImageUrl(event.coverImage)}
                                                 alt={event.name}
-                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100"
+                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
                                         </div>
 
-                                        <div className="px-1 text-center">
-                                            <h3 className="text-xl md:text-2xl font-light text-slate-800 group-hover:text-brand transition-colors line-clamp-2 uppercase tracking-tight leading-tight">
+                                        <div className="px-2 pb-2 text-center">
+                                            <h3 className="text-lg md:text-xl font-medium text-slate-900 group-hover:text-brand transition-colors uppercase tracking-wider leading-tight">
                                                 {event.name}
                                             </h3>
                                         </div>
@@ -104,16 +105,18 @@ export default function AllEventsPage() {
                     )}
 
                     {!loading && events.length === 0 && (
-                        <div className="text-center py-20 text-slate-400 font-light text-xl">
+                        <div className="text-center py-20 text-slate-800 font-medium text-xl bg-white/40 backdrop-blur-md rounded-3xl border border-white">
                             Nenhum evento encontrado no momento.
                         </div>
                     )}
                 </div>
             </div>
 
-            <div className="pb-32">
-                <DiscountCard />
+            <div className="pb-32 relative z-30 px-6">
+                <div className="container mx-auto">
+                    <DiscountCard />
+                </div>
             </div>
-        </div>
+        </>
     );
 }
