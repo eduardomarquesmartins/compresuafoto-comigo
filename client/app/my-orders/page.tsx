@@ -105,8 +105,8 @@ export default function MyOrdersPage() {
 
                 <div className="flex flex-col md:flex-row items-baseline justify-between mb-8 gap-4 border-b border-white/5 pb-8">
                     <div>
-                        <h1 className="text-4xl font-black uppercase tracking-tighter mb-2">Meus Pedidos</h1>
-                        <p className="text-gray-400 font-medium">Gerencie suas fotos e downloads recentes.</p>
+                        <h1 className="text-4xl font-medium uppercase tracking-tighter mb-2">Meus Pedidos</h1>
+                        <p className="text-gray-400 font-light">Gerencie suas fotos e downloads recentes.</p>
                     </div>
                 </div>
 
