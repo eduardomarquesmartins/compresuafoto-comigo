@@ -44,7 +44,8 @@ export default function AdminEventsPage() {
         if (confirm('Tem certeza que deseja excluir permanentemente este evento?')) {
             try {
                 await deleteEvent(id);
-                setEvents(events.filter(e => e.id !== id));
+                // Functional update to ensure we use the latest state
+                setEvents(prev => prev.filter(e => e.id !== id));
             } catch (error) {
                 alert('Erro ao excluir evento');
             }
@@ -56,12 +57,18 @@ export default function AdminEventsPage() {
         if (confirm(`Deseja ${newStatus === 'ARCHIVED' ? 'arquivar' : 'ativar'} este evento?`)) {
             try {
                 await updateEvent(event.id, { status: newStatus });
-                // Optimistic update
-                setEvents(events.map(e => e.id === event.id ? { ...e, status: newStatus } : e));
-                // If filter is active, remove from list if it doesn't match anymore
-                if (filterStatus !== 'ALL' && newStatus !== filterStatus) {
-                    setEvents(prev => prev.filter(e => e.id !== event.id));
-                }
+
+                setEvents(prev => {
+                    // Update the event status in the list
+                    const updated = prev.map(e => e.id === event.id ? { ...e, status: newStatus } : e);
+
+                    // If filter is active, remove from list if it doesn't match anymore
+                    if (filterStatus !== 'ALL' && newStatus !== filterStatus) {
+                        return updated.filter(e => e.id !== event.id);
+                    }
+
+                    return updated;
+                });
             } catch (error) {
                 alert('Erro ao alterar status');
             }
