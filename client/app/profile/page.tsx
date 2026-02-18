@@ -44,6 +44,17 @@ function ProfileContent() {
         e.preventDefault();
         setError('');
         setSuccess('');
+
+        // Validation for mandatory fields
+        if (!cpf || !cpf.trim()) {
+            setError('O CPF é obrigatório para manter sua conta ativa e utilizar cupons.');
+            return;
+        }
+        if (!phone || !phone.trim()) {
+            setError('O Celular é obrigatório para comunicações e segurança.');
+            return;
+        }
+
         setSaving(true);
 
         try {
