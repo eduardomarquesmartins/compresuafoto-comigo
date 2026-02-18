@@ -360,7 +360,7 @@ exports.getAllOrders = async (req, res) => {
         const orders = await prisma.order.findMany({
             include: {
                 user: {
-                    select: { id: true, name: true, email: true, phone: true }
+                    select: { id: true, name: true, email: true, phone: true, cpf: true }
                 }
             },
             orderBy: { createdAt: 'desc' }

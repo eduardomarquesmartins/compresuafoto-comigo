@@ -8,6 +8,7 @@ interface OrderUser {
     name: string | null;
     email: string;
     phone: string | null;
+    cpf: string | null;
 }
 
 interface Order {
@@ -170,6 +171,7 @@ export default function AdminOrdersPage() {
         const matchesSearch = searchTerm === "" ||
             o.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             o.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            o.user?.cpf?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             o.publicId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             o.id.toString().includes(searchTerm);
         return matchesEvent && matchesFilter && matchesSearch;
@@ -252,7 +254,7 @@ export default function AdminOrdersPage() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                     <input
                         type="text"
-                        placeholder="Buscar por nome, email ou ID..."
+                        placeholder="Buscar por nome, CPF, email ou ID..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-2xl text-white placeholder:text-slate-600 focus:border-blue-500 outline-none transition-all"
@@ -369,6 +371,7 @@ export default function AdminOrdersPage() {
                                     </h2>
                                     <p className="text-sm text-slate-500 mt-1">
                                         {selectedOrder.user?.name || "Sem nome"} — {selectedOrder.user?.email}
+                                        {selectedOrder.user?.cpf && ` — CPF: ${selectedOrder.user.cpf}`}
                                         {selectedOrder.user?.phone && ` — ${selectedOrder.user.phone}`}
                                     </p>
                                 </div>
