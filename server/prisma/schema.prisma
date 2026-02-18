@@ -60,14 +60,26 @@ model Order {
 }
 
 model Coupon {
-  id            Int       @id @default(autoincrement())
-  code          String    @unique
-  discountType  String    // "PERCENTAGE" or "FIXED"
+  id            Int           @id @default(autoincrement())
+  code          String        @unique
+  discountType  String        // "PERCENTAGE" or "FIXED"
   discountValue Float
   expiryDate    DateTime?
   maxUses       Int?
-  usedCount     Int       @default(0)
-  isActive      Boolean   @default(true)
-  freePhotos    Int       @default(0)
-  createdAt     DateTime  @default(now())
+  usedCount     Int           @default(0)
+  isActive      Boolean       @default(true)
+  freePhotos    Int           @default(0)
+  oncePerCpf    Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  usages        CouponUsage[]
+}
+
+model CouponUsage {
+  id        Int      @id @default(autoincrement())
+  couponId  Int
+  cpf       String
+  createdAt DateTime @default(now())
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, cpf])
 }

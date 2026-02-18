@@ -31,7 +31,16 @@ exports.createOrder = async (req, res) => {
 
         let serverTotal = count * pricePerPhoto;
 
-        // 2. Apply coupon discount server-side
+        // 2. Fetch user CPF if logged in (needed for oncePerCpf validation)
+        let userCpf = null;
+        if (userId) {
+            const user = await prisma.user.findUnique({ where: { id: userId }, select: { cpf: true } });
+            if (user && user.cpf) {
+                userCpf = user.cpf.replace(/\D/g, '');
+            }
+        }
+
+        // 3. Apply coupon discount server-side
         let validCoupon = null;
         if (couponCode) {
             validCoupon = await prisma.coupon.findUnique({
@@ -46,6 +55,15 @@ exports.createOrder = async (req, res) => {
                 // Check max uses
                 if (validCoupon && validCoupon.maxUses && validCoupon.usedCount >= validCoupon.maxUses) {
                     validCoupon = null;
+                }
+                // Check per-CPF restriction
+                if (validCoupon && validCoupon.oncePerCpf && userCpf) {
+                    const existingUsage = await prisma.couponUsage.findUnique({
+                        where: { couponId_cpf: { couponId: validCoupon.id, cpf: userCpf } }
+                    });
+                    if (existingUsage) {
+                        return res.status(400).json({ error: 'Este cupom já foi utilizado com o seu CPF.' });
+                    }
                 }
             } else {
                 validCoupon = null;
@@ -80,13 +98,19 @@ exports.createOrder = async (req, res) => {
             }
         });
 
-        // 4. Increment Coupon Usage Count
+        // 4. Increment Coupon Usage Count and register CPF usage
         if (validCoupon) {
             try {
                 await prisma.coupon.update({
                     where: { code: couponCode.toUpperCase() },
                     data: { usedCount: { increment: 1 } }
                 });
+                // Register CPF usage if oncePerCpf is enabled
+                if (validCoupon.oncePerCpf && userCpf) {
+                    await prisma.couponUsage.create({
+                        data: { couponId: validCoupon.id, cpf: userCpf }
+                    });
+                }
             } catch (e) {
                 console.error("Failed to increment coupon count:", e);
             }

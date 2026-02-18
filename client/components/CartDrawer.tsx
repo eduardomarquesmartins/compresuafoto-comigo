@@ -47,7 +47,23 @@ export default function CartDrawer() {
         if (!couponCode || isValidatingCoupon) return;
         setIsValidatingCoupon(true);
         try {
-            const res = await api.get(`/coupons/validate/${couponCode}`);
+            // Get user CPF if logged in, for per-CPF coupon validation
+            let cpfParam = '';
+            if (typeof window !== 'undefined') {
+                try {
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        const userData = JSON.parse(userStr);
+                        if (userData?.cpf) cpfParam = userData.cpf;
+                    }
+                } catch (_) { }
+            }
+
+            const url = cpfParam
+                ? `/coupons/validate/${couponCode}?cpf=${encodeURIComponent(cpfParam)}`
+                : `/coupons/validate/${couponCode}`;
+
+            const res = await api.get(url);
             setAppliedCoupon(res.data);
             alert("Cupom aplicado com sucesso!");
             setCouponCode("");

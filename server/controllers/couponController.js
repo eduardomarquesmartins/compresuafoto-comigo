@@ -15,7 +15,7 @@ exports.getCoupons = async (req, res) => {
 // Create a new coupon
 exports.createCoupon = async (req, res) => {
     try {
-        const { code, discountType, discountValue, expiryDate, maxUses, isActive, freePhotos } = req.body;
+        const { code, discountType, discountValue, expiryDate, maxUses, isActive, freePhotos, oncePerCpf } = req.body;
 
         // Check if code already exists
         const existing = await prisma.coupon.findUnique({ where: { code } });
@@ -31,7 +31,8 @@ exports.createCoupon = async (req, res) => {
                 expiryDate: expiryDate ? new Date(expiryDate) : null,
                 maxUses: maxUses ? parseInt(maxUses) : null,
                 isActive: isActive !== undefined ? isActive : true,
-                freePhotos: freePhotos ? parseInt(freePhotos) : 0
+                freePhotos: freePhotos ? parseInt(freePhotos) : 0,
+                oncePerCpf: oncePerCpf === true || oncePerCpf === 'true'
             }
         });
         res.status(201).json(coupon);
@@ -44,7 +45,7 @@ exports.createCoupon = async (req, res) => {
 exports.updateCoupon = async (req, res) => {
     try {
         const { id } = req.params;
-        const { code, discountType, discountValue, expiryDate, maxUses, isActive, freePhotos } = req.body;
+        const { code, discountType, discountValue, expiryDate, maxUses, isActive, freePhotos, oncePerCpf } = req.body;
 
         const coupon = await prisma.coupon.update({
             where: { id: parseInt(id) },
@@ -55,7 +56,8 @@ exports.updateCoupon = async (req, res) => {
                 expiryDate: expiryDate ? new Date(expiryDate) : null,
                 maxUses: maxUses ? parseInt(maxUses) : null,
                 isActive,
-                freePhotos: freePhotos ? parseInt(freePhotos) : 0
+                freePhotos: freePhotos ? parseInt(freePhotos) : 0,
+                oncePerCpf: oncePerCpf === true || oncePerCpf === 'true'
             }
         });
         res.json(coupon);
@@ -81,6 +83,8 @@ exports.deleteCoupon = async (req, res) => {
 exports.validateCoupon = async (req, res) => {
     try {
         const { code } = req.params;
+        const { cpf } = req.query; // optional CPF for per-CPF validation
+
         const coupon = await prisma.coupon.findUnique({
             where: { code: code.toUpperCase() }
         });
@@ -101,11 +105,23 @@ exports.validateCoupon = async (req, res) => {
             return res.status(400).json({ error: "Este cupom atingiu o limite de uso." });
         }
 
+        // Check per-CPF restriction
+        if (coupon.oncePerCpf && cpf) {
+            const cleanCpf = cpf.replace(/\D/g, '');
+            const existingUsage = await prisma.couponUsage.findUnique({
+                where: { couponId_cpf: { couponId: coupon.id, cpf: cleanCpf } }
+            });
+            if (existingUsage) {
+                return res.status(400).json({ error: "Este cupom já foi utilizado com o seu CPF." });
+            }
+        }
+
         res.json({
             code: coupon.code,
             discountType: coupon.discountType,
             discountValue: coupon.discountValue,
-            freePhotos: coupon.freePhotos
+            freePhotos: coupon.freePhotos,
+            oncePerCpf: coupon.oncePerCpf
         });
     } catch (error) {
         res.status(500).json({ error: error.message });

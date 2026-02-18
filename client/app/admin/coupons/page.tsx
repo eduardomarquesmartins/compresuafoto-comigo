@@ -13,6 +13,7 @@ interface Coupon {
     usedCount: number;
     isActive: boolean;
     freePhotos: number;
+    oncePerCpf: boolean;
     createdAt: string;
 }
 
@@ -29,7 +30,8 @@ export default function CouponsPage() {
         expiryDate: "",
         maxUses: "",
         freePhotos: "",
-        isActive: true
+        isActive: true,
+        oncePerCpf: false
     });
 
     useEffect(() => {
@@ -57,7 +59,8 @@ export default function CouponsPage() {
                 expiryDate: coupon.expiryDate ? new Date(coupon.expiryDate).toISOString().split('T')[0] : "",
                 maxUses: coupon.maxUses?.toString() || "",
                 freePhotos: coupon.freePhotos?.toString() || "0",
-                isActive: coupon.isActive
+                isActive: coupon.isActive,
+                oncePerCpf: coupon.oncePerCpf
             });
         } else {
             setEditingCoupon(null);
@@ -68,7 +71,8 @@ export default function CouponsPage() {
                 expiryDate: "",
                 maxUses: "",
                 freePhotos: "0",
-                isActive: true
+                isActive: true,
+                oncePerCpf: false
             });
         }
         setShowModal(true);
@@ -196,6 +200,12 @@ export default function CouponsPage() {
                                     <Ticket className="w-4 h-4 text-slate-400" />
                                     Usos: <span className="text-slate-900">{coupon.usedCount} {coupon.maxUses ? `/ ${coupon.maxUses}` : '(∞)'}</span>
                                 </div>
+                                {coupon.oncePerCpf && (
+                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 px-3 py-2 rounded-xl">
+                                        <span>🔒</span>
+                                        1x por CPF
+                                    </div>
+                                )}
                             </div>
 
                             <button
@@ -321,6 +331,20 @@ export default function CouponsPage() {
                                         className={`w-16 h-9 rounded-full transition-all relative ${formData.isActive ? 'bg-blue-600' : 'bg-slate-200'}`}
                                     >
                                         <div className={`absolute top-1.5 w-6 h-6 bg-white rounded-full shadow-lg transition-all ${formData.isActive ? 'left-8' : 'left-2'}`} />
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-amber-50 p-6 rounded-[24px] border border-amber-100">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-black uppercase tracking-widest !text-slate-900">🔒 Uso único por CPF</span>
+                                        <span className="text-[10px] font-medium !text-slate-400 uppercase tracking-widest">Cada CPF usa apenas 1 vez</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, oncePerCpf: !formData.oncePerCpf })}
+                                        className={`w-16 h-9 rounded-full transition-all relative ${formData.oncePerCpf ? 'bg-amber-500' : 'bg-slate-200'}`}
+                                    >
+                                        <div className={`absolute top-1.5 w-6 h-6 bg-white rounded-full shadow-lg transition-all ${formData.oncePerCpf ? 'left-8' : 'left-2'}`} />
                                     </button>
                                 </div>
 
