@@ -15,6 +15,29 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Response interceptor to handle session expiration (Logout Automático)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (typeof window !== 'undefined') {
+            const status = error.response?.status;
+            const message = error.response?.data?.error;
+
+            if (status === 401 || (status === 403 && message === 'Invalid token')) {
+                console.warn("Sessão expirada ou inválida. Redirecionando para login...");
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+
+                // Only redirect if not already on the login page to avoid loops
+                if (!window.location.pathname.includes('/login')) {
+                    window.location.href = '/login?expired=true';
+                }
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export const getEvents = async (status?: string) => {
     const response = await api.get('/events', { params: { status } });
     return response.data;
