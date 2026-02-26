@@ -1,5 +1,10 @@
 const puppeteer = require('puppeteer');
 const { PDFDocument } = require('pdf-lib');
+
+// Render fallback: ensure Puppeteer knows where Chrome is installed
+if (process.env.RENDER) {
+    process.env.PUPPETEER_CACHE_DIR = '/opt/render/.cache/puppeteer';
+}
 const fs = require('fs');
 const path = require('path');
 
