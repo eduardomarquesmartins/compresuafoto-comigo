@@ -7,12 +7,15 @@
 # Dependencies
 node_modules/
 
-# Next.js build output
-.next/
-out/
-
 # Logs
 *.log
+startup_check.log
+
+# Uploads (arquivos de usuários)
+uploads/
+
+# Prisma generated client (regenerado automaticamente)
+prisma/generated-client/
 
 # OS
 .DS_Store
