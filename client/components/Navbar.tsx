@@ -42,7 +42,7 @@ export default function Navbar() {
             `}>
                 {/* Logo Section */}
                 <div className="flex-1 flex justify-start">
-                    <Link href="/" className="flex items-center group">
+                    <Link href="https://www.econticomigo.com.br/" className="flex items-center group">
                         <img
                             src="/logo.png"
                             alt="Logo"
