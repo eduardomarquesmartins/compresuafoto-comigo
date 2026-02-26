@@ -31,13 +31,14 @@ exports.createOrder = async (req, res) => {
 
         let serverTotal = count * pricePerPhoto;
 
-        // 2. Fetch user CPF if logged in (needed for oncePerCpf validation)
+        // 2. Fetch user and check for CPF
         let userCpf = null;
         if (userId) {
             const user = await prisma.user.findUnique({ where: { id: userId }, select: { cpf: true } });
-            if (user && user.cpf) {
-                userCpf = user.cpf.replace(/\D/g, '');
+            if (!user || !user.cpf || !user.cpf.trim()) {
+                return res.status(403).json({ error: 'Perfil incompleto. Por favor, cadastre seu CPF antes de finalizar a compra.' });
             }
+            userCpf = user.cpf.replace(/\D/g, '');
         }
 
         // 3. Apply coupon discount server-side
