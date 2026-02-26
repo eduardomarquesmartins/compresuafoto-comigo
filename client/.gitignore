@@ -1,4 +1,4 @@
-# Environment Variables - NUNCA enviar ao GitHub!
+
 .env
 .env.local
 .env.production
