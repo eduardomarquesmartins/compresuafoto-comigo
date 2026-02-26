@@ -42,10 +42,10 @@ const drawHeaderFooter = (doc, dateStr) => {
     doc.strokeColor(SLATE_200).lineWidth(1).moveTo(55, footerY).lineTo(doc.page.width - 55, footerY).stroke();
 
     doc.fillColor(BLUE_ACCENT).fontSize(10).font('Helvetica-Bold')
-        .text('& CONTI', 0, footerY + 10, { align: 'center', characterSpacing: 4 });
+        .text('& CONTI', 0, footerY + 10, { align: 'center', characterSpacing: 4, lineBreak: false });
 
     doc.fillColor(SLATE_400).fontSize(7).font('Helvetica')
-        .text('TRANSFORMANDO VISÃO EM RESULTADOS DIGITAIS', 0, footerY + 25, { align: 'center', characterSpacing: 2 });
+        .text('TRANSFORMANDO VISÃO EM RESULTADOS DIGITAIS', 0, footerY + 25, { align: 'center', characterSpacing: 2, lineBreak: false });
 };
 
 exports.generatePDFBuffer = (clientName, selectedServices, total) => {
@@ -99,7 +99,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
             // ──────────────────────────────────────────────────────────
             // PAGINA 2: SERVIÇOS
             // ──────────────────────────────────────────────────────────
-            doc.addPage({ margin: 55 });
+            doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 15 } });
             drawHeaderFooter(doc, dateStr);
 
             let currentY = 90; // Start right below the header
@@ -121,7 +121,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
             Object.entries(groupedServices).forEach(([category, items]) => {
                 // Check if we need a new page for the category title
                 if (currentY > doc.page.height - 180) {
-                    doc.addPage({ margin: 55 });
+                    doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 15 } });
                     drawHeaderFooter(doc, dateStr);
                     currentY = 90; // Reset Y right below header
                 }
@@ -141,7 +141,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
                 items.forEach(item => {
                     // Check if we need a new page for an item
                     if (currentY > doc.page.height - 120) {
-                        doc.addPage({ margin: 55 });
+                        doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 15 } });
                         drawHeaderFooter(doc, dateStr);
                         currentY = 90;
                     }
