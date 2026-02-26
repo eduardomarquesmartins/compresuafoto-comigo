@@ -73,6 +73,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/coupons', require('./routes/couponRoutes'));
 app.use('/api/webhooks/mercadopago', require('./controllers/webhookController').handleMercadoPagoWebhook);
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/proposals', require('./routes/proposalRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 
 // Global Error Handler

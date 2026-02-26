@@ -127,8 +127,8 @@ export default function CouponsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-black uppercase tracking-tighter text-white flex items-center gap-3">
-                        <Ticket className="w-10 h-10 text-blue-500" />
+                    <h1 className="text-3xl font-light text-white flex items-center gap-3">
+                        <Ticket className="w-8 h-8 text-blue-500" />
                         Cupons de Desconto
                     </h1>
                     <p className="text-slate-400 font-medium mt-1">Gerencie suas promoções e códigos de desconto.</p>

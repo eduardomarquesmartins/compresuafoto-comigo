@@ -184,9 +184,17 @@ export default function AdminDashboard() {
                         <p className="text-slate-300 mb-8 leading-relaxed text-sm">
                             Mantenha seus eventos atualizados e organize os registros mais antigos para garantir que as informações estejam sempre corretas.
                         </p>
-                        <Link href="/admin/events" className="block w-full bg-white text-slate-900 font-semibold py-3 rounded-xl hover:bg-blue-50 transition-colors text-center">
-                            Gerenciar Eventos
-                        </Link>
+                        <div className="space-y-3">
+                            <Link href="/admin/events" className="block w-full bg-white text-slate-900 font-semibold py-3 rounded-xl hover:bg-blue-50 transition-colors text-center">
+                                Gerenciar Eventos
+                            </Link>
+                            <Link href="/admin/orders" className="block w-full bg-slate-800 text-white border border-slate-700 font-semibold py-3 rounded-xl hover:bg-slate-700 transition-colors text-center">
+                                Gerenciar Pedidos
+                            </Link>
+                            <Link href="/admin/proposals/new" className="block w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-500 transition-colors text-center shadow-lg shadow-blue-900/40">
+                                + Nova Proposta
+                            </Link>
+                        </div>
                     </div>
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                 </div>

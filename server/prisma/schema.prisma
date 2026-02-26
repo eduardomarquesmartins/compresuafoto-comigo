@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "./generated-client"
 }
 
 datasource db {
@@ -82,4 +83,15 @@ model CouponUsage {
   coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
 
   @@unique([couponId, cpf])
+}
+
+model Proposal {
+  id               Int      @id @default(autoincrement())
+  clientName       String
+  clientEmail      String?
+  selectedServices String   // Store as JSON string
+  total            Float
+  status           String   @default("PENDING") // PENDING, APPROVED, DELETED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

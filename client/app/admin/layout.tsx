@@ -51,7 +51,7 @@ export default function AdminLayout({
     return (
         <div className="min-h-screen bg-slate-950 text-slate-200 font-sans">
             {/* Mobile Header */}
-            <div className="md:hidden bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-30">
+            <div className="md:hidden print:hidden bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-30">
                 <div className="flex items-center gap-2">
                     <span className="text-xl font-light text-blue-500 font-sans">&</span>
                     <span className="text-lg font-normal text-white tracking-wide">CONTI ADMIN</span>
@@ -72,7 +72,7 @@ export default function AdminLayout({
 
                 {/* Sidebar */}
                 <aside className={`
-                    bg-slate-900 min-h-screen py-8 border-r border-slate-800 shadow-xl z-40 
+                    bg-slate-900 min-h-screen py-8 border-r border-slate-800 shadow-xl z-40 print:hidden
                     fixed md:sticky top-0 left-0 bottom-0 h-screen overflow-y-auto flex flex-col
                     w-64 transition-transform duration-300 ease-in-out
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
@@ -110,11 +110,11 @@ export default function AdminLayout({
                         <Link href="/admin/coupons" className={`block px-6 py-3 transition-all font-normal ${isActive('/admin/coupons')}`}>
                             Cupons de Desconto
                         </Link>
-                        <Link href="/admin/proposals" className={`block px-6 py-3 transition-all font-normal ${isActive('/admin/proposals')}`}>
-                            Propostas
-                        </Link>
                         <Link href="/admin/orders" className={`block px-6 py-3 transition-all font-normal ${isActive('/admin/orders')}`}>
                             Pedidos
+                        </Link>
+                        <Link href="/admin/proposals" className={`block px-6 py-3 transition-all font-normal ${isActive('/admin/proposals')}`}>
+                            Propostas
                         </Link>
                     </nav>
 

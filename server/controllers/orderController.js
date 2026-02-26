@@ -397,7 +397,7 @@ exports.getAllOrders = async (req, res) => {
                     if (!isNaN(firstPhotoId)) {
                         const firstPhoto = await prisma.photo.findUnique({
                             where: { id: firstPhotoId },
-                            include: { event: { select: { id: true, name: true } } }
+                            include: { event: { select: { id: true, name: true, status: true } } }
                         });
                         if (firstPhoto && firstPhoto.event) {
                             event = firstPhoto.event;

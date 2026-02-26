@@ -22,7 +22,7 @@ interface Order {
     createdAt: string;
     user: OrderUser;
     photoCount: number;
-    event?: { id: number; name: string } | null;
+    event?: { id: number; name: string; status?: string } | null;
 }
 
 interface PhotoOption {
@@ -46,6 +46,7 @@ export default function AdminOrdersPage() {
     const [filter, setFilter] = useState("ALL");
     const [searchTerm, setSearchTerm] = useState("");
     const [filterEventId, setFilterEventId] = useState<number | "ALL">("ALL");
+    const [showOnlyActive, setShowOnlyActive] = useState(false);
 
     // Detail Modal
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -178,17 +179,20 @@ export default function AdminOrdersPage() {
     });
 
     // Get unique events from orders for the filter
-    const ordersByEvent = orders.reduce((acc: Record<number, { id: number; name: string, count: number }>, order: Order) => {
+    const ordersByEvent = orders.reduce((acc: Record<number, { id: number; name: string, status: string, count: number }>, order: Order) => {
         const eventId = order.event?.id || 0;
         const eventName = order.event?.name || "Sem Evento";
+        const eventStatus = order.event?.status || "INACTIVE";
         if (!acc[eventId]) {
-            acc[eventId] = { id: eventId, name: eventName, count: 0 };
+            acc[eventId] = { id: eventId, name: eventName, status: eventStatus, count: 0 };
         }
         acc[eventId].count++;
         return acc;
-    }, {} as Record<number, { id: number; name: string, count: number }>);
+    }, {} as Record<number, { id: number; name: string, status: string, count: number }>);
 
-    const eventList = Object.values(ordersByEvent).sort((a: any, b: any) => b.count - a.count);
+    const eventList = Object.values(ordersByEvent)
+        .filter((ev: any) => !showOnlyActive || ev.status === "ACTIVE")
+        .sort((a: any, b: any) => b.count - a.count);
 
     const pendingCount = orders.filter((o: Order) => o.status === "PENDING").length;
     const approvedCount = orders.filter((o: Order) => o.status === "approved" || o.status === "PAID").length;
@@ -206,13 +210,20 @@ export default function AdminOrdersPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-black uppercase tracking-tighter text-white flex items-center gap-3">
-                        <Package className="w-10 h-10 text-blue-500" />
+                    <h1 className="text-3xl font-light text-white flex items-center gap-3">
+                        <Package className="w-8 h-8 text-blue-500" />
                         Pedidos
                     </h1>
                     <p className="text-slate-400 font-medium mt-1">Gerencie, aprove e adicione fotos aos pedidos.</p>
                 </div>
                 <div className="flex gap-4">
+                    <button
+                        onClick={() => setShowOnlyActive(!showOnlyActive)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${showOnlyActive ? 'bg-green-600 text-white shadow-lg shadow-green-900/20' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                    >
+                        <div className={`w-2 h-2 rounded-full ${showOnlyActive ? 'bg-white animate-pulse' : 'bg-slate-600'}`} />
+                        {showOnlyActive ? 'Eventos Ativos' : 'Todos Eventos'}
+                    </button>
                 </div>
             </div>
 

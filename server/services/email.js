@@ -1,13 +1,10 @@
 const { Resend } = require('resend');
+const pdfService = require('./pdfService');
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_R5nTJJnG_PrJBBCwhqbSvMh9TNU4y4WPj');
 
 /**
  * Envia e-mail de confirmação de pedido com link de download
- * @param {string} email - E-mail do cliente
- * @param {string} orderId - ID público do pedido
- * @param {number} photosCount - Quantidade de fotos
- * @param {string} [clientUrl] - URL do cliente (opcional)
  */
 exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) => {
     try {
@@ -25,98 +22,86 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
                     <h1 style="color: #0044ff;">Obrigado pela sua compra!</h1>
                     <p style="font-size: 16px;">Suas <strong>${photosCount} fotos</strong> já estão disponíveis para download.</p>
-                    
                     <div style="margin: 30px 0; text-align: center;">
-                        <a href="${downloadLink}" 
-                           style="background-color: #0044ff; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-                           BAIXAR MINHAS FOTOS
-                        </a>
+                        <a href="${downloadLink}" style="background-color: #0044ff; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">BAIXAR MINHAS FOTOS</a>
                     </div>
-
-                    <p style="font-size: 14px; color: #666;">
-                        Se o botão acima não funcionar, copie e cole o link abaixo no seu navegador:<br>
-                        <a href="${downloadLink}">${downloadLink}</a>
-                    </p>
-
-                    <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
-                    <p style="font-size: 12px; color: #999; text-align: center;">
-                        Compre Sua Foto - Todos os direitos reservados.
-                    </p>
                 </div>
             `
         });
-
-        if (error) {
-            console.error('[EMAIL ERROR]:', error);
-            return { success: false, error };
-        }
-
-        console.log('[EMAIL SENT]:', data.id);
-        return { success: true, data };
+        return { success: !error, data, error };
     } catch (err) {
-        console.error('[EMAIL EXCEPTION]:', err);
         return { success: false, error: err.message };
     }
 };
 
 /**
- * Envia e-mail de recuperação de senha
- * @param {string} email - E-mail do cliente
- * @param {string} resetLink - Link base ou completo de recuperação
- * @param {string} [clientUrl] - URL do cliente (opcional)
+ * Envia proposta comercial estilizada com anexo PDF
  */
-exports.sendPasswordResetEmail = async (email, resetLink, clientUrl = null) => {
+exports.sendProposalEmail = async (email, clientName, selectedServices, total) => {
     try {
-        let finalLink = resetLink;
-        if (clientUrl) {
-            let finalClientUrl = clientUrl;
-            if (!finalClientUrl.startsWith('http')) {
-                finalClientUrl = `http://${finalClientUrl}`;
-            }
-            finalLink = `${finalClientUrl}/forgot-password?token=${resetLink}`;
-        }
+        // Agrupar serviços por categoria para o corpo do e-mail
+        const groupedServices = selectedServices.reduce((acc, service) => {
+            if (!acc[service.category]) acc[service.category] = [];
+            acc[service.category].push(service);
+            return acc;
+        }, {});
+
+        // HTML para o corpo do e-mail (resumido/limpo)
+        const servicesEmailHtml = Object.entries(groupedServices).map(([category, items]) => `
+            <div style="margin-bottom: 24px;">
+                <h4 style="color: #2563eb; text-transform: uppercase; font-size: 12px; margin-bottom: 8px;">${category}</h4>
+                ${items.map(item => `
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding: 5px 0;">
+                        <span style="font-size: 14px; color: #0f172a;">${item.name}</span>
+                        <span style="font-size: 14px; font-weight: bold;">R$ ${item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `).join('');
+
+        // Gerar o PDF usando o serviço centralizado
+        const pdfBuffer = await pdfService.generatePDFBuffer(clientName, selectedServices, total);
 
         const { data, error } = await resend.emails.send({
             from: 'contato@compresuafoto.econticomigo.com.br',
             to: [email],
-            subject: 'Recuperação de Senha - Compre Sua Foto 🔐',
+            subject: `Proposta Comercial - ${clientName || 'CONTI Marketing Digital'} 🚀`,
+            attachments: [
+                {
+                    filename: `proposta_${clientName.replace(/\s+/g, '_').toLowerCase()}.pdf`,
+                    content: pdfBuffer,
+                }
+            ],
             html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
-                    <h1 style="color: #0044ff;">Recuperar sua senha</h1>
-                    <p style="font-size: 16px;">Você solicitou a alteração de sua senha. Clique no botão abaixo para criar uma nova senha:</p>
-                    
-                    <div style="margin: 30px 0; text-align: center;">
-                        <a href="${resetLink}" 
-                           style="background-color: #0044ff; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-                           REDEFINIR MINHA SENHA
-                        </a>
+                <div style="background-color: #f8fafc; font-family: sans-serif; padding: 40px 20px;">
+                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <div style="background-color: #000; padding: 40px; text-align: center;">
+                            <h2 style="color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 2px;">Proposta Comercial</h2>
+                            <p style="color: #2563eb; margin: 10px 0 0; font-weight: bold;">Arquivo em anexo 📎</p>
+                        </div>
+                        <div style="padding: 40px;">
+                            <p>Olá, <strong>${clientName}</strong>!</p>
+                            <p>É um prazer apresentar nossa proposta estratégica. Segue em anexo o arquivo detalhado para sua análise.</p>
+                            <div style="margin: 30px 0; padding: 20px; background: #f1f5f9; border-radius: 12px;">
+                                <h4 style="margin: 0 0 15px 0; color: #0f172a; font-size: 14px;">Resumo do Investimento:</h4>
+                                ${servicesEmailHtml}
+                                <div style="border-top: 2px solid #fff; margin-top: 15px; padding-top: 15px; text-align: right;">
+                                    <span style="font-size: 18px; font-weight: bold; color: #2563eb;">Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                            <p><strong>EDUARDA CONTI & FERNANDO</strong></p>
+                            <p>&copy; ${new Date().getFullYear()} & CONTI Marketing Digital</p>
+                        </div>
                     </div>
-
-                    <p style="font-size: 14px; color: #666;">
-                        Este link expira em 1 hora. Se você não solicitou essa alteração, ignore este e-mail.
-                    </p>
-
-                    <p style="font-size: 14px; color: #666; margin-top: 20px;">
-                        Se o botão acima não funcionar, copie e cole o link abaixo:<br>
-                        <a href="${resetLink}">${resetLink}</a>
-                    </p>
-
-                    <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
-                    <p style="font-size: 12px; color: #999; text-align: center;">
-                        Compre Sua Foto - Todos os direitos reservados.
-                    </p>
                 </div>
             `
         });
 
-        if (error) {
-            console.error('[EMAIL ERROR]:', error);
-            return { success: false, error };
-        }
-
-        return { success: true, data };
+        return { success: !error, data, error };
     } catch (err) {
-        console.error('[EMAIL EXCEPTION]:', err);
+        console.error('[PROPOSAL EMAIL ERROR]:', err);
         return { success: false, error: err.message };
     }
 };
