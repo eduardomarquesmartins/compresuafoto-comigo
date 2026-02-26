@@ -102,12 +102,15 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
             doc.addPage({ margin: 55 });
             drawHeaderFooter(doc, dateStr);
 
-            doc.fillColor(SLATE_900).fontSize(22).font('Helvetica-Bold')
-                .text('Seus Serviços', 55, 100);
-            doc.fillColor(SLATE_500).fontSize(12).font('Helvetica')
-                .text('Confira abaixo o detalhamento estratégico do seu projeto.', 55, 130);
+            let currentY = 90; // Start right below the header
 
-            let currentY = 170;
+            doc.fillColor(SLATE_900).fontSize(22).font('Helvetica-Bold')
+                .text('Seus Serviços', 55, currentY);
+            currentY += 25;
+
+            doc.fillColor(SLATE_500).fontSize(12).font('Helvetica')
+                .text('Confira abaixo o detalhamento estratégico do seu projeto.', 55, currentY);
+            currentY += 40;
 
             const groupedServices = selectedServices.reduce((acc, s) => {
                 if (!acc[s.category]) acc[s.category] = [];
@@ -116,10 +119,11 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
             }, {});
 
             Object.entries(groupedServices).forEach(([category, items]) => {
+                // Check if we need a new page for the category title
                 if (currentY > doc.page.height - 180) {
                     doc.addPage({ margin: 55 });
                     drawHeaderFooter(doc, dateStr);
-                    currentY = 100;
+                    currentY = 90; // Reset Y right below header
                 }
 
                 doc.fillColor(BLUE_ACCENT).rect(55, currentY + 18, 40, 2).fill();
@@ -135,6 +139,13 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
                 }
 
                 items.forEach(item => {
+                    // Check if we need a new page for an item
+                    if (currentY > doc.page.height - 120) {
+                        doc.addPage({ margin: 55 });
+                        drawHeaderFooter(doc, dateStr);
+                        currentY = 90;
+                    }
+
                     doc.fillColor(SLATE_900).fontSize(13).font('Helvetica-Bold')
                         .text(item.name, 65, currentY);
                     const priceStr = `R$ ${item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
@@ -151,11 +162,11 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
                 currentY += 15;
             });
 
-            // Resumo
-            if (currentY > doc.page.height - 150) {
+            // Resumo do Investimento
+            if (currentY > doc.page.height - 180) {
                 doc.addPage({ margin: 55 });
                 drawHeaderFooter(doc, dateStr);
-                currentY = 100;
+                currentY = 90;
             }
 
             const boxWidth = 220;
