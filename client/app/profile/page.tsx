@@ -21,6 +21,7 @@ function ProfileContent() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [isGoogleUser, setIsGoogleUser] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -37,6 +38,7 @@ function ProfileContent() {
         setEmail(user.email || '');
         setPhone(user.phone || '');
         setCpf(user.cpf || '');
+        setIsGoogleUser(!!user.googleId);
         setLoading(false);
     }, []);
 
@@ -171,35 +173,37 @@ function ProfileContent() {
                             </div>
                         </div>
 
-                        <div className="border-t border-slate-100 pt-8 mt-4">
-                            <h2 className="text-sm font-bold mb-6 flex items-center gap-2 text-slate-800">
-                                <Lock size={16} /> Alterar Senha
-                            </h2>
-                            <p className="text-[10px] text-slate-400 mb-6 uppercase tracking-wider">Deixe em branco se não desejar alterar.</p>
+                        {!isGoogleUser && (
+                            <div className="border-t border-slate-100 pt-8 mt-4">
+                                <h2 className="text-sm font-bold mb-6 flex items-center gap-2 text-slate-800">
+                                    <Lock size={16} /> Alterar Senha
+                                </h2>
+                                <p className="text-[10px] text-slate-400 mb-6 uppercase tracking-wider">Deixe em branco se não desejar alterar.</p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div>
-                                    <label className="block text-[10px] uppercase tracking-widest font-semibold mb-3 text-slate-400">Senha Atual</label>
-                                    <input
-                                        type="password"
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-900 focus:border-brand/50 outline-none transition-all font-light"
-                                        value={password}
-                                        onChange={e => setPassword(e.target.value)}
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] uppercase tracking-widest font-semibold mb-3 text-slate-400">Nova Senha</label>
-                                    <input
-                                        type="password"
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-900 focus:border-brand/50 outline-none transition-all font-light"
-                                        value={newPassword}
-                                        onChange={e => setNewPassword(e.target.value)}
-                                        placeholder="••••••••"
-                                    />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div>
+                                        <label className="block text-[10px] uppercase tracking-widest font-semibold mb-3 text-slate-400">Senha Atual</label>
+                                        <input
+                                            type="password"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-900 focus:border-brand/50 outline-none transition-all font-light"
+                                            value={password}
+                                            onChange={e => setPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] uppercase tracking-widest font-semibold mb-3 text-slate-400">Nova Senha</label>
+                                        <input
+                                            type="password"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-900 focus:border-brand/50 outline-none transition-all font-light"
+                                            value={newPassword}
+                                            onChange={e => setNewPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
                         <button
                             type="submit"
