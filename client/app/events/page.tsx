@@ -25,8 +25,8 @@ export default function AllEventsPage() {
 
     const fetchEvents = async () => {
         try {
-            const data = await api.get('/events', { params: { status: 'ACTIVE' } });
-            setEvents(data as unknown as Event[]);
+            const response = await api.get('/events', { params: { status: 'ACTIVE' } });
+            setEvents(response.data);
         } catch (error) {
             console.error("Erro ao buscar eventos:", error);
         } finally {
