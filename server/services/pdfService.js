@@ -42,10 +42,10 @@ const drawHeaderFooter = (doc, dateStr) => {
     doc.strokeColor(SLATE_200).lineWidth(1).moveTo(55, footerY).lineTo(doc.page.width - 55, footerY).stroke();
 
     doc.fillColor(BLUE_ACCENT).fontSize(10).font('Helvetica-Bold')
-        .text('& CONTI', 0, footerY + 10, { align: 'center', characterSpacing: 4, lineBreak: false });
+        .text('& CONTI', 0, footerY + 10, { width: doc.page.width, align: 'center', characterSpacing: 4, lineBreak: false });
 
     doc.fillColor(SLATE_400).fontSize(7).font('Helvetica')
-        .text('TRANSFORMANDO VISÃO EM RESULTADOS DIGITAIS', 0, footerY + 25, { align: 'center', characterSpacing: 2, lineBreak: false });
+        .text('TRANSFORMANDO VISÃO EM RESULTADOS DIGITAIS', 0, footerY + 25, { width: doc.page.width, align: 'center', characterSpacing: 2, lineBreak: false });
 };
 
 exports.generatePDFBuffer = (clientName, selectedServices, total) => {
