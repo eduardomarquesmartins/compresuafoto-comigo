@@ -8,22 +8,81 @@ const resend = new Resend(process.env.RESEND_API_KEY || 're_R5nTJJnG_PrJBBCwhqbS
  */
 exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) => {
     try {
-        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://compresuafoto-comigo.vercel.app';
+        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://compresuafoto.econticomigo.com.br';
         if (!finalClientUrl.startsWith('http')) {
-            finalClientUrl = `http://${finalClientUrl}`;
+            finalClientUrl = `https://${finalClientUrl}`;
         }
         const downloadLink = `${finalClientUrl}/orders/success?id=${orderId}`;
+        const currentYear = new Date().getFullYear();
 
         const { data, error } = await resend.emails.send({
             from: 'contato@compresuafoto.econticomigo.com.br',
             to: [email],
-            subject: 'Suas fotos chegaram! 📸✨',
+            subject: `Pedido #${orderId} - Suas fotos estao prontas para download`,
             html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a1a;">
-                    <h1 style="color: #0044ff;">Obrigado pela sua compra!</h1>
-                    <p style="font-size: 16px;">Suas <strong>${photosCount} fotos</strong> já estão disponíveis para download.</p>
-                    <div style="margin: 30px 0; text-align: center;">
-                        <a href="${downloadLink}" style="background-color: #0044ff; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">BAIXAR MINHAS FOTOS</a>
+                <div style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                        
+                        <!-- Header -->
+                        <div style="background-color: #0a0a0a; padding: 40px 40px 35px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;">&amp; CONTI</h1>
+                            <p style="color: #64748b; margin: 8px 0 0; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Marketing Digital</p>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div style="text-align: center; padding: 30px 40px 0;">
+                            <div style="display: inline-block; background-color: #ecfdf5; color: #059669; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px;">
+                                Pedido Confirmado
+                            </div>
+                        </div>
+
+                        <!-- Body -->
+                        <div style="padding: 25px 40px 35px;">
+                            <h2 style="color: #0f172a; font-size: 24px; font-weight: 600; margin: 0 0 12px; text-align: center;">
+                                Obrigado pela sua compra!
+                            </h2>
+                            <p style="color: #64748b; font-size: 15px; line-height: 1.6; text-align: center; margin: 0 0 30px;">
+                                Suas fotos foram processadas com sucesso e estao prontas para download.
+                            </p>
+
+                            <!-- Order Summary Card -->
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Pedido</td>
+                                        <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">#${orderId}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 14px;">Fotos</td>
+                                        <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${photosCount} foto${photosCount > 1 ? 's' : ''}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 14px;">Status</td>
+                                        <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #059669; font-size: 14px; font-weight: 600; text-align: right;">Aprovado</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- CTA Button -->
+                            <div style="text-align: center; margin-bottom: 10px;">
+                                <a href="${downloadLink}" style="display: inline-block; background-color: #0f172a; color: #ffffff; padding: 16px 48px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; letter-spacing: 1px; text-transform: uppercase;">
+                                    Baixar Minhas Fotos
+                                </a>
+                            </div>
+                            <p style="text-align: center; color: #94a3b8; font-size: 12px; margin: 12px 0 0;">
+                                Ou copie e cole este link no navegador:<br>
+                                <a href="${downloadLink}" style="color: #2563eb; word-break: break-all; font-size: 11px;">${downloadLink}</a>
+                            </p>
+                        </div>
+
+                        <!-- Footer -->
+                        <div style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
+                            <p style="color: #94a3b8; font-size: 11px; margin: 0; line-height: 1.6;">
+                                Este e-mail foi enviado automaticamente. Em caso de duvidas, entre em contato conosco.<br>
+                                &copy; ${currentYear} &amp; CONTI Marketing Digital - Todos os direitos reservados.
+                            </p>
+                        </div>
+
                     </div>
                 </div>
             `
