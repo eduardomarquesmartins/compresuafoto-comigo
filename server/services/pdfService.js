@@ -38,7 +38,7 @@ const drawHeaderFooter = (doc, dateStr) => {
     doc.strokeColor(SLATE_200).lineWidth(1).moveTo(55, 65).lineTo(doc.page.width - 55, 65).stroke();
 
     // --- Footer ---
-    const footerY = doc.page.height - 45;
+    const footerY = doc.page.height - 65;
     doc.strokeColor(SLATE_200).lineWidth(1).moveTo(55, footerY).lineTo(doc.page.width - 55, footerY).stroke();
 
     doc.fillColor(BLUE_ACCENT).fontSize(10).font('Helvetica-Bold')
@@ -99,7 +99,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
             // ──────────────────────────────────────────────────────────
             // PAGINA 2: SERVIÇOS
             // ──────────────────────────────────────────────────────────
-            doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 15 } });
+            doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 20 } });
             drawHeaderFooter(doc, dateStr);
 
             let currentY = 90; // Start right below the header
@@ -121,7 +121,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
             Object.entries(groupedServices).forEach(([category, items]) => {
                 // Check if we need a new page for the category title
                 if (currentY > doc.page.height - 180) {
-                    doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 15 } });
+                    doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 20 } });
                     drawHeaderFooter(doc, dateStr);
                     currentY = 90; // Reset Y right below header
                 }
@@ -141,7 +141,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
                 items.forEach(item => {
                     // Check if we need a new page for an item
                     if (currentY > doc.page.height - 120) {
-                        doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 15 } });
+                        doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 20 } });
                         drawHeaderFooter(doc, dateStr);
                         currentY = 90;
                     }
@@ -164,7 +164,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
 
             // Resumo do Investimento
             if (currentY > doc.page.height - 180) {
-                doc.addPage({ margin: 55 });
+                doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 20 } });
                 drawHeaderFooter(doc, dateStr);
                 currentY = 90;
             }
