@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "prisma generate && npx puppeteer browsers install chrome",
+    "build": "prisma generate && PUPPETEER_CACHE_DIR=/opt/render/.cache/puppeteer npx puppeteer browsers install chrome",
+    "postinstall": "prisma generate && PUPPETEER_CACHE_DIR=/opt/render/.cache/puppeteer npx puppeteer browsers install chrome",
     "migrate": "prisma migrate dev --name init",
-    "start": "node index.js"
+    "start": "PUPPETEER_CACHE_DIR=/opt/render/.cache/puppeteer node index.js"
   },
   "keywords": [],
   "author": "",
