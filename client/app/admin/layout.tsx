@@ -110,6 +110,9 @@ export default function AdminLayout({
                         <Link href="/admin/coupons" className={`block px-6 py-3 transition-all font-normal ${isActive('/admin/coupons')}`}>
                             Cupons de Desconto
                         </Link>
+                        <Link href="/admin/proposals" className={`block px-6 py-3 transition-all font-normal ${isActive('/admin/proposals')}`}>
+                            Propostas
+                        </Link>
                         <Link href="/admin/orders" className={`block px-6 py-3 transition-all font-normal ${isActive('/admin/orders')}`}>
                             Pedidos
                         </Link>

@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const baseURL = process.env.NEXT_PUBLIC_API_URL
+    ? (process.env.NEXT_PUBLIC_API_URL.endsWith('/api') ? process.env.NEXT_PUBLIC_API_URL : `${process.env.NEXT_PUBLIC_API_URL}/api`)
+    : 'http://localhost:3002/api';
+
+console.log('API BASE URL:', baseURL);
+
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : 'https://compresuafoto-comigo.onrender.com/api',
+    baseURL,
     timeout: 120000, // 2 minutes timeout
 });
 
@@ -43,31 +49,31 @@ api.interceptors.response.use(
 );
 
 export const getEvents = async (status?: string) => {
-    const response = await api.get('/events', { params: { status } });
+    const response = await api.get('events', { params: { status } });
     return response.data;
 };
 
 export const updateEvent = async (id: number, data: any) => {
     // If data contains a file, we need to use FormData
     if (data instanceof FormData) {
-        const response = await api.put(`/events/${id}`, data, {
+        const response = await api.put(`events/${id}`, data, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         return response.data;
     }
 
     // Otherwise JSON
-    const response = await api.put(`/events/${id}`, data);
+    const response = await api.put(`events/${id}`, data);
     return response.data;
 };
 
 export const getEvent = async (id: string) => {
-    const response = await api.get(`/events/${id}`);
+    const response = await api.get(`events/${id}`);
     return response.data;
 };
 
 export const uploadPhotos = async (eventId: number, formData: FormData, onProgress?: (progress: number) => void) => {
-    const response = await api.post('/photos/upload', formData, {
+    const response = await api.post('photos/upload', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
@@ -86,7 +92,7 @@ export const searchFaces = async (eventId: number, selfieFile: File) => {
     formData.append('eventId', eventId.toString());
     formData.append('selfie', selfieFile);
 
-    const response = await api.post('/photos/search', formData, {
+    const response = await api.post('photos/search', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         }
@@ -95,7 +101,7 @@ export const searchFaces = async (eventId: number, selfieFile: File) => {
 };
 
 export const deleteEvent = async (id: number) => {
-    const response = await api.delete(`/events/${id}`);
+    const response = await api.delete(`events/${id}`);
     return response.data;
 };
 
@@ -137,6 +143,38 @@ export const uploadWithRetry = async (
     }
 
     throw lastError;
+};
+
+export const sendProposalEmail = async (data: { email: string; clientName: string; selectedServices: any[]; total: number }) => {
+    const response = await api.post('proposals/send-email', data);
+    return response.data;
+};
+
+export const downloadProposalPdf = async (data: { clientName: string; selectedServices: any[]; total: number }) => {
+    const response = await api.post('proposals/download', data, {
+        responseType: 'blob'
+    });
+    return response.data;
+};
+
+export const createProposal = async (data: { clientName: string; clientEmail?: string; selectedServices: any[]; total: number }) => {
+    const response = await api.post('proposals', data);
+    return response.data;
+};
+
+export const getProposals = async () => {
+    const response = await api.get('proposals');
+    return response.data;
+};
+
+export const deleteProposal = async (id: number) => {
+    const response = await api.delete(`proposals/${id}`);
+    return response.data;
+};
+
+export const approveProposal = async (id: number) => {
+    const response = await api.patch(`proposals/${id}/approve`);
+    return response.data;
 };
 
 export default api;
