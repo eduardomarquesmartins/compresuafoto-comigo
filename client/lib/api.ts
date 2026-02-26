@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL
-    ? (process.env.NEXT_PUBLIC_API_URL.endsWith('/api') ? process.env.NEXT_PUBLIC_API_URL : `${process.env.NEXT_PUBLIC_API_URL}/api`)
-    : 'https://compresuafoto-comigo.onrender.com/api';
+const baseURL = 'https://compresuafoto-comigo.onrender.com/api';
+// Fallback local para desenvolvimento se necessário:
+// const baseURL = process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : 'https://compresuafoto-comigo.onrender.com/api';
 
 console.log('API BASE URL:', baseURL);
 
