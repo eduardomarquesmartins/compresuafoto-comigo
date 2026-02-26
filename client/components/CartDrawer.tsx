@@ -85,6 +85,18 @@ export default function CartDrawer() {
             return;
         }
 
+        // Check if user has completed their profile (CPF required)
+        const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+        if (userData) {
+            const user = JSON.parse(userData);
+            if (!user.cpf || !user.cpf.trim()) {
+                setDrawerOpen(false);
+                alert('Para finalizar sua compra, complete seu cadastro com o CPF.');
+                router.push(`/profile?incomplete=true&redirectTo=${encodeURIComponent(pathname)}`);
+                return;
+            }
+        }
+
         setIsCheckingOut(true);
         try {
             const res = await api.post('/orders', {
