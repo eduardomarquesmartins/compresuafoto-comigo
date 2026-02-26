@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  password         String
+  role             String    @default("ADMIN")
+  name             String?
+  fullName         String?
+  cpf              String?   @unique
+  phone            String?   @unique
+  securityQuestion String?
+  securityAnswer   String?
+  googleId         String?   @unique
+  lastLogin        DateTime?
+  createdAt        DateTime  @default(now())
+  orders           Order[]
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  name        String
+  date        DateTime
+  description String?
+  coverImage  String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  photos      Photo[]
+}
+
+model Photo {
+  id             Int      @id @default(autoincrement())
+  eventId        Int
+  originalUrl    String
+  watermarkedUrl String?
+  price          Float    @default(10.0)
+  createdAt      DateTime @default(now())
+  embedding      String?
+  event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id         Int      @id @default(autoincrement())
+  publicId   String   @unique @default(uuid())
+  total      Float
+  status     String   @default("PENDING")
+  items      String
+  userId     Int
+  couponCode String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Coupon {
+  id            Int           @id @default(autoincrement())
+  code          String        @unique
+  discountType  String        // "PERCENTAGE" or "FIXED"
+  discountValue Float
+  expiryDate    DateTime?
+  maxUses       Int?
+  usedCount     Int           @default(0)
+  isActive      Boolean       @default(true)
+  freePhotos    Int           @default(0)
+  oncePerCpf    Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  usages        CouponUsage[]
+}
+
+model CouponUsage {
+  id        Int      @id @default(autoincrement())
+  couponId  Int
+  cpf       String
+  createdAt DateTime @default(now())
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, cpf])
+}
