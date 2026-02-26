@@ -237,7 +237,17 @@ exports.generatePDFBuffer = async (clientName, selectedServices, total) => {
 
         browser = await puppeteer.launch({
             headless: 'new',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage', // critical for low-memory containers
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
+                '--single-process', // helps keep memory lower in small instances
+                '--disable-gpu'
+            ],
+            encoding: 'binary'
         });
         const p = await browser.newPage();
         await p.setViewport({ width: 794, height: 1122, deviceScaleFactor: 1 });
