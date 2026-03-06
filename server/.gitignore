@@ -1,0 +1,22 @@
+# Environment Variables - NUNCA enviar ao GitHub!
+.env
+.env.local
+.env.production
+.env.*
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+startup_check.log
+
+# Uploads (arquivos de usuários)
+uploads/
+
+# Prisma generated client (regenerado automaticamente)
+prisma/generated-client/
+
+# OS
+.DS_Store
+Thumbs.db
