@@ -147,7 +147,7 @@ export default function AdminLayout({
                             </div>
                             <div className="flex flex-col">
                                 <span className="text-xs font-semibold text-white">Administrador</span>
-                                <span className="text-[0.65rem] text-slate-500">Sistema Premium</span>
+                                <span className="text-[0.65rem] text-slate-500">Sistema</span>
                             </div>
                         </div>
                     </div>
