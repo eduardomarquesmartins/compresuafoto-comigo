@@ -1,0 +1,44 @@
+# Node & Build
+node_modules
+.next
+dist
+build
+*.log
+logs/
+
+# Environment & Secrets (CRITICAL SECURITY)
+.env
+.env.local
+.env.*
+.env.*.local
+*.key
+*.pem
+secrets/
+
+# Database
+dev.db
+dev.db-journal
+prisma/generated-client/
+
+# AIOX Framework & Local Agents (DO NOT COMMIT SECRETS)
+.agent/
+.antigravity/
+.aios-core/
+.aiox-core/
+.claude/
+.cline/
+.cursor/
+.gemini/
+.aios/
+.aiox/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Project Specific
+uploads/
+client/build_output.txt
