@@ -4,9 +4,17 @@ import { motion } from "framer-motion";
 import { Camera, CreditCard, ScanFace, CheckCircle2, ArrowRight, Zap } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function LandingPage() {
   const router = useRouter();
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+
+  const handleVerEventos = () => {
+    setIsLoadingEvents(true);
+    router.push('/events');
+  };
 
   const sections = [
     {
@@ -40,13 +48,23 @@ export default function LandingPage() {
           {/* Top CTA (Hero) */}
           <div className="text-center mb-24">
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-brand text-white px-12 py-4 rounded-full text-lg font-normal shadow-xl shadow-brand/20 hover:bg-slate-900 transition-all flex items-center gap-3 mx-auto uppercase tracking-wider"
-              onClick={() => router.push('/events')}
+              whileHover={!isLoadingEvents ? { scale: 1.05 } : {}}
+              whileTap={!isLoadingEvents ? { scale: 0.95 } : {}}
+              disabled={isLoadingEvents}
+              className={`bg-brand text-white px-12 py-4 rounded-full text-lg font-normal shadow-xl shadow-brand/20 transition-all flex items-center gap-3 mx-auto uppercase tracking-wider ${isLoadingEvents ? 'opacity-80 cursor-wait bg-slate-800' : 'hover:bg-slate-900'}`}
+              onClick={handleVerEventos}
             >
-              VER EVENTOS DISPONÍVEIS
-              <ArrowRight className="w-5 h-5" />
+              {isLoadingEvents ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  CARREGANDO...
+                </>
+              ) : (
+                <>
+                  VER EVENTOS DISPONÍVEIS
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
             </motion.button>
             <h2 className="mt-6 text-slate-500 font-normal text-sm">
               Na & Conti Marketing Digital, tecnologia e inovação se unem para conectar <br /> você aos melhores momentos do evento que participou.

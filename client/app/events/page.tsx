@@ -59,8 +59,13 @@ export default function AllEventsPage() {
                     </header>
 
                     {loading ? (
-                        <div className="flex justify-center py-20">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand"></div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <div key={i} className="bg-white/20 backdrop-blur-xl rounded-[2.5rem] p-4 border border-white/40 animate-pulse">
+                                    <div className="aspect-[4/3] rounded-2xl bg-slate-200/50 mb-5" />
+                                    <div className="h-6 bg-slate-200/50 rounded-full w-3/4 mx-auto" />
+                                </div>
+                            ))}
                         </div>
                     ) : (
                         <motion.div
