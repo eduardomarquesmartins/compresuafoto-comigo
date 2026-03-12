@@ -1,4 +1,5 @@
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { Upload } = require('@aws-sdk/lib-storage');
 
 const s3Client = new S3Client({
@@ -27,23 +28,44 @@ exports.uploadToS3 = async (buffer, fileName, mimeType = 'image/jpeg') => {
                 Key: fileName,
                 Body: buffer,
                 ContentType: mimeType,
-                // ACL: 'public-read', // Depende da configuração do bucket, melhor usar URLs via Cloudfront ou políticas de bucket
             },
         });
 
         await upload.done();
 
-        // Retorna a URL padrão do S3 (pode ser personalizada se usar CloudFront)
         const region = process.env.AWS_REGION || 'us-east-1';
         return `https://${BUCKET_NAME}.s3.${region}.amazonaws.com/${fileName}`;
     } catch (error) {
         console.error('S3 Upload Error:', error);
-        throw new Error(`Falha ao subir para o S3: ${error.message}${error.code ? ' (' + error.code + ')' : ''}`);
+        throw new Error(`Falha ao subir para o S3: ${error.message}`);
+    }
+};
+
+/**
+ * Gera uma URL assinada (temporária) para um objeto no S3
+ * @param {string} url - URL completa ou Key do S3
+ * @param {number} expiresIn - Tempo de expiração em segundos (default 900 = 15min)
+ */
+exports.getPresignedUrl = async (url, expiresIn = 900) => {
+    try {
+        const key = exports.extractS3Key(url);
+        if (!key) return url;
+
+        const command = new GetObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: key,
+        });
+
+        return await getSignedUrl(s3Client, command, { expiresIn });
+    } catch (error) {
+        console.error('Error generating Presigned URL:', error);
+        return url;
     }
 };
 
 exports.extractS3Key = (url) => {
     try {
+        if (!url) return null;
         const parts = url.split('.amazonaws.com/');
         return parts.length > 1 ? parts[1] : null;
     } catch (e) {
