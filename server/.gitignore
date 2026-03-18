@@ -1,0 +1,30 @@
+# Environment Variables - NUNCA enviar ao GitHub!
+.env
+.env.local
+.env.production
+.env.*
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+startup_check.log
+
+# Uploads (arquivos de usuários)
+uploads/
+
+# Database & Prisma
+dev.db
+dev.db-journal
+prisma/generated-client/
+
+# AIOX Framework & Local Agents
+.agent/
+.antigravity/
+.aios-core/
+.aiox-core/
+
+# OS
+.DS_Store
+Thumbs.db
