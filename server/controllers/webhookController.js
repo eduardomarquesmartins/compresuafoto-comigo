@@ -47,7 +47,7 @@ exports.handleMercadoPagoWebhook = async (req, res) => {
         }
 
         const { type, data } = req.body;
-...
+
         // Mercado Pago sent a payment notification
         if (type === 'payment') {
             const paymentId = data.id;
