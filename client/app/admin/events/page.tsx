@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { getEvents, deleteEvent, updateEvent } from '@/lib/api';
 import Link from 'next/link';
-import { Plus, Image as ImageIcon, Trash2, Edit, Archive, Filter, Sparkles, Calendar } from 'lucide-react';
+import { Plus, Image as ImageIcon, Trash2, Edit, Archive, Filter, Calendar } from 'lucide-react';
 
 interface Event {
     id: number;
@@ -72,8 +72,7 @@ export default function AdminEventsPage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
                 <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="text-blue-500 h-5 w-5" />
+                    <div className="mb-2">
                         <span className="text-blue-500 font-medium tracking-widest uppercase text-xs">Gestão de Álbuns</span>
                     </div>
                     <h1 className="text-4xl font-light text-white tracking-tight">Gerenciar Eventos</h1>

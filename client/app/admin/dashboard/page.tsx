@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from "@/lib/api";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Wallet, ShoppingBag, Calendar, Image as ImageIcon, ArrowUpRight, Sparkles } from 'lucide-react';
+import { Wallet, ShoppingBag, Calendar, Image as ImageIcon, ArrowUpRight } from 'lucide-react';
 
 import AdminUserMenu from '@/components/AdminUserMenu';
 
@@ -50,8 +50,7 @@ export default function AdminDashboard() {
             {/* Header */}
             <header className="flex justify-between items-end mb-10">
                 <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="text-blue-500 h-5 w-5" />
+                    <div className="mb-2">
                         <span className="text-blue-500 font-medium tracking-widest uppercase text-xs">Visão Geral</span>
                     </div>
                     <h1 className="text-4xl font-light text-white tracking-tight">Dashboard</h1>

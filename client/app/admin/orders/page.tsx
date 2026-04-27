@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Package, CheckCircle, Clock, AlertTriangle, Loader2, Search, Eye, X, ImagePlus, ChevronDown, Sparkles } from "lucide-react";
+import { Package, CheckCircle, Clock, AlertTriangle, Loader2, Search, Eye, X, ImagePlus, ChevronDown } from "lucide-react";
 import api from "@/lib/api";
 
 interface OrderUser {
@@ -210,8 +210,7 @@ export default function AdminOrdersPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="text-blue-500 h-5 w-5" />
+                    <div className="mb-2">
                         <span className="text-blue-500 font-medium tracking-widest uppercase text-xs">Gestão Financeira</span>
                     </div>
                     <h1 className="text-4xl font-light text-white tracking-tight flex items-center gap-4">

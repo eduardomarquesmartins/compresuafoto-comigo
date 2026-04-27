@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { FileText, Plus, Search, Trash2, CheckCircle, Clock, Sparkles } from "lucide-react";
+import { FileText, Plus, Search, Trash2, CheckCircle, Clock } from "lucide-react";
 import Link from 'next/link';
 import { getProposals, deleteProposal, approveProposal } from "@/lib/api";
 
@@ -51,8 +51,7 @@ export default function ProposalsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
                 <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="text-blue-500 h-5 w-5" />
+                    <div className="mb-2">
                         <span className="text-blue-500 font-medium tracking-widest uppercase text-xs">Gestão Comercial</span>
                     </div>
                     <h1 className="text-4xl font-light text-white tracking-tight flex items-center gap-4">

@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { BadgePercent, Check, Sparkles } from "lucide-react";
 
 const tiers = [
     {
@@ -38,8 +37,7 @@ export default function DiscountCard() {
                         <p className="mt-3 max-w-sm text-sm leading-6 text-slate-300 md:text-base">
                             Quanto mais fotos você compra, menor fica o valor por foto.
                         </p>
-                        <div className="mt-5 flex items-start gap-2 text-sm leading-5 text-slate-200">
-                            <BadgePercent className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+                        <div className="mt-5 border-l-2 border-brand pl-3 text-sm leading-5 text-slate-200">
                             <span>Desconto aplicado automaticamente no carrinho.</span>
                         </div>
                     </div>
@@ -59,14 +57,12 @@ export default function DiscountCard() {
                                             {tier.discount}
                                         </span>
                                         {tier.featured && (
-                                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-950 px-2 py-1 text-xs font-semibold uppercase text-white">
-                                                <Sparkles className="h-3 w-3 text-brand" />
+                                            <span className="rounded-md bg-slate-950 px-2 py-1 text-xs font-semibold uppercase text-white">
                                                 Melhor valor
                                             </span>
                                         )}
                                     </div>
-                                    <div className="flex items-start gap-2 text-sm leading-5 text-slate-500">
-                                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                                    <div className="text-sm leading-5 text-slate-500">
                                         <span>Pacote ideal para galerias com várias escolhas.</span>
                                     </div>
                                 </div>
