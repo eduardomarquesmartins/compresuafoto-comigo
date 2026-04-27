@@ -3,6 +3,7 @@ const prisma = require('../lib/prisma');
 const archiver = require('archiver');
 const https = require('https');
 const emailService = require('../services/email');
+const { logToFile } = require('../utils/logger');
 
 // Initialize Mercado Pago
 const client = new MercadoPagoConfig({ accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || 'TEST-00000000-0000-0000-0000-000000000000' });
@@ -11,6 +12,14 @@ exports.createOrder = async (req, res) => {
     try {
         const { photoIds, total, eventName, couponCode } = req.body;
         const userId = req.user ? req.user.userId : null;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Login required to create an order.' });
+        }
+
+        if (!Array.isArray(photoIds) || photoIds.length === 0) {
+            return res.status(400).json({ error: 'Nenhuma foto valida selecionada.' });
+        }
 
         // 1. Server-side price calculation with progressive tiers
         const photos = await prisma.photo.findMany({

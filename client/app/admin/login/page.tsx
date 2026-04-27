@@ -18,6 +18,11 @@ export default function LoginPage() {
             // Using the 'api' instance automatically handles the base URL fallback
             const res = await api.post('/auth/login', { login: email, password });
 
+            if (res.data.user?.role !== 'ADMIN') {
+                setError('Acesso restrito a administradores.');
+                return;
+            }
+
             if (res.data.token) {
                 localStorage.setItem('token', res.data.token);
                 // Also store user info if needed

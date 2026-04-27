@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const proposalController = require('../controllers/proposalController');
+const { authenticate, isAdmin } = require('../middlewares/auth');
+
+router.use(authenticate, isAdmin);
 
 router.get('/', proposalController.getProposals);
 router.post('/', proposalController.createProposal);

@@ -8,6 +8,7 @@
 
 
   --brand: #0044ff;
+  --brand-rgb: 0, 68, 255;
 
   --brand-light: #4488ff;
   --brand-glow: rgba(0, 68, 255, 0.4);
@@ -43,7 +44,10 @@
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background:
+    radial-gradient(circle at 8% 10%, rgba(0, 68, 255, 0.16), transparent 28rem),
+    radial-gradient(circle at 86% 0%, rgba(215, 255, 70, 0.22), transparent 20rem),
+    linear-gradient(180deg, #fff8ec, #f3eadb 44%, #ede1d1);
   font-family: var(--font-sans), system-ui, sans-serif;
   overflow-x: hidden;
   antialiased: subpixel-antialiased;

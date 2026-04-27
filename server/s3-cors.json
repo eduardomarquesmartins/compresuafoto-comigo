@@ -1,0 +1,14 @@
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["GET", "PUT"],
+    "AllowedOrigins": [
+      "https://compresuafoto-comigo.vercel.app",
+      "https://compresuafoto.econticomigo.com.br",
+      "http://localhost:3000",
+      "http://localhost:3001"
+    ],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3000
+  }
+]

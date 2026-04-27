@@ -10,11 +10,139 @@ const s3Service = require('../services/s3');
 const { logToFile } = require('../utils/logger');
 const axios = require('axios');
 
+const sanitizeFileName = (fileName = 'photo.jpg') => {
+    return fileName
+        .replace(/[^\w.-]+/g, '_')
+        .replace(/^_+/, '')
+        .slice(0, 120) || 'photo.jpg';
+};
+
+exports.createDirectUploadUrls = async (req, res) => {
+    try {
+        const { eventId, files } = req.body;
+        const parsedEventId = parseInt(eventId);
+
+        if (isNaN(parsedEventId)) {
+            return res.status(400).json({ error: 'Event ID invalido ou ausente' });
+        }
+
+        if (!Array.isArray(files) || files.length === 0) {
+            return res.status(400).json({ error: 'Nenhum arquivo informado' });
+        }
+
+        const event = await prisma.event.findUnique({ where: { id: parsedEventId } });
+        if (!event) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+
+        const uploads = await Promise.all(files.map(async (file, index) => {
+            const safeName = sanitizeFileName(file.name);
+            const uniquePrefix = `${Date.now()}_${index}_${crypto.randomBytes(6).toString('hex')}`;
+            const contentType = file.contentType || 'image/jpeg';
+
+            const originalKey = `events/event_${parsedEventId}/originals/${uniquePrefix}_${safeName}`;
+            const watermarkedKey = `events/event_${parsedEventId}/watermarked/${uniquePrefix}_wm_${safeName}`;
+            const faceKey = `events/event_${parsedEventId}/face/${uniquePrefix}_face_${safeName}`;
+
+            const [originalUploadUrl, watermarkedUploadUrl, faceUploadUrl] = await Promise.all([
+                s3Service.getPresignedUploadUrl(originalKey, contentType),
+                s3Service.getPresignedUploadUrl(watermarkedKey, 'image/jpeg'),
+                s3Service.getPresignedUploadUrl(faceKey, 'image/jpeg'),
+            ]);
+
+            return {
+                originalKey,
+                watermarkedKey,
+                faceKey,
+                originalUrl: s3Service.getPublicUrl(originalKey),
+                watermarkedUrl: s3Service.getPublicUrl(watermarkedKey),
+                faceUrl: s3Service.getPublicUrl(faceKey),
+                uploadUrls: {
+                    original: originalUploadUrl,
+                    watermarked: watermarkedUploadUrl,
+                    face: faceUploadUrl,
+                },
+            };
+        }));
+
+        res.json({ uploads });
+    } catch (error) {
+        console.error('Create Direct Upload URLs Error:', error);
+        res.status(500).json({ error: 'Falha ao gerar URLs de upload: ' + error.message });
+    }
+};
+
+exports.registerDirectUploads = async (req, res) => {
+    try {
+        const { eventId, price, uploads } = req.body;
+        const parsedEventId = parseInt(eventId);
+
+        if (isNaN(parsedEventId)) {
+            return res.status(400).json({ error: 'Event ID invalido ou ausente' });
+        }
+
+        if (!Array.isArray(uploads) || uploads.length === 0) {
+            return res.status(400).json({ error: 'Nenhum upload informado' });
+        }
+
+        const event = await prisma.event.findUnique({ where: { id: parsedEventId } });
+        if (!event) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+
+        const priceValue = parseFloat(price) || 10.0;
+        const createdPhotos = await Promise.all(uploads.map((upload) => {
+            if (!upload.originalUrl || !upload.watermarkedUrl || !upload.faceKey) {
+                throw new Error('Dados de upload incompletos');
+            }
+
+            return prisma.photo.create({
+                data: {
+                    originalUrl: upload.originalUrl,
+                    watermarkedUrl: upload.watermarkedUrl,
+                    price: priceValue,
+                    eventId: parsedEventId,
+                    embedding: null
+                }
+            }).then(photo => ({ photo, faceKey: upload.faceKey }));
+        }));
+
+        setImmediate(async () => {
+            const bucket = s3Service.getBucketName();
+            await Promise.all(createdPhotos.map(async ({ photo, faceKey }) => {
+                try {
+                    const embedding = await rekognitionService.indexFacesFromS3(bucket, faceKey);
+                    if (embedding) {
+                        await prisma.photo.update({
+                            where: { id: photo.id },
+                            data: { embedding }
+                        });
+                    }
+                } catch (error) {
+                    logToFile(`Direct upload Rekognition failed for photo ${photo.id}: ${error.message}`);
+                }
+            }));
+        });
+
+        res.status(201).json({
+            message: 'Fotos registradas com sucesso',
+            count: createdPhotos.length,
+            photoIds: createdPhotos.map(({ photo }) => photo.id)
+        });
+    } catch (error) {
+        console.error('Register Direct Upload Error:', error);
+        res.status(500).json({ error: 'Falha ao registrar uploads: ' + error.message });
+    }
+};
+
 exports.uploadPhotos = async (req, res) => {
     logToFile('uploadPhotos called');
     try {
         const { eventId, price } = req.body;
-        const files = req.files;
+        const uploadedFiles = req.files || [];
+        const files = uploadedFiles.filter(file => file.fieldname === 'photos');
+        const watermarkedFiles = uploadedFiles.filter(file => file.fieldname === 'watermarkedPhotos');
+        const faceFiles = uploadedFiles.filter(file => file.fieldname === 'facePhotos');
 
         const parsedEventId = parseInt(eventId);
         console.log(`[LOG] uploadPhotos: EventID=${eventId} (Parsed: ${parsedEventId}), Files=${files ? files.length : 0}`);
@@ -43,8 +171,10 @@ exports.uploadPhotos = async (req, res) => {
         const pLimit = require('p-limit');
         const limit = pLimit(5); // Concorrência de 5 fotos simultâneas para aproveitar 16GB RAM
 
-        await Promise.all(files.map(file => limit(async () => {
+        await Promise.all(files.map((file, index) => limit(async () => {
             const originalFilename = file.originalname;
+            const watermarkedFile = watermarkedFiles[index];
+            const faceFile = faceFiles[index];
             console.log(`[LOG] Starting process for: ${originalFilename}`);
             logToFile(`Processing: ${originalFilename}`);
 
@@ -54,10 +184,16 @@ exports.uploadPhotos = async (req, res) => {
                 const originalFileNameS3 = `events/event_${eventId}/originals/${Date.now()}_${originalFilename.replace(/\s+/g, '_')}`;
                 const originalUrl = await s3Service.uploadToS3(originalBuffer, originalFileNameS3, file.mimetype || 'image/jpeg');
 
-                // 2. Resize & Watermark
-                console.log(`[LOG] Sharp: Generating watermark for ${originalFilename}...`);
-                let watermarkedBuffer = await watermarkService.generateWatermark(file.path);
-                console.log(`[LOG] Sharp: Watermark OK (${watermarkedBuffer.length} bytes)`);
+                // 2. Use client-side watermark when present. Fall back to server-side Sharp for legacy uploads.
+                let watermarkedBuffer;
+                if (watermarkedFile && fs.existsSync(watermarkedFile.path)) {
+                    console.log(`[LOG] Using client-side watermark for ${originalFilename}...`);
+                    watermarkedBuffer = fs.readFileSync(watermarkedFile.path);
+                } else {
+                    console.log(`[LOG] Sharp: Generating watermark for ${originalFilename}...`);
+                    watermarkedBuffer = await watermarkService.generateWatermark(file.path);
+                    console.log(`[LOG] Sharp: Watermark OK (${watermarkedBuffer.length} bytes)`);
+                }
 
                 // 3. Upload Watermarked to S3
                 console.log(`[LOG] S3: Uploading watermarked ${originalFilename}...`);
@@ -87,10 +223,12 @@ exports.uploadPhotos = async (req, res) => {
                 setImmediate(async () => {
                     try {
                         console.log(`[BG] Rekognition: Indexing ${originalFilename} (Photo ID: ${photo.id})...`);
-                        const bufferForRekognition = await sharp(file.path)
-                            .rotate()
-                            .resize(1000)
-                            .toBuffer();
+                        const bufferForRekognition = faceFile && fs.existsSync(faceFile.path)
+                            ? fs.readFileSync(faceFile.path)
+                            : await sharp(file.path)
+                                .rotate()
+                                .resize(1000)
+                                .toBuffer();
 
                         const embedding = await rekognitionService.indexFaces(bufferForRekognition);
                         
@@ -109,6 +247,12 @@ exports.uploadPhotos = async (req, res) => {
                         if (fs.existsSync(file.path)) {
                             fs.unlinkSync(file.path);
                         }
+                        if (watermarkedFile && fs.existsSync(watermarkedFile.path)) {
+                            fs.unlinkSync(watermarkedFile.path);
+                        }
+                        if (faceFile && fs.existsSync(faceFile.path)) {
+                            fs.unlinkSync(faceFile.path);
+                        }
                     }
                 });
 
@@ -122,6 +266,12 @@ exports.uploadPhotos = async (req, res) => {
                 // Clean up on error if not handled by BG
                 if (fs.existsSync(file.path)) {
                     fs.unlinkSync(file.path);
+                }
+                if (watermarkedFile && fs.existsSync(watermarkedFile.path)) {
+                    fs.unlinkSync(watermarkedFile.path);
+                }
+                if (faceFile && fs.existsSync(faceFile.path)) {
+                    fs.unlinkSync(faceFile.path);
                 }
             }
         })));

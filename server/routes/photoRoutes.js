@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const photoController = require('../controllers/photoController');
 const upload = require('../middlewares/upload');
+const { authenticate, isAdmin } = require('../middlewares/auth');
 
 // Upload array of photos
 const fs = require('fs');
@@ -18,7 +19,9 @@ const uploadMiddleware = (req, res, next) => {
     });
 };
 
-router.post('/upload', uploadMiddleware, photoController.uploadPhotos);
+router.post('/direct-upload-urls', authenticate, isAdmin, photoController.createDirectUploadUrls);
+router.post('/register-direct-upload', authenticate, isAdmin, photoController.registerDirectUploads);
+router.post('/upload', authenticate, isAdmin, uploadMiddleware, photoController.uploadPhotos);
 
 // Search photos by face (upload selfie)
 router.post('/search', upload.single('selfie'), photoController.searchPhotos);

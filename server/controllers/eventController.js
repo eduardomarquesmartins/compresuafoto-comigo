@@ -177,9 +177,15 @@ exports.updateEvent = async (req, res) => {
         if (description !== undefined) data.description = description;
         if (status) data.status = status;
 
-        if (req.file) {
-            const result = await cloudinaryService.uploadStream(req.file.buffer, 'events/covers');
-            data.coverImage = result.secure_url;
+        if (req.files && req.files['coverImage']) {
+            const file = req.files['coverImage'][0];
+            try {
+                const buffer = fs.readFileSync(file.path);
+                const result = await cloudinaryService.uploadStream(buffer, 'events/covers');
+                data.coverImage = result.secure_url;
+            } finally {
+                if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+            }
         }
 
         const event = await prisma.event.update({
@@ -382,4 +388,3 @@ exports.createEventFromDrive = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error: ' + error.message });
     }
 };
-

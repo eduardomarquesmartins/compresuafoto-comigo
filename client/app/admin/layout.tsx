@@ -18,11 +18,23 @@ export default function AdminLayout({
 
     useEffect(() => {
         const token = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
 
         if (pathname === '/admin/login') {
             setIsAuthorized(true);
         } else {
-            if (!token) {
+            let isAdmin = false;
+            if (storedUser) {
+                try {
+                    isAdmin = JSON.parse(storedUser)?.role === 'ADMIN';
+                } catch {
+                    isAdmin = false;
+                }
+            }
+
+            if (!token || !isAdmin) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
                 router.push('/admin/login');
             } else {
                 setIsAuthorized(true);

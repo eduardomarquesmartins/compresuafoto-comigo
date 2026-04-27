@@ -63,6 +63,23 @@ exports.getPresignedUrl = async (url, expiresIn = 900) => {
     }
 };
 
+exports.getPresignedUploadUrl = async (key, contentType = 'image/jpeg', expiresIn = 900) => {
+    const command = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+        ContentType: contentType,
+    });
+
+    return await getSignedUrl(s3Client, command, { expiresIn });
+};
+
+exports.getPublicUrl = (key) => {
+    const region = process.env.AWS_REGION || 'us-east-1';
+    return `https://${BUCKET_NAME}.s3.${region}.amazonaws.com/${key}`;
+};
+
+exports.getBucketName = () => BUCKET_NAME;
+
 exports.extractS3Key = (url) => {
     try {
         if (!url) return null;

@@ -7,9 +7,11 @@ const isLocalhost = typeof window !== 'undefined'
        window.location.hostname.startsWith('192.168.'))
     : process.env.NODE_ENV === 'development';
 
-const baseURL = isLocalhost 
+const envBaseURL = process.env.NEXT_PUBLIC_API_URL;
+
+const baseURL = envBaseURL || (isLocalhost 
     ? `http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:3002/api`
-    : 'https://compresuafoto-comigo.onrender.com/api';
+    : 'https://compresuafoto-comigo.onrender.com/api');
 
 console.log('API BASE URL:', baseURL);
 

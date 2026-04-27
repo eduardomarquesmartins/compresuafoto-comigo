@@ -20,7 +20,7 @@ export default function DiscountCard() {
                                 Descontos <span className="text-brand font-normal">Progressivos</span>
                             </h2>
                         </div>
-                        <p className="text-sm md:text-lg text-slate-500 font-normal">Quanto mais fotos você compra, maior o seu desconto automático!</p>
+                        <p className="text-sm md:text-lg text-slate-500 font-normal">Quanto mais fotos vocÃª compra, maior o seu desconto automÃ¡tico!</p>
                     </div>
                 </div>
 

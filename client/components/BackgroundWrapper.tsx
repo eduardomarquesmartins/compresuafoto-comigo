@@ -17,7 +17,7 @@ export default function BackgroundWrapper({ children }: { children: React.ReactN
                 <div className="absolute inset-0 bg-[#F5F5F3]" />
                 <div className="absolute inset-0 opacity-40 animate-gradient"
                     style={{
-                        background: 'radial-gradient(circle at 10% 10%, #F5F5F3 0%, transparent 80%), radial-gradient(circle at 90% 90%, var(--brand) 0%, transparent 80%)',
+                        background: 'radial-gradient(circle at 8% 10%, rgba(0,68,255,0.16) 0%, transparent 36%), radial-gradient(circle at 90% 2%, rgba(215,255,70,0.22) 0%, transparent 28%), linear-gradient(180deg, #fff8ec, #f3eadb 46%, #ede1d1)',
                         backgroundSize: '200% 200%'
                     }}
                 />

@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Image as ImageIcon, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import api, { uploadWithRetry } from '@/lib/api';
+import api from '@/lib/api';
+import { uploadPhotosDirectToS3 } from '@/lib/directPhotoUpload';
 
 export default function CreateEventPage() {
     const router = useRouter();
@@ -21,29 +22,6 @@ export default function CreateEventPage() {
             const url = URL.createObjectURL(file);
             setPreview(url);
         }
-    };
-
-    const compressImage = (file: File): Promise<Blob> => {
-        console.log(`DEBUG: Comprimindo ${file.name}...`);
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onerror = () => reject(new Error(`Erro ao ler arquivo ${file.name}`));
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target?.result as string;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 2000;
-                    const scale = Math.min(1, MAX_WIDTH / img.width);
-                    canvas.width = img.width * scale;
-                    canvas.height = img.height * scale;
-                    const ctx = canvas.getContext('2d');
-                    ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    canvas.toBlob((blob) => resolve(blob || file), 'image/jpeg', 0.85);
-                };
-            };
-        });
     };
 
     const handlePhotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,31 +53,14 @@ export default function CreateEventPage() {
             console.log(`DEBUG: Evento criado ID ${eventId}. Fotos selecionadas: ${selectedPhotos.length}`);
             if (selectedPhotos.length > 0) {
                 console.log('DEBUG: Iniciando processamento de fotos em lotes...');
-                const BATCH_SIZE = 5;
-                const total = selectedPhotos.length;
-
-                for (let i = 0; i < total; i += BATCH_SIZE) {
-                    const chunk = selectedPhotos.slice(i, i + BATCH_SIZE);
-                    const batchFormData = new FormData();
-                    batchFormData.append('eventId', eventId.toString());
-                    batchFormData.append('price', '15.00');
-
-                    // Compress batch
-                    const compressedFiles = await Promise.all(chunk.map(async (file) => {
-                        const blob = await compressImage(file);
-                        return new File([blob], file.name, { type: 'image/jpeg' });
-                    }));
-
-                    compressedFiles.forEach(file => {
-                        batchFormData.append('photos', file);
-                    });
-
-                    await uploadWithRetry('/photos/upload', batchFormData, (percent) => {
-                        const basePercent = (i / total) * 100;
-                        const chunkContribution = (percent / 100) * (chunk.length / total) * 100;
-                        setUploadProgress(Math.round(basePercent + chunkContribution));
-                    });
-                }
+                await uploadPhotosDirectToS3({
+                    eventId,
+                    files: selectedPhotos,
+                    price: '15.00',
+                    batchSize: 5,
+                    onStatus: console.log,
+                    onProgress: setUploadProgress,
+                });
             }
 
             setUploadProgress(100);
@@ -124,7 +85,7 @@ export default function CreateEventPage() {
                 </motion.div>
                 <h2 className="text-2xl font-bold text-white mb-4">Evento Criado!</h2>
                 <p className="text-slate-400 mb-8 font-light">
-                    O evento e as fotos foram enviados com sucesso. O processamento (marcas d'água e IA) continuará em segundo plano.
+                    O evento e as fotos foram enviados com sucesso. A marca d'agua foi gerada localmente e a IA continuara em segundo plano.
                 </p>
                 <button
                     onClick={() => router.push('/admin/dashboard')}

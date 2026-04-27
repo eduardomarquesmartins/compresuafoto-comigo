@@ -99,6 +99,40 @@ exports.indexFaces = async (imageInput) => {
     }
 };
 
+exports.indexFacesFromS3 = async (bucket, key) => {
+    const rekognition = getClient();
+    if (!rekognition) throw new Error("AWS Rekognition not initialized");
+
+    try {
+        const command = new IndexFacesCommand({
+            CollectionId: COLLECTION_ID,
+            Image: {
+                S3Object: {
+                    Bucket: bucket,
+                    Name: key
+                }
+            },
+            DetectionAttributes: ["ALL"],
+            MaxFaces: 1,
+            QualityFilter: "AUTO"
+        });
+
+        const response = await rekognition.send(command);
+
+        if (response.FaceRecords && response.FaceRecords.length > 0) {
+            const faceId = response.FaceRecords[0].Face.FaceId;
+            console.log(`AWS Rekognition: Face indexed from S3 with ID ${faceId}`);
+            return faceId;
+        }
+
+        console.warn("AWS Rekognition: No face detected in S3 image.");
+        return null;
+    } catch (error) {
+        console.error("AWS IndexFaces S3 Error:", error);
+        throw error;
+    }
+};
+
 exports.searchFacesByImage = async (imageInput, eventId) => {
     const rekognition = getClient();
     if (!rekognition) throw new Error("AWS Rekognition not initialized");
