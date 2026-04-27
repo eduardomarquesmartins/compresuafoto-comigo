@@ -9,7 +9,13 @@ const isLocalhost = typeof window !== 'undefined'
 
 const envBaseURL = process.env.NEXT_PUBLIC_API_URL;
 
-const baseURL = envBaseURL || (isLocalhost 
+const normalizeApiBaseURL = (url?: string) => {
+    if (!url) return undefined;
+    const trimmed = url.replace(/\/+$/, '');
+    return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+};
+
+const baseURL = normalizeApiBaseURL(envBaseURL) || (isLocalhost 
     ? `http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:3002/api`
     : 'https://compresuafoto-comigo.onrender.com/api');
 
