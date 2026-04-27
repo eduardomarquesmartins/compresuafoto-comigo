@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -14,6 +14,11 @@ function LoginContent() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [googleReady, setGoogleReady] = useState(false);
+
+    useEffect(() => {
+        setGoogleReady(true);
+    }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -129,15 +134,17 @@ function LoginContent() {
                         </div>
                     </div>
 
-                    <div className="flex justify-center">
-                        <GoogleLogin
-                            onSuccess={handleGoogleSuccess}
-                            onError={() => setError('Erro no Google Login')}
-                            theme="outline"
-                            shape="pill"
-                            width="250px"
-                        />
-                    </div>
+                    {googleReady && (
+                        <div className="flex justify-center">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => setError('Erro no Google Login')}
+                                theme="outline"
+                                shape="pill"
+                                width="250px"
+                            />
+                        </div>
+                    )}
 
                     <div className="mt-10 text-center text-sm text-slate-500">
                         Não tem uma conta? <Link href={`/register${redirectTo ? `?redirectTo=${redirectTo}` : ''}`} className="text-brand font-bold hover:underline">Cadastre-se</Link>

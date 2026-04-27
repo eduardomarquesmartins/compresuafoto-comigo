@@ -136,15 +136,15 @@ export default function AdminDashboard() {
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Sales Chart */}
-                <div className="lg:col-span-2 bg-[#0a0a0c]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                <div className="lg:col-span-2 min-w-0 bg-[#0a0a0c]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none"></div>
                     <div className="relative z-10">
                         <h3 className="text-sm font-medium tracking-widest text-white uppercase mb-8 flex items-center gap-2">
                             <span>Métricas de Vendas</span>
                             <span className="text-slate-500 text-xs font-normal Normal-case">(Últimos 7 dias)</span>
                         </h3>
-                        <div className="h-[320px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
+                        <div className="h-[320px] min-h-[320px] w-full min-w-0">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={300}>
                                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">

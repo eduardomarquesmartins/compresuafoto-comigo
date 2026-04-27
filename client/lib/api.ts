@@ -19,8 +19,6 @@ const baseURL = normalizeApiBaseURL(envBaseURL) || (isLocalhost
     ? `http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:3002/api`
     : 'https://compresuafoto-comigo.onrender.com/api');
 
-console.log('API BASE URL:', baseURL);
-
 const api = axios.create({
     baseURL,
     timeout: 600000, // 10 minutes timeout (match server)
