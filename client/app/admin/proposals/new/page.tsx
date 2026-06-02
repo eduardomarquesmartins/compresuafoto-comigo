@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { ArrowLeft, Plus, Trash2, Printer, Mail, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Mail, Send, CheckCircle2, Loader2 } from 'lucide-react';
 import { sendProposalEmail, downloadProposalPdf, createProposal } from '@/lib/api';
 import Link from 'next/link';
 import ProposalCover from "@/components/proposals/ProposalCover";
@@ -14,7 +14,11 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
     "Social Media + Audiovisual": "Postagens Facebook e Instagram, organização de feed, análise de mercado, estratégia, designer (cards), copyright, pesquisa do mês através do forms, Trello para organização, social media, + fotografias, vídeos e drone (uma vez ao mês) + cadastro Google meu negócio.",
     "Tráfego Pago": "Gestão estratégica de anúncios para maximizar alcance, leads e conversões através de plataformas de alta performance.",
     "Audiovisual / Fotos": "Produção de conteúdo visual de alto impacto, incluindo fotografia profissional e vídeos dinâmicos para plataformas digitais.",
-    "Artes Adicionais": "Criação de identidades visuais e artes gráficas exclusivas para fortalecer a comunicação da sua marca."
+    "Artes Adicionais": "Criação de identidades visuais e artes gráficas exclusivas para fortalecer a comunicação da sua marca.",
+    "Fotografia": "Pacotes de cobertura fotográfica para casamento, com tratamento profissional, entrega digital em alta resolução e opções de making of, recepção, balada e ensaio.",
+    "Vídeo": "Cobertura em vídeo para cerimônia, recepção e momentos especiais, com opções de teaser, filme, drone e entrega prioritária.",
+    "Combos Foto + Vídeo": "Pacotes combinados de fotografia e vídeo com economia progressiva, equipe completa e entregas integradas para o evento.",
+    "Storymaker": "Cobertura em tempo real para redes sociais, com profissionais especializados em conteúdo, stories criativos e entrega de todos os arquivos."
 };
 
 const dataSocialMedia = [
@@ -71,11 +75,57 @@ const dataArtes = [
     { id: "ar_16", name: "Arte avulsa redes sociais", defaultPrice: 60, description: "Design unitário para postagens avulsas." },
 ];
 
+const dataFotografia = [
+    { id: "foto_essencial", name: "Essencial", defaultPrice: 2000, description: "4h de cobertura | 1 fotógrafo profissional | Cerimônia + início da recepção | 250 fotos tratadas e editadas | Entrega digital em alta resolução | Sem making of, balada completa ou ensaio" },
+    { id: "foto_premium", name: "Premium", defaultPrice: 3500, description: "8h de cobertura | 2 fotógrafos profissionais | Making of da noiva | Cerimônia completa + recepção + abertura da balada | 450 fotos tratadas e editadas | Galeria completa do evento | Sem ensaio pré-casamento" },
+    { id: "foto_completa", name: "Experiência Completa", defaultPrice: 4800, description: "10h de cobertura | 2 fotógrafos profissionais | Making of do noivo e da noiva | Cerimônia + recepção + balada completa | 650+ fotos tratadas e editadas | Galeria completa | Entrega prioritária + backup garantido" },
+    { id: "foto_ensaio_pre", name: "Adicional: Ensaio pré-casamento", defaultPrice: 1200, description: "Ensaio fotográfico pré-casamento." },
+    { id: "foto_hora_extra", name: "Adicional: Hora extra", defaultPrice: 400, description: "Hora adicional de cobertura fotográfica." },
+    { id: "foto_album", name: "Adicional: Álbum físico", defaultPrice: 0, description: "Valor sob consulta." },
+];
+
+const dataVideo = [
+    { id: "video_essencial", name: "Essencial", defaultPrice: 2500, description: "4h de cobertura | 1 câmera profissional | Cerimônia + início da recepção | Teaser de até 1 minuto | Sem making of, balada, drone ou filme longo" },
+    { id: "video_premium", name: "Premium", defaultPrice: 3800, description: "8h de cobertura | 2 câmeras profissionais | Making of da noiva | Cerimônia completa + recepção + abertura da balada | Teaser de 1 a 2 minutos | Filme de até 15 minutos | Sem drone, making do noivo ou pré-wedding" },
+    { id: "video_completa", name: "Experiência Completa", defaultPrice: 5000, description: "10h de cobertura | 2 câmeras profissionais | Making of do noivo e da noiva | Cerimônia + recepção + balada completa | Drone incluso | Teaser + filme de até 15 minutos | Entrega prioritária" },
+    { id: "video_making_noivo", name: "Adicional: Making do noivo", defaultPrice: 600, description: "Cobertura adicional do making of do noivo." },
+    { id: "video_drone", name: "Adicional: Drone", defaultPrice: 500, description: "Captação aérea com drone." },
+    { id: "video_pre_wedding", name: "Adicional: Pré-wedding", defaultPrice: 1400, description: "Vídeo pré-wedding." },
+    { id: "video_hora_extra", name: "Adicional: Hora extra", defaultPrice: 450, description: "Hora adicional de cobertura em vídeo." },
+];
+
+const dataCombos = [
+    { id: "combo_essencial", name: "Combo Essencial", defaultPrice: 4200, description: "Economia de R$300 | 4h de cobertura | 1 fotógrafo + 1 cinegrafista | Cerimônia + início da recepção | 250 fotos tratadas + teaser até 1 min | Entrega digital em alta resolução" },
+    { id: "combo_premium", name: "Combo Premium", defaultPrice: 6700, description: "Economia de R$600 | 8h de cobertura | 2 fotógrafos + 2 cinegrafistas | Making of da noiva | Cerimônia + recepção + abertura da balada | 450 fotos tratadas + teaser 1-2 min + filme até 15 min" },
+    { id: "combo_completa", name: "Combo Experiência Completa", defaultPrice: 8800, description: "Economia de R$1.000 | 10h de cobertura | 2 fotógrafos + 2 cinegrafistas | Making of do noivo e da noiva | Cerimônia + recepção + balada completa | 650+ fotos + teaser + filme até 15 min + drone incluso | Entrega prioritária + backup garantido" },
+    { id: "combo_camera_adicional", name: "Adicional: Câmera adicional", defaultPrice: 500, description: "Câmera adicional para cobertura do evento." },
+    { id: "combo_hora_extra", name: "Adicional: Hora extra", defaultPrice: 500, description: "Hora adicional para combo foto + vídeo." },
+    { id: "combo_same_day", name: "Adicional: Same Day Edit", defaultPrice: 1200, description: "Edição para exibição no mesmo dia." },
+    { id: "combo_storymaker_6h", name: "Adicional: Storymaker 6h", defaultPrice: 1200, description: "Cobertura storymaker por até 6 horas." },
+    { id: "combo_storymaker_10h", name: "Adicional: Storymaker 10h", defaultPrice: 1500, description: "Cobertura storymaker por até 10 horas." },
+    { id: "combo_pre_wedding_foto", name: "Adicional: Pré-wedding foto", defaultPrice: 1200, description: "Ensaio fotográfico pré-wedding." },
+    { id: "combo_pre_wedding_video", name: "Adicional: Pré-wedding vídeo", defaultPrice: 1400, description: "Vídeo pré-wedding." },
+    { id: "combo_album", name: "Adicional: Álbum físico", defaultPrice: 0, description: "Valor sob consulta." },
+];
+
+const dataStorymaker = [
+    { id: "story_6h", name: "Até 6h", defaultPrice: 1200, description: "Cobertura em tempo real para redes sociais | 2 profissionais especializados em conteúdo | Stories criativos produzidos e postados em tempo real | Entrega de todos os arquivos" },
+    { id: "story_10h", name: "Até 10h", defaultPrice: 1500, description: "Cobertura em tempo real para redes sociais | 2 profissionais especializados em conteúdo | Stories criativos produzidos e postados em tempo real | Entrega de todos os arquivos" },
+    { id: "story_obs", name: "Observação de deslocamento", defaultPrice: 0, description: "Deslocamento não incluso para eventos fora do estado. O local deve fornecer acesso à internet estável." },
+];
+
 interface SelectedService {
     id: string;
     category: string;
     name: string;
     price: number;
+    description?: string;
+}
+
+interface ProposalItem {
+    id: string;
+    name: string;
+    defaultPrice: number;
     description?: string;
 }
 
@@ -85,11 +135,17 @@ export default function NewProposalPage() {
     const [isDownloading, setIsDownloading] = useState(false);
     const [emailStatus, setEmailStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
+    const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
 
-    const handleServiceToggle = (item: any, category: string) => {
+    const handleServiceToggle = (item: ProposalItem, category: string) => {
         const isSelected = selectedServices.some(s => s.id === item.id);
         if (isSelected) {
             setSelectedServices(selectedServices.filter(s => s.id !== item.id));
+            setPriceDrafts(prev => {
+                const next = { ...prev };
+                delete next[item.id];
+                return next;
+            });
         } else {
             setSelectedServices([...selectedServices, {
                 id: item.id,
@@ -98,18 +154,24 @@ export default function NewProposalPage() {
                 price: item.defaultPrice,
                 description: item.description // Ensure description is passed
             }]);
+            setPriceDrafts(prev => ({ ...prev, [item.id]: String(item.defaultPrice) }));
         }
     };
 
     const handlePriceChange = (id: string, newPrice: string) => {
-        const price = parseFloat(newPrice) || 0;
+        setPriceDrafts(prev => ({ ...prev, [id]: newPrice }));
+
+        const normalizedPrice = newPrice.replace(',', '.');
+        const price = normalizedPrice.trim() === '' ? 0 : Number(normalizedPrice);
+        if (Number.isNaN(price)) return;
+
         setSelectedServices(selectedServices.map(s => s.id === id ? { ...s, price } : s));
     };
 
     const isSelected = (id: string) => selectedServices.some(s => s.id === id);
     const total = selectedServices.reduce((acc, curr) => acc + curr.price, 0);
 
-    const renderCategory = (title: string, data: any[], categoryStr: string) => (
+    const renderCategory = (title: string, data: ProposalItem[], categoryStr: string) => (
         <div key={categoryStr} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
             <h3 className="text-xl font-black uppercase tracking-widest text-slate-200">{title}</h3>
             {CATEGORY_DESCRIPTIONS[categoryStr] && (
@@ -135,7 +197,7 @@ export default function NewProposalPage() {
                                 <div className="flex-1">
                                     <p className={`font-bold text-sm ${selected ? 'text-white' : 'text-slate-300'}`}>{item.name}</p>
                                     {item.description && (
-                                        <p className="text-[10px] text-slate-500 mt-1 leading-tight line-clamp-2">
+                                        <p className="text-[10px] text-slate-500 mt-1 leading-snug">
                                             {item.description}
                                         </p>
                                     )}
@@ -144,9 +206,11 @@ export default function NewProposalPage() {
                                             <div className="flex items-center gap-2">
                                                 <span className="text-slate-400 text-sm">R$</span>
                                                 <input
-                                                    type="number"
-                                                    value={currentService?.price ?? ''}
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    value={priceDrafts[item.id] ?? (currentService?.price ? String(currentService.price) : '')}
                                                     onChange={(e) => handlePriceChange(item.id, e.target.value)}
+                                                    placeholder="0"
                                                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1 text-white font-mono text-sm focus:border-blue-500 focus:outline-none"
                                                 />
                                             </div>
@@ -234,6 +298,10 @@ export default function NewProposalPage() {
                     {renderCategory("Tráfego Pago", dataTrafego, "Tráfego Pago")}
                     {renderCategory("Audiovisual / Fotos", dataAudiovisual, "Audiovisual / Fotos")}
                     {renderCategory("Artes Adicionais", dataArtes, "Artes Adicionais")}
+                    {renderCategory("Fotografia", dataFotografia, "Fotografia")}
+                    {renderCategory("Vídeo", dataVideo, "Vídeo")}
+                    {renderCategory("Combos Foto + Vídeo", dataCombos, "Combos Foto + Vídeo")}
+                    {renderCategory("Storymaker", dataStorymaker, "Storymaker")}
                 </div>
             </div>
 

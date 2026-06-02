@@ -1,13 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const rateLimit = require('../middlewares/rateLimit');
 
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.get('/security-question', authController.getSecurityQuestion);
-router.post('/reset-password', authController.resetPassword);
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/reset-with-token', authController.resetPasswordWithToken);
-router.post('/google', authController.googleLogin);
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
+const passwordResetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5 });
+const registerLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 8 });
+
+router.post('/register', registerLimiter, authController.register);
+router.post('/login', authLimiter, authController.login);
+router.get('/security-question', passwordResetLimiter, authController.getSecurityQuestion);
+router.post('/reset-password', passwordResetLimiter, authController.resetPassword);
+router.post('/forgot-password', passwordResetLimiter, authController.forgotPassword);
+router.post('/reset-with-token', passwordResetLimiter, authController.resetPasswordWithToken);
+router.post('/google', authLimiter, authController.googleLogin);
 
 module.exports = router;

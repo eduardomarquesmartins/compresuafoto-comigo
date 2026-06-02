@@ -17,6 +17,32 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const PORT = process.env.PORT || 3002;
 
+const parseOrigin = (url) => {
+    if (!url) return null;
+    try {
+        return new URL(url).origin;
+    } catch {
+        return null;
+    }
+};
+
+const allowedOrigins = new Set([
+    parseOrigin(process.env.CLIENT_URL),
+    parseOrigin(process.env.SERVER_URL),
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3001'
+].filter(Boolean));
+
+if (process.env.CORS_ORIGINS) {
+    process.env.CORS_ORIGINS
+        .split(',')
+        .map(origin => origin.trim())
+        .filter(Boolean)
+        .forEach(origin => allowedOrigins.add(origin));
+}
+
 process.on('uncaughtException', (err) => {
     console.error('UNCAUGHT EXCEPTION:', err);
 });
@@ -43,7 +69,15 @@ process.on('beforeExit', (code) => {
     console.log(`PROCESS BEFORE EXIT: No more work scheduled, code: ${code}`);
 });
 
-app.use(cors());
+app.use(cors({
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.has(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+    }
+}));
 app.use((req, res, next) => {
     console.log(`REQ: ${req.method} ${req.url}`);
     next();

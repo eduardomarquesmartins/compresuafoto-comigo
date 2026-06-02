@@ -30,10 +30,10 @@ const drawHeaderFooter = (doc, dateStr) => {
     }
 
     doc.fillColor(SLATE_400).fontSize(9).font('Helvetica-Bold')
-        .text('PROPOSTA COMERCIAL', 0, 38, { align: 'center', characterSpacing: 2 });
+        .text('PROPOSTA COMERCIAL', 0, 38, { width: doc.page.width, align: 'center', characterSpacing: 2 });
 
     doc.fillColor(SLATE_400).fontSize(8).font('Helvetica')
-        .text(dateStr, 55, 38, { align: 'right' });
+        .text(dateStr, doc.page.width - 155, 38, { width: 100, align: 'right' });
 
     doc.strokeColor(SLATE_200).lineWidth(1).moveTo(55, 65).lineTo(doc.page.width - 55, 65).stroke();
 
@@ -44,8 +44,6 @@ const drawHeaderFooter = (doc, dateStr) => {
     doc.fillColor(BLUE_ACCENT).fontSize(10).font('Helvetica-Bold')
         .text('& CONTI', 0, footerY + 10, { width: doc.page.width, align: 'center', characterSpacing: 4, lineBreak: false });
 
-    doc.fillColor(SLATE_400).fontSize(7).font('Helvetica')
-        .text('TRANSFORMANDO VISÃO EM RESULTADOS DIGITAIS', 0, footerY + 25, { width: doc.page.width, align: 'center', characterSpacing: 2, lineBreak: false });
 };
 
 exports.generatePDFBuffer = (clientName, selectedServices, total) => {
@@ -104,13 +102,9 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
 
             let currentY = 90; // Start right below the header
 
-            doc.fillColor(SLATE_900).fontSize(22).font('Helvetica-Bold')
-                .text('Seus Serviços', 55, currentY);
-            currentY += 25;
-
-            doc.fillColor(SLATE_500).fontSize(12).font('Helvetica')
-                .text('Confira abaixo o detalhamento estratégico do seu projeto.', 55, currentY);
-            currentY += 40;
+            doc.fillColor(SLATE_500).fontSize(13).font('Helvetica')
+                .text('Confira abaixo os detalhes da sua proposta.', 55, currentY);
+            currentY += 35;
 
             const groupedServices = selectedServices.reduce((acc, s) => {
                 if (!acc[s.category]) acc[s.category] = [];
@@ -162,22 +156,24 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
                 currentY += 15;
             });
 
-            // Resumo do Investimento
-            if (currentY > doc.page.height - 180) {
+            // Resumo do Investimento fixo no rodape util da ultima pagina de servicos
+            const boxWidth = 220;
+            const boxHeight = 70;
+            const boxX = doc.page.width - 55 - boxWidth;
+            const boxY = doc.page.height - 165;
+
+            if (currentY > boxY - 20) {
                 doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 20 } });
                 drawHeaderFooter(doc, dateStr);
-                currentY = 90;
             }
 
-            const boxWidth = 220;
-            const boxX = doc.page.width - 55 - boxWidth;
-            doc.fillColor('#f8fafc').rect(boxX, currentY, boxWidth, 70).fill();
-            doc.fillColor(BLUE_ACCENT).rect(boxX, currentY, 4, 70).fill();
+            doc.fillColor('#f8fafc').rect(boxX, boxY, boxWidth, boxHeight).fill();
+            doc.fillColor(BLUE_ACCENT).rect(boxX, boxY, 4, boxHeight).fill();
             doc.fillColor(SLATE_400).fontSize(9).font('Helvetica-Bold')
-                .text('INVESTIMENTO TOTAL', boxX + 20, currentY + 18, { characterSpacing: 1.5 });
+                .text('INVESTIMENTO TOTAL', boxX + 20, boxY + 18, { characterSpacing: 1.5 });
             const totalStr = `R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
             doc.fillColor(SLATE_900).fontSize(24).font('Helvetica-Bold')
-                .text(totalStr, boxX + 20, currentY + 32);
+                .text(totalStr, boxX + 20, boxY + 32);
 
 
             // ──────────────────────────────────────────────────────────
@@ -207,9 +203,6 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
                 .text('EDUARDA CONTI & FERNANDO', 0, midY + 190, { align: 'center' });
             doc.fillColor(BLUE_ACCENT).fontSize(11).font('Helvetica-Bold')
                 .text('CEOs & ESTRATEGISTAS', 0, midY + 210, { align: 'center', characterSpacing: 2 });
-
-            doc.fillColor(SLATE_400).fontSize(9).font('Helvetica')
-                .text('TRANSFORMANDO VISÃO EM RESULTADOS DIGITAIS', 0, doc.page.height - 60, { align: 'center', characterSpacing: 3 });
 
             doc.end();
         } catch (err) {

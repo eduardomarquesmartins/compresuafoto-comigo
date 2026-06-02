@@ -37,22 +37,21 @@ const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, t
             style={{ pageBreakAfter: 'always', breakAfter: 'page' }}
         >
             {/* Header da Página de Serviços */}
-            <div className="flex justify-between items-center mb-[15mm] border-b-2 border-slate-100 pb-6">
-                <div className="flex items-center gap-3">
+            <div className="grid grid-cols-3 items-center mb-[15mm] border-b-2 border-slate-100 pb-6">
+                <div className="flex items-center justify-start">
                     <img src="/logo.png" alt="Logo" className="h-[10mm] w-auto brightness-0" />
-                    <div className="w-px h-6 bg-slate-200 mx-1"></div>
-                    <span className="text-[3.5mm] font-bold tracking-widest text-slate-800 uppercase">Proposta Comercial</span>
                 </div>
-                <div className="text-right">
-                    <p className="text-[3mm] text-slate-400 font-bold uppercase tracking-widest">Investimento Detalhado</p>
-                    <p className="text-[2.5mm] text-slate-300 mt-1 uppercase font-medium">{new Date().toLocaleDateString('pt-BR')}</p>
+                <div className="flex justify-center text-center">
+                    <span className="text-[3.5mm] font-bold tracking-[0.35em] text-slate-800 uppercase whitespace-nowrap">Proposta Comercial</span>
+                </div>
+                <div className="text-right flex justify-end">
+                    <p className="text-[2.5mm] text-slate-300 uppercase font-medium">{new Date().toLocaleDateString('pt-BR')}</p>
                 </div>
             </div>
 
-            <div className="flex-1">
-                <div className="mb-[10mm]">
-                    <h3 className="text-[6mm] font-bold text-slate-900 uppercase tracking-tighter mb-2">Seus Serviços</h3>
-                    <p className="text-slate-400 text-[3.5mm] font-medium">Confira abaixo o detalhamento estratégico do seu projeto.</p>
+            <div className="flex-1 flex flex-col">
+                <div className="mb-[8mm]">
+                    <p className="text-slate-500 text-[4mm] font-medium">Confira abaixo os detalhes da sua proposta.</p>
                 </div>
 
                 <div className="w-full">
@@ -93,7 +92,7 @@ const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, t
                 </div>
 
                 {/* Bloco de Total */}
-                <div className="mt-[15mm] bg-blue-50 border-2 border-blue-100 p-[10mm] rounded-3xl flex justify-between items-center break-inside-avoid">
+                <div className="mt-auto bg-blue-50 border-2 border-blue-100 p-[10mm] rounded-3xl flex justify-between items-center break-inside-avoid">
                     <div className="flex flex-col text-left">
                         <span className="text-[3.5mm] uppercase tracking-[0.2em] text-blue-600 font-bold mb-1">Total do Investimento</span>
                         <span className="text-[4mm] text-slate-500 font-medium tracking-tight">Fee Mensal / Valor do Projeto</span>

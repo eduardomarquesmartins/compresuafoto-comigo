@@ -38,9 +38,6 @@ const ProposalClosing: React.FC = () => {
                 </div>
             </div>
 
-            <div className="absolute bottom-[20mm] w-full flex justify-center text-[2.5mm] text-slate-300 uppercase tracking-[0.4em] font-medium">
-                Transformando Visão em Resultados Digitais
-            </div>
         </div>
     );
 };

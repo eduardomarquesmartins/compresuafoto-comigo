@@ -23,8 +23,9 @@ export default function AdminUserMenu() {
     }, [dropdownRef]);
 
     const handleLogout = () => {
-        // Here you would typically clear the session/token
-        // localStorage.removeItem('token'); 
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setIsOpen(false);
         router.push('/admin/login');
     };
 

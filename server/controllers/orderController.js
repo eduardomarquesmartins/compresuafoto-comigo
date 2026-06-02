@@ -8,6 +8,56 @@ const { logToFile } = require('../utils/logger');
 // Initialize Mercado Pago
 const client = new MercadoPagoConfig({ accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || 'TEST-00000000-0000-0000-0000-000000000000' });
 
+const paidStatuses = ['PAID', 'approved'];
+
+const getOrderWhere = (id, allowNumericId = false) => {
+    if (!Number.isNaN(Number(id)) && String(id).trim() !== '') {
+        if (!allowNumericId) {
+            const error = new Error('Numeric order IDs are not allowed for public access');
+            error.status = 403;
+            throw error;
+        }
+        return { id: parseInt(id, 10) };
+    }
+
+    return { publicId: id };
+};
+
+const canAccessOrder = (req, order) => {
+    if (!req.user) return false;
+    return req.user.role === 'ADMIN' || req.user.userId === order.userId;
+};
+
+const buildOrderResponse = async (order) => {
+    let photoIds = [];
+    try {
+        photoIds = JSON.parse(order.items);
+    } catch (e) {
+        photoIds = [];
+    }
+
+    const photos = await prisma.photo.findMany({
+        where: { id: { in: photoIds } }
+    });
+
+    const isPaid = paidStatuses.includes(order.status);
+    const safePhotos = photos.map(photo => ({
+        id: photo.id,
+        originalUrl: isPaid ? photo.originalUrl : null,
+        watermarkedUrl: photo.watermarkedUrl,
+        price: photo.price
+    }));
+
+    return {
+        id: order.id,
+        publicId: order.publicId,
+        status: order.status,
+        total: order.total,
+        createdAt: order.createdAt,
+        photos: safePhotos
+    };
+};
+
 exports.createOrder = async (req, res) => {
     try {
         const { photoIds, total, eventName, couponCode } = req.body;
@@ -227,14 +277,8 @@ exports.getMyOrders = async (req, res) => {
 exports.getOrderById = async (req, res) => {
     try {
         const { id } = req.params;
-
-        // Support both ID (int) and PublicID (UUID)
-        let where = {};
-        if (!isNaN(id)) {
-            where = { id: parseInt(id) };
-        } else {
-            where = { publicId: id };
-        }
+        const isNumericId = !Number.isNaN(Number(id)) && String(id).trim() !== '';
+        const where = getOrderWhere(id, !!req.user);
 
         const order = await prisma.order.findUnique({
             where: where
@@ -242,39 +286,15 @@ exports.getOrderById = async (req, res) => {
 
         if (!order) return res.status(404).json({ error: 'Order not found' });
 
-        // Parse items
-        let photoIds = [];
-        try {
-            photoIds = JSON.parse(order.items);
-        } catch (e) {
-            photoIds = [];
+        if (isNumericId && !canAccessOrder(req, order)) {
+            return res.status(403).json({ error: 'Order access denied' });
         }
 
-        const photos = await prisma.photo.findMany({
-            where: { id: { in: photoIds } }
-        });
-
-        const isPaid = order.status === 'PAID' || order.status === 'approved';
-
-        const safePhotos = photos.map(photo => ({
-            id: photo.id,
-            originalUrl: isPaid ? photo.originalUrl : null,
-            watermarkedUrl: photo.watermarkedUrl,
-            price: photo.price
-        }));
-
-        res.json({
-            id: order.id,
-            publicId: order.publicId,
-            status: order.status,
-            total: order.total,
-            createdAt: order.createdAt,
-            photos: safePhotos
-        });
+        res.json(await buildOrderResponse(order));
 
     } catch (error) {
         console.error("Get Order Error:", error);
-        res.status(500).json({ error: 'Failed to fetch order' });
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to fetch order' });
     }
 };
 
@@ -310,13 +330,9 @@ exports.syncOrderWithMercadoPago = async (req, res) => {
 
         console.log(`[SYNC] Syncing order ${id} with payment_id: ${payment_id}`);
 
-        // 1. Get order from DB
-        let where = {};
-        if (!isNaN(id)) {
-            where = { id: parseInt(id) };
-        } else {
-            where = { publicId: id };
-        }
+        // 1. Get order from DB. Numeric IDs require authenticated owner/admin access.
+        const isNumericId = !Number.isNaN(Number(id)) && String(id).trim() !== '';
+        const where = getOrderWhere(id, !!req.user);
 
         const order = await prisma.order.findUnique({
             where,
@@ -325,9 +341,17 @@ exports.syncOrderWithMercadoPago = async (req, res) => {
 
         if (!order) return res.status(404).json({ error: 'Order not found' });
 
+        if (isNumericId && !canAccessOrder(req, order)) {
+            return res.status(403).json({ error: 'Order access denied' });
+        }
+
+        if (!payment_id && !canAccessOrder(req, order)) {
+            return res.status(400).json({ error: 'payment_id is required to sync public orders' });
+        }
+
         // If already paid, just return it
-        if (order.status === 'approved' || order.status === 'PAID') {
-            return res.json(order);
+        if (paidStatuses.includes(order.status)) {
+            return res.json(await buildOrderResponse(order));
         }
 
         // 2. If we have a payment_id, verify it with Mercado Pago
@@ -356,14 +380,14 @@ exports.syncOrderWithMercadoPago = async (req, res) => {
                 }
 
                 console.log(`[SYNC] Order ${id} manually synced to 'approved'`);
-                return res.json(updatedOrder);
+                return res.json(await buildOrderResponse(updatedOrder));
             }
         }
 
-        res.json(order);
+        res.json(await buildOrderResponse(order));
     } catch (error) {
         console.error("Sync Error:", error);
-        res.status(500).json({ error: 'Failed to sync with payment provider' });
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to sync with payment provider' });
     }
 };
 
@@ -371,20 +395,18 @@ exports.syncOrderWithMercadoPago = async (req, res) => {
 exports.downloadOrderImages = async (req, res) => {
     try {
         const { id } = req.params;
-
-        // Support both ID (int) and PublicID (UUID)
-        let where = {};
-        if (!isNaN(id)) {
-            where = { id: parseInt(id) };
-        } else {
-            where = { publicId: id };
-        }
+        const isNumericId = !Number.isNaN(Number(id)) && String(id).trim() !== '';
+        const where = getOrderWhere(id, !!req.user);
 
         const order = await prisma.order.findUnique({ where });
 
         if (!order) return res.status(404).send('Order not found');
 
-        const isPaid = order.status === 'PAID' || order.status === 'approved';
+        if (isNumericId && !canAccessOrder(req, order)) {
+            return res.status(403).send('Order access denied');
+        }
+
+        const isPaid = paidStatuses.includes(order.status);
         if (!isPaid) return res.status(403).send('Order not paid');
 
         let photoIds = [];
@@ -440,7 +462,7 @@ exports.downloadOrderImages = async (req, res) => {
     } catch (error) {
         console.error("Download Zip Error:", error);
         if (!res.headersSent) {
-            res.status(500).json({ error: 'Failed to generate zip' });
+            res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to generate zip' });
         }
     }
 };

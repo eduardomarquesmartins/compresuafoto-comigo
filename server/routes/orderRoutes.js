@@ -14,8 +14,8 @@ router.patch('/:id/status', authenticate, isAdmin, orderController.updateOrderSt
 router.post('/:id/photos', authenticate, isAdmin, orderController.addPhotosToOrder);
 
 // Public/shared routes
-router.get('/:id', orderController.getOrderById);
-router.post('/:id/sync', orderController.syncOrderWithMercadoPago);
-router.get('/:id/zip', orderController.downloadOrderImages);
+router.get('/:id', optionalAuth, orderController.getOrderById);
+router.post('/:id/sync', optionalAuth, orderController.syncOrderWithMercadoPago);
+router.get('/:id/zip', optionalAuth, orderController.downloadOrderImages);
 
 module.exports = router;
