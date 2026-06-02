@@ -158,19 +158,28 @@ export const uploadWithRetry = async (
     throw lastError;
 };
 
-export const sendProposalEmail = async (data: { email: string; clientName: string; selectedServices: any[]; total: number }) => {
+type ProposalType = 'empresarial' | 'casamento' | '15anos';
+
+type ProposalPayload = {
+    clientName: string;
+    selectedServices: any[];
+    total: number;
+    proposalType?: ProposalType;
+};
+
+export const sendProposalEmail = async (data: ProposalPayload & { email: string }) => {
     const response = await api.post('proposals/send-email', data);
     return response.data;
 };
 
-export const downloadProposalPdf = async (data: { clientName: string; selectedServices: any[]; total: number }) => {
+export const downloadProposalPdf = async (data: ProposalPayload) => {
     const response = await api.post('proposals/download', data, {
         responseType: 'blob'
     });
     return response.data;
 };
 
-export const createProposal = async (data: { clientName: string; clientEmail?: string; selectedServices: any[]; total: number }) => {
+export const createProposal = async (data: ProposalPayload & { clientEmail?: string }) => {
     const response = await api.post('proposals', data);
     return response.data;
 };

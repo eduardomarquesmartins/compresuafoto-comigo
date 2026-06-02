@@ -129,9 +129,18 @@ interface ProposalItem {
     description?: string;
 }
 
+type ProposalType = 'empresarial' | 'casamento' | '15anos';
+
+const PROPOSAL_TYPE_OPTIONS: { value: ProposalType; label: string; description: string }[] = [
+    { value: 'empresarial', label: 'Empresarial', description: 'Social media, tráfego, audiovisual e artes.' },
+    { value: 'casamento', label: 'Casamento', description: 'Foto, vídeo, combos e storymaker para casamento.' },
+    { value: '15anos', label: '15 anos', description: 'Foto, vídeo, combos e storymaker para festa de 15 anos.' },
+];
+
 export default function NewProposalPage() {
     const [clientName, setClientName] = useState("");
     const [clientEmail, setClientEmail] = useState('');
+    const [proposalType, setProposalType] = useState<ProposalType>('empresarial');
     const [isDownloading, setIsDownloading] = useState(false);
     const [emailStatus, setEmailStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
@@ -262,6 +271,35 @@ export default function NewProposalPage() {
                         <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
                             <Plus className="w-5 h-5 text-blue-500" />
                         </div>
+                        <h3 className="text-xl font-bold uppercase tracking-widest text-slate-200">Tipo de Proposta</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {PROPOSAL_TYPE_OPTIONS.map(option => (
+                            <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => {
+                                    setProposalType(option.value);
+                                    setSelectedServices([]);
+                                    setPriceDrafts({});
+                                }}
+                                className={`text-left p-5 rounded-2xl border-2 transition-all ${proposalType === option.value
+                                    ? 'border-blue-500 bg-blue-500/10 text-white'
+                                    : 'border-slate-800 bg-slate-950/40 text-slate-400 hover:border-slate-700'
+                                    }`}
+                            >
+                                <span className="block text-sm font-black uppercase tracking-[0.2em]">{option.label}</span>
+                                <span className="block text-xs mt-2 leading-relaxed">{option.description}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-2xl">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <Plus className="w-5 h-5 text-blue-500" />
+                        </div>
                         <h3 className="text-xl font-bold uppercase tracking-widest text-slate-200">Dados do Cliente</h3>
                     </div>
 
@@ -293,15 +331,23 @@ export default function NewProposalPage() {
                 </div>
 
                 <div className="space-y-10">
-                    {renderCategory("Social Media", dataSocialMedia, "Social Media")}
-                    {renderCategory("Social Media + Audiovisual", dataSocialMediaAudiovisual, "Social Media + Audiovisual")}
-                    {renderCategory("Tráfego Pago", dataTrafego, "Tráfego Pago")}
-                    {renderCategory("Audiovisual / Fotos", dataAudiovisual, "Audiovisual / Fotos")}
-                    {renderCategory("Artes Adicionais", dataArtes, "Artes Adicionais")}
-                    {renderCategory("Fotografia", dataFotografia, "Fotografia")}
-                    {renderCategory("Vídeo", dataVideo, "Vídeo")}
-                    {renderCategory("Combos Foto + Vídeo", dataCombos, "Combos Foto + Vídeo")}
-                    {renderCategory("Storymaker", dataStorymaker, "Storymaker")}
+                    {proposalType === 'empresarial' && (
+                        <>
+                            {renderCategory("Social Media", dataSocialMedia, "Social Media")}
+                            {renderCategory("Social Media + Audiovisual", dataSocialMediaAudiovisual, "Social Media + Audiovisual")}
+                            {renderCategory("Tráfego Pago", dataTrafego, "Tráfego Pago")}
+                            {renderCategory("Audiovisual / Fotos", dataAudiovisual, "Audiovisual / Fotos")}
+                            {renderCategory("Artes Adicionais", dataArtes, "Artes Adicionais")}
+                        </>
+                    )}
+                    {(proposalType === 'casamento' || proposalType === '15anos') && (
+                        <>
+                            {renderCategory("Fotografia", dataFotografia, "Fotografia")}
+                            {renderCategory("Vídeo", dataVideo, "Vídeo")}
+                            {renderCategory("Combos Foto + Vídeo", dataCombos, "Combos Foto + Vídeo")}
+                            {renderCategory("Storymaker", dataStorymaker, "Storymaker")}
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -331,7 +377,8 @@ export default function NewProposalPage() {
                                             email: clientEmail,
                                             clientName,
                                             selectedServices,
-                                            total
+                                            total,
+                                            proposalType
                                         });
                                         setEmailStatus('success');
                                         setTimeout(() => setEmailStatus('idle'), 5000);
@@ -342,14 +389,16 @@ export default function NewProposalPage() {
                                         clientName,
                                         clientEmail,
                                         selectedServices,
-                                        total
+                                        total,
+                                        proposalType
                                     });
 
                                     // 3. Faz o download do PDF
                                     const blob = await downloadProposalPdf({
                                         clientName,
                                         selectedServices,
-                                        total
+                                        total,
+                                        proposalType
                                     });
 
                                     const url = window.URL.createObjectURL(new Blob([blob]));

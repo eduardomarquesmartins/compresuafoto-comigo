@@ -4,9 +4,9 @@ const prisma = require('../lib/prisma');
 
 exports.sendProposalEmail = async (req, res) => {
     try {
-        const { email, clientName, selectedServices, total } = req.body;
+        const { email, clientName, selectedServices, total, proposalType = 'empresarial' } = req.body;
         if (!email) return res.status(400).json({ error: 'E-mail é obrigatório.' });
-        const result = await emailService.sendProposalEmail(email, clientName, selectedServices, total);
+        const result = await emailService.sendProposalEmail(email, clientName, selectedServices, total, proposalType);
         if (result.success) return res.json({ message: 'Proposta enviada com sucesso.' });
         return res.status(500).json({ error: 'Erro ao enviar e-mail.' });
     } catch (err) {
@@ -17,8 +17,8 @@ exports.sendProposalEmail = async (req, res) => {
 
 exports.downloadProposalPdf = async (req, res) => {
     try {
-        const { clientName, selectedServices, total } = req.body;
-        const pdfBuffer = await pdfService.generatePDFBuffer(clientName, selectedServices, total);
+        const { clientName, selectedServices, total, proposalType = 'empresarial' } = req.body;
+        const pdfBuffer = await pdfService.generatePDFBuffer(clientName, selectedServices, total, proposalType);
         const fileName = `proposta_${clientName.replace(/\s+/g, '_').toLowerCase()}.pdf`;
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
