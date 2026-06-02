@@ -2,8 +2,9 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-// Logo local — lido do disco
+// Assets locais — lidos do disco
 const LOGO_PATH = path.join(__dirname, '../../client/public/logo.png');
+const BACKGROUND_PATH = path.join(__dirname, '../../client/public/background.jpg');
 
 const CATEGORY_DESCRIPTIONS = {
     "Social Media": "Postagens Facebook e Instagram, organização de feed, análise de mercado, estratégia, designer (cards), copyright, pesquisa do mês através do forms, Trello para organização.",
@@ -18,6 +19,26 @@ const SLATE_900 = '#0f172a';
 const SLATE_500 = '#64748b';
 const SLATE_400 = '#94a3b8';
 const SLATE_200 = '#e2e8f0';
+
+// Helper: Desenha imagem de fundo em página inteira com overlay
+const drawPageBackground = (doc, overlayColor = '#000000', overlayOpacity = 0.55) => {
+    if (fs.existsSync(BACKGROUND_PATH)) {
+        doc.save();
+        doc.image(BACKGROUND_PATH, 0, 0, {
+            cover: [doc.page.width, doc.page.height],
+            align: 'center',
+            valign: 'center'
+        });
+        doc.restore();
+    }
+
+    doc.save();
+    doc.fillColor(overlayColor).opacity(overlayOpacity)
+        .rect(0, 0, doc.page.width, doc.page.height)
+        .fill();
+    doc.restore();
+    doc.opacity(1);
+};
 
 // Helper: Desenha Header e Footer nas páginas internas
 const drawHeaderFooter = (doc, dateStr) => {
@@ -68,7 +89,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
             // ──────────────────────────────────────────────────────────
             // PAGINA 1: CAPA
             // ──────────────────────────────────────────────────────────
-            doc.rect(0, 0, doc.page.width, doc.page.height).fill('#000000');
+            drawPageBackground(doc, '#000000', 0.68);
             if (fs.existsSync(LOGO_PATH)) {
                 doc.image(LOGO_PATH, doc.page.width / 2 - 130, 80, { width: 260 });
             }
@@ -180,6 +201,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total) => {
             // PAGINA 3: FECHAMENTO
             // ──────────────────────────────────────────────────────────
             doc.addPage({ margin: 0 });
+            drawPageBackground(doc, '#ffffff', 0.82);
             doc.fillColor('#000000').opacity(0.03).fontSize(400).font('Helvetica-Bold')
                 .text('&', 0, doc.page.height / 2 - 200, { align: 'center' });
             doc.opacity(1);
