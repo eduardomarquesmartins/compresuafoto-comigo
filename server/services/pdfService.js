@@ -26,10 +26,10 @@ const PROPOSAL_TYPES = {
     '15anos': {
         label: '15 anos',
         title: 'PROPOSTA 15 ANOS',
-        coverBackground: BACKGROUND_PATH,
-        closingBackground: BACKGROUND_PATH,
-        coverOverlay: { color: '#000000', opacity: 0.68 },
-        closingOverlay: { color: '#ffffff', opacity: 0.82 }
+        coverBackground: path.join(__dirname, '../../client/public/proposals/quinze-anos-cover.jpg'),
+        closingBackground: path.join(__dirname, '../../client/public/proposals/quinze-anos-closing.jpg'),
+        coverOverlay: { color: '#000000', opacity: 0.52 },
+        closingOverlay: { color: '#ffffff', opacity: 0.70 }
     }
 };
 
