@@ -101,6 +101,31 @@ const dataStorymaker = [
     { id: "story_obs", name: "Observação de deslocamento", defaultPrice: 0, description: "Deslocamento não incluso para eventos fora do estado. O local deve fornecer acesso à internet estável." },
 ];
 
+const data15Anos = [
+    { id: "15_ensaio_foto", name: "Ensaio externo foto", defaultPrice: 1100, description: "Ensaio externo para 15 anos." },
+    { id: "15_ensaio_video", name: "Ensaio externo vídeo", defaultPrice: 1200, description: "Ensaio externo em vídeo para 15 anos." },
+    { id: "15_ensaio_foto_video", name: "Ensaio externo foto + vídeo juntos", defaultPrice: 2000, description: "Combo de ensaio externo com foto + vídeo | Economia de R$300." },
+    { id: "15_foto_essencial", name: "Foto 15 anos — Essencial", defaultPrice: 1600, description: "Pacote essencial de fotografia para 15 anos." },
+    { id: "15_foto_premium", name: "Foto 15 anos — Premium", defaultPrice: 2400, description: "Pacote premium de fotografia para 15 anos." },
+    { id: "15_foto_completa", name: "Foto 15 anos — Experiência Completa", defaultPrice: 3600, description: "Pacote experiência completa de fotografia para 15 anos." },
+    { id: "15_foto_ensaio_externo", name: "Foto 15 anos — Adicional: Ensaio externo", defaultPrice: 1100, description: "Ensaio externo fotográfico adicional." },
+    { id: "15_foto_album", name: "Foto 15 anos — Adicional: Álbum físico", defaultPrice: 0, description: "Valor sob orçamento." },
+    { id: "15_foto_hora_extra", name: "Foto 15 anos — Adicional: Hora extra", defaultPrice: 350, description: "Hora extra de cobertura fotográfica." },
+    { id: "15_video_essencial", name: "Vídeo 15 anos — Essencial", defaultPrice: 1900, description: "Pacote essencial de vídeo para 15 anos." },
+    { id: "15_video_premium", name: "Vídeo 15 anos — Premium", defaultPrice: 2700, description: "Pacote premium de vídeo para 15 anos." },
+    { id: "15_video_completa", name: "Vídeo 15 anos — Experiência Completa", defaultPrice: 4000, description: "Pacote experiência completa de vídeo para 15 anos." },
+    { id: "15_video_ensaio_externo", name: "Vídeo 15 anos — Adicional: Ensaio externo", defaultPrice: 1200, description: "Ensaio externo em vídeo adicional." },
+    { id: "15_video_retrospectiva", name: "Vídeo 15 anos — Adicional: Retrospectiva personalizada", defaultPrice: 900, description: "Retrospectiva personalizada para 15 anos." },
+    { id: "15_video_drone", name: "Vídeo 15 anos — Adicional: Drone avulso", defaultPrice: 400, description: "Captação aérea com drone avulso." },
+    { id: "15_video_hora_extra", name: "Vídeo 15 anos — Adicional: Hora extra", defaultPrice: 400, description: "Hora extra de cobertura em vídeo." },
+    { id: "15_combo_essencial", name: "Combo Foto + Vídeo 15 anos — Essencial", defaultPrice: 3200, description: "Combo essencial de foto + vídeo | Economia de R$300." },
+    { id: "15_combo_premium", name: "Combo Foto + Vídeo 15 anos — Premium", defaultPrice: 4500, description: "Combo premium de foto + vídeo | Economia de R$600." },
+    { id: "15_combo_completa", name: "Combo Foto + Vídeo 15 anos — Experiência Completa", defaultPrice: 6600, description: "Combo experiência completa de foto + vídeo | Economia de R$1.000." },
+    { id: "15_combo_ensaio_externo", name: "Combo 15 anos — Adicional: Ensaio externo foto + vídeo", defaultPrice: 2000, description: "Ensaio externo com foto + vídeo adicional." },
+    { id: "15_combo_retrospectiva_telao", name: "Combo 15 anos — Adicional: Vídeo retrospectiva telão", defaultPrice: 500, description: "Vídeo retrospectiva para exibição no telão." },
+    { id: "15_combo_same_day", name: "Combo 15 anos — Adicional: Same Day Edit", defaultPrice: 1200, description: "Edição para exibição no mesmo dia." },
+];
+
 interface SelectedService {
     id: string;
     category: string;
@@ -322,7 +347,7 @@ export default function NewProposalPage() {
                             {renderCategory("Artes Adicionais", dataArtes, "Artes Adicionais")}
                         </>
                     )}
-                    {(proposalType === 'casamento' || proposalType === '15anos') && (
+                    {proposalType === 'casamento' && (
                         <>
                             {renderCategory("Fotografia", dataFotografia, "Fotografia")}
                             {renderCategory("Vídeo", dataVideo, "Vídeo")}
@@ -330,6 +355,7 @@ export default function NewProposalPage() {
                             {renderCategory("Storymaker", dataStorymaker, "Storymaker")}
                         </>
                     )}
+                    {proposalType === '15anos' && renderCategory("15 anos", data15Anos, "15 anos")}
                 </div>
             </div>
 
