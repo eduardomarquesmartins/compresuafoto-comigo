@@ -1,7 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowLeft, Plus, Mail, Send, CheckCircle2, Loader2 } from 'lucide-react';
-import { sendProposalEmail, downloadProposalPdf, createProposal } from '@/lib/api';
+import { sendProposalEmail, downloadProposalPdf, createProposal, getClients } from '@/lib/api';
 import Link from 'next/link';
 import ProposalCover from "@/components/proposals/ProposalCover";
 import ProposalServices from "@/components/proposals/ProposalServices";
@@ -156,12 +156,36 @@ interface ProposalItem {
 }
 
 export default function NewProposalPage() {
+    const [clients, setClients] = useState<any[]>([]);
+    const [selectedClientId, setSelectedClientId] = useState("");
     const [clientName, setClientName] = useState("");
     const [clientEmail, setClientEmail] = useState('');
     const [isDownloading, setIsDownloading] = useState(false);
     const [emailStatus, setEmailStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
     const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        const loadClients = async () => {
+            try {
+                const data = await getClients();
+                setClients(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.warn("Erro ao carregar clientes para proposta:", error);
+            }
+        };
+
+        loadClients();
+    }, []);
+
+    const handleClientSelect = (clientId: string) => {
+        setSelectedClientId(clientId);
+        const client = clients.find(item => String(item.id) === clientId);
+        if (!client) return;
+
+        setClientName(client.name || "");
+        setClientEmail(client.email || "");
+    };
 
     const handleServiceToggle = (item: ProposalItem, category: string) => {
         const isSelected = selectedServices.some(s => s.id === item.id);
@@ -292,6 +316,21 @@ export default function NewProposalPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3 md:col-span-2">
+                            <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Cliente vinculado</label>
+                            <select
+                                value={selectedClientId}
+                                onChange={e => handleClientSelect(e.target.value)}
+                                className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
+                            >
+                                <option value="">Sem vínculo / preencher manualmente</option>
+                                {clients.map(client => (
+                                    <option key={client.id} value={client.id}>
+                                        {client.name} {client.email ? `- ${client.email}` : ""}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                         <div className="space-y-3">
                             <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Nome do Cliente / Empresa</label>
                             <input
@@ -366,6 +405,7 @@ export default function NewProposalPage() {
 
                                     // 2. Salva a proposta no banco de dados
                                     await createProposal({
+                                        clientId: selectedClientId ? Number(selectedClientId) : undefined,
                                         clientName,
                                         clientEmail,
                                         selectedServices,

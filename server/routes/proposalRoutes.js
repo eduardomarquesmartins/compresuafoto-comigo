@@ -12,5 +12,6 @@ router.post('/send-email', proposalController.sendProposalEmail);
 router.post('/download', proposalController.downloadProposalPdf);
 router.delete('/:id', proposalController.deleteProposal);
 router.patch('/:id/approve', proposalController.approveProposal);
+router.patch('/:id/link-client', proposalController.linkProposalClient);
 
 module.exports = router;

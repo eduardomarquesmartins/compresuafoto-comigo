@@ -31,14 +31,25 @@ exports.downloadProposalPdf = async (req, res) => {
 
 exports.createProposal = async (req, res) => {
     try {
-        const { clientName, clientEmail, selectedServices, total } = req.body;
+        const { clientId, clientName, clientEmail, selectedServices, total } = req.body;
+        const parsedClientId = clientId ? parseInt(clientId) : null;
+        const matchedClient = parsedClientId
+            ? await prisma.client.findUnique({ where: { id: parsedClientId } })
+            : clientEmail
+                ? await prisma.client.findUnique({ where: { email: clientEmail } })
+                : null;
+
         const proposal = await prisma.proposal.create({
             data: {
-                clientName,
-                clientEmail,
+                clientId: matchedClient?.id || null,
+                clientName: matchedClient?.name || clientName,
+                clientEmail: matchedClient?.email || clientEmail,
                 selectedServices: JSON.stringify(selectedServices),
                 total,
                 status: 'PENDING'
+            },
+            include: {
+                client: true
             }
         });
         res.status(201).json(proposal);
@@ -51,7 +62,13 @@ exports.createProposal = async (req, res) => {
 exports.getProposals = async (req, res) => {
     try {
         const proposals = await prisma.proposal.findMany({
-            where: { status: { not: 'DELETED' } }
+            where: { status: { not: 'DELETED' } },
+            include: {
+                client: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
         });
         const formattedProposals = proposals.map(p => ({
             ...p,
@@ -83,7 +100,10 @@ exports.approveProposal = async (req, res) => {
         const { id } = req.params;
         const proposal = await prisma.proposal.update({
             where: { id: parseInt(id) },
-            data: { status: 'APPROVED' }
+            data: { status: 'APPROVED' },
+            include: {
+                client: true
+            }
         });
         res.json(proposal);
     } catch (err) {
@@ -92,11 +112,44 @@ exports.approveProposal = async (req, res) => {
     }
 };
 
+exports.linkProposalClient = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { clientId } = req.body;
+        const parsedClientId = clientId ? parseInt(clientId) : null;
+        const client = parsedClientId
+            ? await prisma.client.findUnique({ where: { id: parsedClientId } })
+            : null;
+
+        const proposal = await prisma.proposal.update({
+            where: { id: parseInt(id) },
+            data: {
+                clientId: client?.id || null,
+                ...(client ? { clientName: client.name, clientEmail: client.email } : {})
+            },
+            include: {
+                client: true
+            }
+        });
+
+        res.json({
+            ...proposal,
+            selectedServices: typeof proposal.selectedServices === 'string' ? JSON.parse(proposal.selectedServices) : proposal.selectedServices
+        });
+    } catch (err) {
+        console.error('[LINK PROPOSAL CLIENT ERROR]:', err);
+        res.status(500).json({ error: 'Erro ao vincular cliente à proposta.' });
+    }
+};
+
 exports.getProposalById = async (req, res) => {
     try {
         const { id } = req.params;
         const proposal = await prisma.proposal.findUnique({
-            where: { id: parseInt(id) }
+            where: { id: parseInt(id) },
+            include: {
+                client: true
+            }
         });
         if (!proposal || proposal.status === 'DELETED') {
             return res.status(404).json({ error: 'Proposta não encontrada.' });
@@ -111,4 +164,3 @@ exports.getProposalById = async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar proposta.' });
     }
 };
-

@@ -4,6 +4,31 @@ import { useEffect, useState } from "react";
 import { Plus, ShieldAlert, Award, TrendingDown, DollarSign, Loader2, Edit2, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { getDebts, createDebt, updateDebt, deleteDebt } from "@/lib/api";
 
+const PRIORITY_OPTIONS = [
+    "",
+    "🔴 Urgente",
+    "🟡 Atenção",
+    "⚖️ Judicial",
+    "🟢 Baixa",
+    "CNPJ",
+    "Fiscal"
+];
+
+const STATUS_OPTIONS = [
+    "Aguardando",
+    "Negociar agora",
+    "Processo ativo",
+    "Em acordo",
+    "Parcelando",
+    "A vencer",
+    "Pago",
+    "Quitado",
+    "Suspenso"
+];
+
+const getDebtCreditor = (debt: any) => debt.credor || debt.creditor || "";
+const isDebtCnpj = (debt: any) => Boolean(debt.isCnpj) || String(debt.holder || "").toLowerCase().includes("cnpj");
+
 export default function AdminDebtsPage() {
     const [debts, setDebts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -24,6 +49,12 @@ export default function AdminDebtsPage() {
         obs: "",
         isCnpj: "false"
     });
+    const priorityOptions = form.priority && !PRIORITY_OPTIONS.includes(form.priority)
+        ? [form.priority, ...PRIORITY_OPTIONS]
+        : PRIORITY_OPTIONS;
+    const statusOptions = form.status && !STATUS_OPTIONS.includes(form.status)
+        ? [form.status, ...STATUS_OPTIONS]
+        : STATUS_OPTIONS;
 
     const fetchDebts = async () => {
         try {
@@ -42,7 +73,7 @@ export default function AdminDebtsPage() {
     }, []);
 
     // Filtrar dívidas conforme o modo selecionado
-    const filteredDebts = debts.filter(d => viewMode === "CNPJ" ? d.isCnpj : !d.isCnpj);
+    const filteredDebts = debts.filter(d => viewMode === "CNPJ" ? isDebtCnpj(d) : !isDebtCnpj(d));
 
     // Calcular Totais
     const totalOriginal = filteredDebts.reduce((acc, d) => acc + d.originalAmount, 0);
@@ -55,14 +86,14 @@ export default function AdminDebtsPage() {
             setEditingDebt(debt);
             setForm({
                 priority: debt.priority || "",
-                credor: debt.credor || "",
+                credor: getDebtCreditor(debt),
                 holder: debt.holder || "",
                 originalAmount: String(debt.originalAmount),
                 bestOffer: String(debt.bestOffer),
                 type: debt.type || "Serasa",
                 status: debt.status || "Negociar agora",
                 obs: debt.obs || "",
-                isCnpj: String(debt.isCnpj)
+                isCnpj: String(isDebtCnpj(debt))
             });
         } else {
             setEditingDebt(null);
@@ -92,6 +123,7 @@ export default function AdminDebtsPage() {
             setActionLoading("save");
             const data = {
                 ...form,
+                creditor: form.credor,
                 originalAmount: parseFloat(form.originalAmount),
                 bestOffer: parseFloat(form.bestOffer || form.originalAmount),
                 isCnpj: form.isCnpj === "true"
@@ -253,7 +285,7 @@ export default function AdminDebtsPage() {
                     <div className="py-24 flex flex-col items-center justify-center text-center">
                         <AlertCircle size={32} className="text-slate-400 mb-3" />
                         <p className="text-slate-300 text-sm font-medium">Nenhum débito registrado para esta aba.</p>
-                        <p className="text-slate-500 text-xs mt-1">Carregue a planilha oficial na tela financeira ou adicione manualmente.</p>
+                        <p className="text-slate-500 text-xs mt-1">Cadastre um débito manualmente para acompanhar acordos, prioridade e status.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -277,7 +309,7 @@ export default function AdminDebtsPage() {
                                             {debt.priority || "-"}
                                         </td>
                                         <td className="px-6 py-5">
-                                            <div className="font-bold text-white text-sm tracking-tight">{debt.credor}</div>
+                                            <div className="font-bold text-white text-sm tracking-tight">{getDebtCreditor(debt) || "-"}</div>
                                         </td>
                                         <td className="px-6 py-5 text-xs text-slate-400 font-medium">
                                             {debt.holder || "-"}
@@ -347,11 +379,32 @@ export default function AdminDebtsPage() {
                                 </label>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Titular / Empresa</span>
-                                    <input required value={form.holder} onChange={e => setForm({...form, holder: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: CPF Eduarda ou CNPJ &Conti" />
+                                    <input
+                                        required
+                                        value={form.holder}
+                                        onChange={e => {
+                                            const holder = e.target.value;
+                                            const normalized = holder.toLowerCase();
+                                            setForm({
+                                                ...form,
+                                                holder,
+                                                isCnpj: normalized.includes("cnpj") ? "true" : normalized.includes("cpf") ? "false" : form.isCnpj
+                                            });
+                                        }}
+                                        className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm"
+                                        placeholder="Ex: CPF Eduarda ou CNPJ &Conti"
+                                    />
                                 </label>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Prioridade / Identificador</span>
-                                    <input value={form.priority} onChange={e => setForm({...form, priority: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: 🔴 1 ou 🟡 4 ou CNPJ" />
+                                    <div className="relative">
+                                        <select value={form.priority} onChange={e => setForm({...form, priority: e.target.value})} className="w-full bg-[#111322] border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none text-sm appearance-none pr-8 cursor-pointer">
+                                            {priorityOptions.map(option => (
+                                                <option key={option || "none"} value={option}>{option || "Sem prioridade"}</option>
+                                            ))}
+                                        </select>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 text-xs">▼</div>
+                                    </div>
                                 </label>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Tipo de Dívida</span>
@@ -367,7 +420,14 @@ export default function AdminDebtsPage() {
                                 </label>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status</span>
-                                    <input value={form.status} onChange={e => setForm({...form, status: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: Negociar agora, Processo ativo, Pago" />
+                                    <div className="relative">
+                                        <select value={form.status} onChange={e => setForm({...form, status: e.target.value})} className="w-full bg-[#111322] border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none text-sm appearance-none pr-8 cursor-pointer">
+                                            {statusOptions.map(option => (
+                                                <option key={option} value={option}>{option}</option>
+                                            ))}
+                                        </select>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 text-xs">▼</div>
+                                    </div>
                                 </label>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Dívida de CNPJ (Empresa)?</span>

@@ -2,11 +2,13 @@
 import React, { useEffect, useState } from "react";
 import { FileText, Plus, Search, Trash2, CheckCircle, Clock } from "lucide-react";
 import Link from 'next/link';
-import { getProposals, deleteProposal, approveProposal } from "@/lib/api";
+import { getClients, getProposals, deleteProposal, approveProposal, linkProposalClient } from "@/lib/api";
 
 export default function ProposalsPage() {
     const [proposals, setProposals] = useState<any[]>([]);
+    const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [linkingId, setLinkingId] = useState<number | null>(null);
 
     const fetchProposals = async () => {
         try {
@@ -22,6 +24,15 @@ export default function ProposalsPage() {
 
     useEffect(() => {
         fetchProposals();
+        const loadClients = async () => {
+            try {
+                const data = await getClients();
+                setClients(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.warn("Erro ao carregar clientes:", error);
+            }
+        };
+        loadClients();
     }, []);
 
     const handleDelete = async (id: number) => {
@@ -43,6 +54,19 @@ export default function ProposalsPage() {
             } catch (error) {
                 alert("Erro ao aprovar proposta.");
             }
+        }
+    };
+
+    const handleLinkClient = async (proposalId: number, clientId: string) => {
+        try {
+            setLinkingId(proposalId);
+            const updatedProposal = await linkProposalClient(proposalId, clientId ? Number(clientId) : undefined);
+            setProposals(proposals.map(proposal => proposal.id === proposalId ? updatedProposal : proposal));
+        } catch (error) {
+            console.error("Erro ao vincular cliente:", error);
+            alert("Erro ao vincular cliente à proposta.");
+        } finally {
+            setLinkingId(null);
         }
     };
 
@@ -105,8 +129,23 @@ export default function ProposalsPage() {
                                 {proposals.map((proposal) => (
                                     <tr key={proposal.id} className="hover:bg-white/[0.02] transition-colors group">
                                         <td className="px-8 py-6">
-                                            <div className="font-medium text-white text-base tracking-tight mb-1">{proposal.clientName}</div>
-                                            <div className="text-xs font-semibold tracking-wider uppercase text-slate-500 flex items-center gap-1.5">{proposal.clientEmail || 'Sem e-mail'}</div>
+                                            <div className="font-medium text-white text-base tracking-tight mb-1">{proposal.client?.name || proposal.clientName}</div>
+                                            <div className="text-xs font-semibold tracking-wider uppercase text-slate-500 flex items-center gap-1.5">
+                                                {proposal.client ? "Vinculada ao cliente" : "Sem vínculo"} · {proposal.client?.email || proposal.clientEmail || 'Sem e-mail'}
+                                            </div>
+                                            <select
+                                                value={proposal.clientId || proposal.client?.id || ""}
+                                                onChange={event => handleLinkClient(proposal.id, event.target.value)}
+                                                disabled={linkingId === proposal.id}
+                                                className="mt-3 w-full max-w-[320px] rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-slate-200 outline-none transition focus:border-blue-500 disabled:opacity-50"
+                                            >
+                                                <option value="">Vincular cliente...</option>
+                                                {clients.map(client => (
+                                                    <option key={client.id} value={client.id}>
+                                                        {client.name} {client.email ? `- ${client.email}` : ""}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </td>
                                         <td className="px-8 py-6 text-sm font-medium tracking-tight text-slate-400">
                                             {new Date(proposal.createdAt).toLocaleDateString('pt-BR')}

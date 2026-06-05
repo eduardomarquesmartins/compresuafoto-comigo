@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { 
     Plus, DollarSign, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, 
-    Calendar, Trash2, CheckCircle, Clock, Loader2, Filter, AlertCircle, Upload
+    Calendar, Trash2, CheckCircle, Clock, Loader2, Filter, AlertCircle
 } from "lucide-react";
 import { 
-    getFinancials, getFinancialStats, createFinancial, updateFinancial, deleteFinancial, getClients, importExcel 
+    getFinancials, getFinancialStats, createFinancial, updateFinancial, deleteFinancial, getClients
 } from "@/lib/api";
 
 const CATEGORIES = {
@@ -39,17 +39,32 @@ const CATEGORY_COLORS: Record<string, string> = {
     "Outros": "bg-slate-700/10 text-slate-400 border-slate-700/20"
 };
 
+const getInitialFinanceFilters = () => {
+    if (typeof window === "undefined") {
+        return {
+            month: String(new Date().getMonth() + 1),
+            year: String(new Date().getFullYear())
+        };
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    return {
+        month: params.get("month") || String(new Date().getMonth() + 1),
+        year: params.get("year") || String(new Date().getFullYear())
+    };
+};
+
 export default function AdminFinancePage() {
+    const initialFilters = getInitialFinanceFilters();
     const [records, setRecords] = useState<any[]>([]);
     const [stats, setStats] = useState({ incomes: 0, expenses: 0, balance: 0, forecast: 0 });
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Filtros
-    const [month, setMonth] = useState(String(new Date().getMonth() + 1));
-    const [year, setYear] = useState(String(new Date().getFullYear()));
+    const [month, setMonth] = useState(initialFilters.month);
+    const [year, setYear] = useState(initialFilters.year);
     const [typeFilter, setTypeFilter] = useState("ALL");
 
     // Modal
@@ -158,33 +173,6 @@ export default function AdminFinancePage() {
         }
     };
 
-    const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-
-        const file = files[0];
-        try {
-            setActionLoading("import");
-            const res = await importExcel(file);
-            alert(
-                `${res.message}\n\nResumo da Importação:\n` +
-                `- Gastos Mai 2026: ${res.summary.incomesAndExpenses} transações\n` +
-                `- Dívidas: ${res.summary.debts} registros\n` +
-                `- Demandas Mentoria: ${res.summary.mentoriaDemands} tarefas`
-            );
-            // Sincronizar filtros com o mês de Maio para exibir os dados importados
-            setMonth("5");
-            setYear("2026");
-            fetchFinanceData();
-        } catch (error: any) {
-            console.error("Erro ao importar planilha:", error);
-            alert(error.response?.data?.error || "Erro ao processar arquivo Excel.");
-        } finally {
-            setActionLoading(null);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-        }
-    };
-
     return (
         <div className="pb-20 max-w-[1400px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
@@ -196,26 +184,6 @@ export default function AdminFinancePage() {
                     </h1>
                 </div>
                 <div className="flex flex-wrap gap-4 items-center">
-                    <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        onChange={handleImportExcel} 
-                        accept=".xlsx, .xls" 
-                        className="hidden" 
-                    />
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={actionLoading === "import"}
-                        className="group flex items-center justify-center gap-2 bg-[#0a0a0c]/80 border border-white/10 hover:border-blue-500/25 text-slate-300 hover:text-white px-5 py-4 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-                        title="Importar planilha Excel oficial do cliente"
-                    >
-                        {actionLoading === "import" ? (
-                            <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                            <Upload size={14} />
-                        )}
-                        Importar Planilha
-                    </button>
                     <button
                         onClick={() => handleOpenModal("INCOME")}
                         className="group flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] border border-white/5 active:scale-95 cursor-pointer"

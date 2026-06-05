@@ -110,9 +110,9 @@ export default function AdminDashboard() {
 
     const metrics = useMemo<MetricCard[]>(() => [
         {
-            label: "Receita capturada",
+            label: "Receita Fotos",
             value: currency.format(stats.revenue),
-            meta: "Pipeline financeiro ativo",
+            meta: "",
             tone: "green",
             icon: Wallet
         },

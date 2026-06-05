@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, Eye, Loader2, Mail, Search, Send, Users, X } from "lucide-react";
+import { Check, Eye, FileUp, Loader2, Mail, Paperclip, Search, Send, Trash2, Users, X } from "lucide-react";
 import { getClients, sendClientEmail } from "@/lib/api";
 
 type Client = {
@@ -18,6 +18,10 @@ type SendResult = {
     failed: number;
     totalRecipients: number;
     skippedWithoutEmail: number;
+    attachments?: Array<{
+        filename: string;
+        contentType?: string;
+    }>;
     results: Array<{
         clientId: number;
         name: string;
@@ -66,6 +70,14 @@ const fillPreview = (value: string, client?: Client) => {
         .replace(/\{documento\}/g, "");
 };
 
+const MAX_ATTACHMENTS = 8;
+const MAX_ATTACHMENTS_SIZE = 20 * 1024 * 1024;
+
+const formatFileSize = (size: number) => {
+    if (size >= 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)} MB`;
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
+};
+
 export default function AdminEmailsPage() {
     const [clients, setClients] = useState<Client[]>([]);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -82,6 +94,7 @@ export default function AdminEmailsPage() {
     const [ctaLabel, setCtaLabel] = useState(templates[0].ctaLabel);
     const [ctaUrl, setCtaUrl] = useState(templates[0].ctaUrl);
     const [replyTo, setReplyTo] = useState("");
+    const [attachments, setAttachments] = useState<File[]>([]);
 
     useEffect(() => {
         const loadClients = async () => {
@@ -123,6 +136,11 @@ export default function AdminEmailsPage() {
         return selectedIds.length;
     }, [clientsWithEmail, mode, selectedIds.length]);
 
+    const allFilteredSelected = useMemo(() => {
+        if (filteredClients.length === 0) return false;
+        return filteredClients.every(client => selectedIds.includes(client.id));
+    }, [filteredClients, selectedIds]);
+
     const selectedPreviewClient = clientsWithEmail.find(client => selectedIds.includes(client.id));
     const previewClient = selectedPreviewClient || {
         id: 0,
@@ -135,6 +153,7 @@ export default function AdminEmailsPage() {
     const previewBody = fillPreview(body, previewClient);
     const previewCtaLabel = fillPreview(ctaLabel, previewClient);
     const previewCtaUrl = fillPreview(ctaUrl, previewClient);
+    const attachmentsSize = attachments.reduce((sum, file) => sum + file.size, 0);
 
     const toggleClient = (id: number) => {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
@@ -142,8 +161,12 @@ export default function AdminEmailsPage() {
 
     const selectFiltered = () => {
         const ids = filteredClients.map(client => client.id);
-        setSelectedIds(prev => Array.from(new Set([...prev, ...ids])));
-        setMode("selected");
+        if (allFilteredSelected) {
+            setSelectedIds(prev => prev.filter(id => !ids.includes(id)));
+        } else {
+            setSelectedIds(prev => Array.from(new Set([...prev, ...ids])));
+            setMode("selected");
+        }
     };
 
     const applyTemplate = (templateId: string) => {
@@ -155,6 +178,31 @@ export default function AdminEmailsPage() {
         setBody(template.body);
         setCtaLabel(template.ctaLabel);
         setCtaUrl(template.ctaUrl);
+    };
+
+    const handleAttachmentChange = (files: FileList | null) => {
+        if (!files?.length) return;
+
+        const nextFiles = [...attachments, ...Array.from(files)];
+        const limitedFiles = nextFiles.slice(0, MAX_ATTACHMENTS);
+        const totalSize = limitedFiles.reduce((sum, file) => sum + file.size, 0);
+
+        if (nextFiles.length > MAX_ATTACHMENTS) {
+            setError(`Voce pode anexar no maximo ${MAX_ATTACHMENTS} arquivos.`);
+            return;
+        }
+
+        if (totalSize > MAX_ATTACHMENTS_SIZE) {
+            setError("Os anexos devem somar no maximo 20 MB.");
+            return;
+        }
+
+        setError(null);
+        setAttachments(limitedFiles);
+    };
+
+    const removeAttachment = (index: number) => {
+        setAttachments(prev => prev.filter((_, itemIndex) => itemIndex !== index));
     };
 
     const handleSend = async () => {
@@ -184,7 +232,8 @@ export default function AdminEmailsPage() {
                 body,
                 ctaLabel,
                 ctaUrl,
-                replyTo
+                replyTo,
+                attachments
             });
             setResult(response);
         } catch (err: any) {
@@ -228,6 +277,11 @@ export default function AdminEmailsPage() {
                         <Check size={16} />
                         Envio concluido: {result.sent} enviados, {result.failed} falharam, {result.skippedWithoutEmail} sem e-mail.
                     </div>
+                    {result.attachments?.length ? (
+                        <div className="mt-2 text-emerald-100/80">
+                            {result.attachments.length} anexo{result.attachments.length === 1 ? "" : "s"} enviado{result.attachments.length === 1 ? "" : "s"} junto com a mensagem.
+                        </div>
+                    ) : null}
                     {result.failed > 0 && (
                         <div className="mt-3 space-y-1 text-emerald-100/80">
                             {result.results.filter(item => !item.success).slice(0, 5).map(item => (
@@ -239,7 +293,7 @@ export default function AdminEmailsPage() {
             )}
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[320px_1fr_420px]">
-                <section className="space-y-5 rounded-lg border border-white/10 bg-[#10121a] p-4">
+                <section className="flex flex-col gap-4 rounded-lg border border-white/10 bg-[#10121a] p-4 xl:h-fit">
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Destinatarios</p>
@@ -280,11 +334,11 @@ export default function AdminEmailsPage() {
                     <div className="flex items-center justify-between text-xs text-slate-500">
                         <span>{selectedIds.length} selecionados</span>
                         <button type="button" onClick={selectFiltered} className="font-semibold text-blue-400 hover:text-blue-300">
-                            Selecionar lista
+                            {allFilteredSelected ? "Desmarcar lista" : "Selecionar lista"}
                         </button>
                     </div>
 
-                    <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
+                    <div className="h-[580px] space-y-2 overflow-y-auto pr-1 custom-scrollbar">
                         {loading ? (
                             <div className="flex h-40 items-center justify-center text-slate-500">
                                 <Loader2 className="animate-spin" />
@@ -391,6 +445,51 @@ export default function AdminEmailsPage() {
                                 placeholder="contato@seudominio.com"
                             />
                         </label>
+                        <div className="space-y-3 md:col-span-2">
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Anexos</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                                    {attachments.length}/{MAX_ATTACHMENTS} · {formatFileSize(attachmentsSize)}
+                                </span>
+                            </div>
+                            <label className="flex cursor-pointer items-center justify-center gap-3 rounded-lg border border-dashed border-white/15 bg-black/20 px-4 py-5 text-sm font-semibold text-slate-300 transition hover:border-blue-500/45 hover:text-white">
+                                <FileUp size={18} />
+                                Anexar documentos ou fotos
+                                <input
+                                    type="file"
+                                    multiple
+                                    className="hidden"
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                                    onChange={event => {
+                                        handleAttachmentChange(event.target.files);
+                                        event.target.value = "";
+                                    }}
+                                />
+                            </label>
+                            {attachments.length > 0 && (
+                                <div className="space-y-2">
+                                    {attachments.map((file, index) => (
+                                        <div key={`${file.name}-${file.size}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/25 px-3 py-2">
+                                            <div className="flex min-w-0 items-center gap-3">
+                                                <Paperclip size={15} className="shrink-0 text-blue-400" />
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-semibold text-white">{file.name}</p>
+                                                    <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeAttachment(index)}
+                                                className="rounded-md p-2 text-slate-500 transition hover:bg-red-500/10 hover:text-red-300"
+                                                aria-label={`Remover ${file.name}`}
+                                            >
+                                                <Trash2 size={15} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="rounded-lg border border-white/10 bg-black/20 p-4 text-xs leading-6 text-slate-400">
@@ -433,6 +532,24 @@ export default function AdminEmailsPage() {
                                     <span className="inline-flex rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white">
                                         {previewCtaLabel}
                                     </span>
+                                </div>
+                            )}
+                            {attachments.length > 0 && (
+                                <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                                    <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
+                                        <Paperclip size={13} />
+                                        Anexos
+                                    </p>
+                                    <div className="space-y-1">
+                                        {attachments.slice(0, 4).map((file, index) => (
+                                            <p key={`${file.name}-preview-${index}`} className="truncate text-xs font-semibold text-slate-700">
+                                                {file.name}
+                                            </p>
+                                        ))}
+                                        {attachments.length > 4 && (
+                                            <p className="text-xs text-slate-500">+ {attachments.length - 4} arquivo{attachments.length - 4 === 1 ? "" : "s"}</p>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>

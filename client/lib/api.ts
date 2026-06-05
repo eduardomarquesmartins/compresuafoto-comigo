@@ -190,7 +190,7 @@ export const downloadProposalPdf = async (data: { clientName: string; selectedSe
     return response.data;
 };
 
-export const createProposal = async (data: { clientName: string; clientEmail?: string; selectedServices: any[]; total: number }) => {
+export const createProposal = async (data: { clientId?: number; clientName: string; clientEmail?: string; selectedServices: any[]; total: number }) => {
     const response = await api.post('proposals', data);
     return response.data;
 };
@@ -212,6 +212,11 @@ export const deleteProposal = async (id: number) => {
 
 export const approveProposal = async (id: number) => {
     const response = await api.patch(`proposals/${id}/approve`);
+    return response.data;
+};
+
+export const linkProposalClient = async (id: number, clientId?: number) => {
+    const response = await api.patch(`proposals/${id}/link-client`, { clientId });
     return response.data;
 };
 
@@ -268,7 +273,26 @@ export const sendClientEmail = async (data: {
     ctaLabel?: string;
     ctaUrl?: string;
     replyTo?: string;
+    attachments?: File[];
 }) => {
+    if (data.attachments?.length) {
+        const formData = new FormData();
+        formData.append('mode', data.mode);
+        formData.append('clientIds', JSON.stringify(data.clientIds));
+        formData.append('subject', data.subject);
+        formData.append('preheader', data.preheader || '');
+        formData.append('body', data.body);
+        formData.append('ctaLabel', data.ctaLabel || '');
+        formData.append('ctaUrl', data.ctaUrl || '');
+        formData.append('replyTo', data.replyTo || '');
+        data.attachments.forEach(file => formData.append('attachments', file));
+
+        const response = await api.post('client-emails/send', formData, {
+            timeout: 120000
+        });
+        return response.data;
+    }
+
     const response = await api.post('client-emails/send', data);
     return response.data;
 };

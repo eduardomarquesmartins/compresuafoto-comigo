@@ -30,7 +30,7 @@ type Slide = ImageSlide | FormSlide;
 const imageSlides: ImageSlide[] = Array.from({ length: 14 }, (_, index) => ({
     kind: "image",
     title: `Slide ${index + 1}`,
-    src: `/apresentacao/${index + 1}.jpg`
+    src: `/apresentacao/${index + 1}.png`
 }));
 
 const slides: Slide[] = [

@@ -241,9 +241,13 @@ const paragraphsToHtml = (text) => {
         .join('');
 };
 
-exports.sendClientBroadcastEmail = async ({ clients, subject, preheader, body, ctaLabel, ctaUrl, replyTo }) => {
+exports.sendClientBroadcastEmail = async ({ clients, subject, preheader, body, ctaLabel, ctaUrl, replyTo, attachments = [] }) => {
     const results = [];
     const currentYear = new Date().getFullYear();
+    const resendAttachments = attachments.map(file => ({
+        filename: file.filename,
+        content: file.content
+    }));
 
     for (const client of clients) {
         const finalSubject = fillClientTemplate(subject, client);
@@ -258,6 +262,7 @@ exports.sendClientBroadcastEmail = async ({ clients, subject, preheader, body, c
                 to: [client.email],
                 subject: finalSubject,
                 ...(replyTo ? { replyTo } : {}),
+                ...(resendAttachments.length ? { attachments: resendAttachments } : {}),
                 html: `
                     <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
                         <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">

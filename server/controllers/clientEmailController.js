@@ -2,7 +2,34 @@ const prisma = require('../lib/prisma');
 const emailService = require('../services/email');
 
 const normalizeList = (value) => {
-    return Array.isArray(value) ? value.map(Number).filter(Number.isFinite) : [];
+    if (Array.isArray(value)) return value.map(Number).filter(Number.isFinite);
+
+    if (typeof value === 'string') {
+        try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed.map(Number).filter(Number.isFinite) : [];
+        } catch {
+            return value.split(',').map(Number).filter(Number.isFinite);
+        }
+    }
+
+    return [];
+};
+
+const normalizeAttachments = (files = []) => {
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+
+    if (totalSize > 20 * 1024 * 1024) {
+        const error = new Error('Os anexos devem somar no maximo 20 MB por envio.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    return files.map(file => ({
+        filename: file.originalname,
+        content: file.buffer,
+        contentType: file.mimetype
+    }));
 };
 
 exports.sendClientEmail = async (req, res) => {
@@ -17,6 +44,7 @@ exports.sendClientEmail = async (req, res) => {
             ctaUrl = '',
             replyTo = ''
         } = req.body;
+        const attachments = normalizeAttachments(req.files || []);
 
         if (!subject || !body) {
             return res.status(400).json({ error: 'Assunto e mensagem sao obrigatorios.' });
@@ -60,17 +88,22 @@ exports.sendClientEmail = async (req, res) => {
             body,
             ctaLabel,
             ctaUrl,
-            replyTo
+            replyTo,
+            attachments
         });
 
         res.json({
             totalClients: clients.length,
             totalRecipients: recipients.length,
             skippedWithoutEmail: clients.length - recipients.length,
+            attachments: attachments.map(file => ({
+                filename: file.filename,
+                contentType: file.contentType
+            })),
             ...result
         });
     } catch (error) {
         console.error('[CLIENT EMAIL ERROR]:', error);
-        res.status(500).json({ error: 'Erro ao enviar e-mail para clientes: ' + error.message });
+        res.status(error.statusCode || 500).json({ error: 'Erro ao enviar e-mail para clientes: ' + error.message });
     }
 };

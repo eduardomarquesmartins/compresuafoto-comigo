@@ -27,6 +27,11 @@ const formatDuration = (durationMonths) => {
 
 const sanitize = (value, fallback = '') => String(value || fallback).trim();
 
+const getDocumentLabel = (value) => {
+    const digits = sanitize(value).replace(/\D/g, '');
+    return digits.length <= 11 ? 'CPF' : 'CNPJ';
+};
+
 const buildClauses = (data) => {
     const scope = sanitize(data.scope, 'gestão de redes sociais e serviços de marketing digital conforme proposta aprovada pelas partes');
     const monthlyValue = formatCurrency(data.monthlyValue);
@@ -294,7 +299,7 @@ const drawSignatureBlock = (doc, data) => {
     doc.text('CPF: 853.143.150-68', 70, y + 51, { width: 185, align: 'center' });
 
     doc.font('Helvetica-Bold').fontSize(9).text(sanitize(data.clientName, 'CONTRATANTE'), 340, y + 10, { width: 185, align: 'center' });
-    doc.font('Helvetica').fontSize(8).text(`CNPJ: ${sanitize(data.clientDocument)}`, 340, y + 25, { width: 185, align: 'center' });
+    doc.font('Helvetica').fontSize(8).text(`${getDocumentLabel(data.clientDocument)}: ${sanitize(data.clientDocument)}`, 340, y + 25, { width: 185, align: 'center' });
     if (data.signerName) doc.text(`Representante: ${sanitize(data.signerName)}`, 340, y + 38, { width: 185, align: 'center' });
     if (data.signerDocument) doc.text(`CPF: ${sanitize(data.signerDocument)}`, 340, y + 51, { width: 185, align: 'center' });
 
@@ -329,7 +334,7 @@ exports.generateContractBuffer = async (data) => {
 
             const contratanteLines = [
                 sanitize(data.clientName, 'Nome/Razão social'),
-                `CNPJ: ${sanitize(data.clientDocument, '-')}`,
+                `${getDocumentLabel(data.clientDocument)}: ${sanitize(data.clientDocument, '-')}`,
                 sanitize(data.clientAddress),
                 sanitize(data.clientCityState),
                 data.signerName ? `Representante: ${sanitize(data.signerName)}` : '',

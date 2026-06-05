@@ -17,15 +17,16 @@ exports.getDebts = async (req, res) => {
 
 exports.createDebt = async (req, res) => {
     try {
-        const { priority, credor, holder, originalAmount, bestOffer, type, status, obs, isCnpj } = req.body;
-        if (!credor || originalAmount === undefined) {
+        const { priority, credor, creditor, holder, originalAmount, bestOffer, type, status, obs, isCnpj } = req.body;
+        const creditorName = creditor || credor;
+        if (!creditorName || originalAmount === undefined) {
             return res.status(400).json({ error: 'Credor e valor original são obrigatórios.' });
         }
 
         const debt = await prisma.debt.create({
             data: {
                 priority: priority || '',
-                credor,
+                creditor: creditorName,
                 holder: holder || '',
                 originalAmount: parseFloat(originalAmount),
                 bestOffer: parseFloat(bestOffer !== undefined ? bestOffer : originalAmount),
@@ -45,13 +46,14 @@ exports.createDebt = async (req, res) => {
 exports.updateDebt = async (req, res) => {
     try {
         const { id } = req.params;
-        const { priority, credor, holder, originalAmount, bestOffer, type, status, obs, isCnpj } = req.body;
+        const { priority, credor, creditor, holder, originalAmount, bestOffer, type, status, obs, isCnpj } = req.body;
+        const creditorName = creditor || credor;
 
         const debt = await prisma.debt.update({
             where: { id: parseInt(id) },
             data: {
                 priority,
-                credor,
+                creditor: creditorName,
                 holder,
                 originalAmount: originalAmount !== undefined ? parseFloat(originalAmount) : undefined,
                 bestOffer: bestOffer !== undefined ? parseFloat(bestOffer) : undefined,

@@ -15,7 +15,7 @@ exports.generateContract = async (req, res) => {
         const { clientName, clientDocument } = req.body;
 
         if (!clientName || !clientDocument) {
-            return res.status(400).json({ error: 'Nome/Razão social e CNPJ são obrigatórios.' });
+            return res.status(400).json({ error: 'Nome/Razão social e CPF ou CNPJ são obrigatórios.' });
         }
 
         const pdfBuffer = await contractService.generateContractBuffer(req.body);

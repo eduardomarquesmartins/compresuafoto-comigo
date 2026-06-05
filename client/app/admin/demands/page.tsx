@@ -75,7 +75,7 @@ export default function AdminDemandsPage() {
         } else {
             setEditingDemand(null);
             setForm({
-                area: "💰 Precificação",
+                area: "",
                 action: "",
                 deadline: "Junho/2026",
                 responsible: "Eduarda",
@@ -390,8 +390,8 @@ export default function AdminDemandsPage() {
                                     <div className="relative">
                                         <select value={form.status} onChange={e => setForm({...form, status: e.target.value})} className="w-full bg-[#111322] border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none text-sm appearance-none pr-8 cursor-pointer">
                                             <option value="Pendente">⏳ Pendente</option>
-                                            <option value="Urgente">⏳ Urgente</option>
-                                            <option value="Monitorar">⏳ Monitorar</option>
+                                            <option value="Urgente">🔴 Urgente</option>
+                                            <option value="Monitorar">👁️ Monitorar</option>
                                             <option value="Realizada">✅ Realizada</option>
                                         </select>
                                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 text-xs">▼</div>

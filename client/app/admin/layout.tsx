@@ -13,6 +13,7 @@ import {
     CalendarPlus,
     ClipboardCheck,
     DollarSign,
+    FileSpreadsheet,
     FileText,
     Home,
     LayoutDashboard,
@@ -57,7 +58,6 @@ const navSections: NavSection[] = [
             { href: "/admin/coupons", label: "Cupons", icon: Tag },
             { href: "/admin/orders", label: "Pedidos", icon: ShoppingBag },
             { href: "/admin/proposals", label: "Propostas", icon: FileText },
-            { href: "/admin/contracts", label: "Contratos", icon: ScrollText },
             { href: "/admin/clients", label: "Clientes", icon: Users },
             { href: "/admin/emails", label: "E-mails", icon: Mail },
             { href: "/admin/presentation", label: "Apresentação", icon: MonitorPlay }
@@ -69,7 +69,8 @@ const navSections: NavSection[] = [
             { href: "/admin/control", label: "Visão geral", icon: Activity },
             { href: "/admin/finance", label: "Financeiro", icon: DollarSign },
             { href: "/admin/debts", label: "Dívidas", icon: ShieldAlert },
-            { href: "/admin/demands", label: "Demandas", icon: ClipboardCheck }
+            { href: "/admin/demands", label: "Demandas", icon: ClipboardCheck },
+            { href: "/admin/imports", label: "Importar histórico", icon: FileSpreadsheet }
         ]
     }
 ];
@@ -268,13 +269,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     <h2 className="truncate text-lg font-semibold text-white">{routeMeta.label}</h2>
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-2">
-                                <button type="button" className="admin-icon-button" title="Notificações" aria-label="Notificações">
-                                    <Bell size={17} />
-                                </button>
-                                <AdminUserMenu />
-                            </div>
                         </div>
 
                         {children}
@@ -286,6 +280,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 body:has(.admin-shell) footer,
                 body:has(.admin-shell) [data-cart-drawer] {
                     display: none !important;
+                }
+
+                body:has(.admin-shell)::-webkit-scrollbar-track,
+                html:has(.admin-shell)::-webkit-scrollbar-track {
+                    background: #050505 !important;
+                }
+
+                body:has(.admin-shell)::-webkit-scrollbar-thumb,
+                html:has(.admin-shell)::-webkit-scrollbar-thumb {
+                    background: rgba(10, 114, 239, 0.4) !important;
+                    border-radius: 999px;
+                }
+
+                body:has(.admin-shell)::-webkit-scrollbar-thumb:hover,
+                html:has(.admin-shell)::-webkit-scrollbar-thumb:hover {
+                    background: rgba(10, 114, 239, 0.8) !important;
                 }
 
                 .admin-shell {
@@ -672,7 +682,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 .admin-scroll::-webkit-scrollbar,
                 .custom-scrollbar::-webkit-scrollbar {
-                    width: 4px;
+                    width: 5px;
+                    height: 5px;
                 }
 
                 .admin-scroll::-webkit-scrollbar-track,
@@ -682,8 +693,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 .admin-scroll::-webkit-scrollbar-thumb,
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(148, 163, 184, 0.24);
+                    background: rgba(10, 114, 239, 0.4) !important;
                     border-radius: 999px;
+                }
+
+                .admin-scroll::-webkit-scrollbar-thumb:hover,
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(10, 114, 239, 0.8) !important;
                 }
 
                 @media (min-width: 768px) {
