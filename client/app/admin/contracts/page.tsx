@@ -89,7 +89,7 @@ export default function AdminContractsPage() {
 
                 const services = proposal.selectedServices || [];
                 const servicesList = services
-                    .map((s: any) => `- ${s.name} (${s.category}): R$ ${Number(s.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}${s.description ? ` - ${s.description}` : ""}`)
+                    .map((s: any) => `**- ${s.name} (${s.category}): R$ ${Number(s.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}**${s.description ? ` - ${s.description}` : ""}`)
                     .join("\n");
 
                 const scopeText = `prestação de serviços de marketing digital e produção de conteúdo, compreendendo os seguintes itens da proposta comercial aprovada:\n\n${servicesList}`;

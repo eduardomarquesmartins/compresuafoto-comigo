@@ -174,6 +174,9 @@ const drawHeader = (doc) => {
         characterSpacing: 1.5
     });
     doc.strokeColor(LIGHT).lineWidth(1).moveTo(55, 78).lineTo(doc.page.width - 55, 78).stroke();
+    
+    // Restaura o Y para o limite da margem superior para que o conteúdo comece depois do header
+    doc.y = 105;
 };
 
 const drawContractTop = (doc) => {
@@ -202,15 +205,13 @@ const drawContractTop = (doc) => {
 };
 
 const ensureSpace = (doc, neededHeight) => {
-    if (doc.y + neededHeight > doc.page.height - 105) {
+    if (doc.y + neededHeight > doc.page.height - 55) {
         doc.addPage();
-        drawHeader(doc);
-        doc.y = 105;
     }
 };
 
 const sectionTitle = (doc, title) => {
-    ensureSpace(doc, 42);
+    ensureSpace(doc, 50);
     doc.moveDown(0.45);
 
     const x = 55;
@@ -228,16 +229,31 @@ const sectionTitle = (doc, title) => {
 };
 
 const paragraph = (doc, text) => {
-    const height = doc.heightOfString(text, {
-        width: doc.page.width - 110,
-        lineGap: 2
-    });
-    ensureSpace(doc, height + 12);
-    doc.fillColor(TEXT).font('Helvetica').fontSize(9.5).text(text, 55, doc.y, {
-        width: doc.page.width - 110,
-        align: 'justify',
-        lineGap: 2
-    });
+    doc.x = 55;
+    
+    if (!text.includes('**')) {
+        doc.fillColor(TEXT).font('Helvetica').fontSize(9.5).text(text, {
+            align: 'justify',
+            lineGap: 2
+        });
+    } else {
+        const parts = text.split(/(\*\*.*?\*\*)/g).filter(Boolean);
+        parts.forEach((part, index) => {
+            const isBold = part.startsWith('**') && part.endsWith('**');
+            const content = isBold ? part.slice(2, -2) : part;
+            const isLast = index === parts.length - 1;
+            
+            doc.fillColor(TEXT)
+               .font(isBold ? 'Helvetica-Bold' : 'Helvetica')
+               .fontSize(9.5)
+               .text(content, {
+                   continued: !isLast,
+                   align: 'justify',
+                   lineGap: 2
+               });
+        });
+    }
+    
     doc.moveDown(0.7);
 };
 
@@ -282,12 +298,12 @@ const drawPartyBox = (doc, title, lines, x, y = 190, width = 220, bodyHeight = 1
 };
 
 const drawSignatureBlock = (doc, data) => {
-    ensureSpace(doc, 230);
-    doc.moveDown(4);
+    ensureSpace(doc, 150);
+    doc.moveDown(2);
 
-    const y = doc.y + 115;
+    const y = doc.y + 60;
     if (fs.existsSync(CONTI_SIGNATURE_PATH)) {
-        doc.image(CONTI_SIGNATURE_PATH, 124, y - 110, { width: 72 });
+        doc.image(CONTI_SIGNATURE_PATH, 124, y - 55, { width: 72 });
     }
 
     doc.strokeColor('#cbd5e1').lineWidth(1).moveTo(70, y).lineTo(255, y).stroke();
@@ -310,17 +326,23 @@ exports.generateContractBuffer = async (data) => {
         try {
             const doc = new PDFDocument({
                 size: 'A4',
-                margin: 55,
+                margins: { top: 105, left: 55, right: 55, bottom: 55 },
                 info: {
                     Title: `Contrato - ${sanitize(data.clientName, 'Cliente')}`,
                     Author: '& CONTI Marketing Digital'
                 }
             });
 
+            doc.on('pageAdded', () => {
+                drawHeader(doc);
+            });
+
             const buffers = [];
             doc.on('data', buffers.push.bind(buffers));
             doc.on('end', () => resolve(Buffer.concat(buffers)));
 
+            // Reset y para o topo porque o drawContractTop ignora a margem
+            doc.y = 0;
             drawContractTop(doc);
 
             const contratadaLines = [
