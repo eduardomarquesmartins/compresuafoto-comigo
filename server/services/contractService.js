@@ -174,9 +174,6 @@ const drawHeader = (doc) => {
         characterSpacing: 1.5
     });
     doc.strokeColor(LIGHT).lineWidth(1).moveTo(55, 78).lineTo(doc.page.width - 55, 78).stroke();
-    
-    // Restaura o Y para o limite da margem superior para que o conteúdo comece depois do header
-    doc.y = 105;
 };
 
 const drawContractTop = (doc) => {
@@ -298,12 +295,12 @@ const drawPartyBox = (doc, title, lines, x, y = 190, width = 220, bodyHeight = 1
 };
 
 const drawSignatureBlock = (doc, data) => {
-    ensureSpace(doc, 150);
-    doc.moveDown(2);
+    ensureSpace(doc, 200);
+    doc.moveDown(4);
 
-    const y = doc.y + 60;
+    const y = doc.y + 115;
     if (fs.existsSync(CONTI_SIGNATURE_PATH)) {
-        doc.image(CONTI_SIGNATURE_PATH, 124, y - 55, { width: 72 });
+        doc.image(CONTI_SIGNATURE_PATH, 124, y - 110, { width: 72 });
     }
 
     doc.strokeColor('#cbd5e1').lineWidth(1).moveTo(70, y).lineTo(255, y).stroke();
@@ -327,14 +324,11 @@ exports.generateContractBuffer = async (data) => {
             const doc = new PDFDocument({
                 size: 'A4',
                 margins: { top: 105, left: 55, right: 55, bottom: 55 },
+                bufferPages: true,
                 info: {
                     Title: `Contrato - ${sanitize(data.clientName, 'Cliente')}`,
                     Author: '& CONTI Marketing Digital'
                 }
-            });
-
-            doc.on('pageAdded', () => {
-                drawHeader(doc);
             });
 
             const buffers = [];
@@ -383,6 +377,13 @@ exports.generateContractBuffer = async (data) => {
                 paragraph(doc, `Local e data: ${sanitize(data.contractDate)}.`);
             }
             drawSignatureBlock(doc, data);
+
+            // Adiciona o header a todas as páginas exceto a primeira, usando bufferPages
+            const range = doc.bufferedPageRange();
+            for (let i = 1; i < range.count; i++) {
+                doc.switchToPage(i);
+                drawHeader(doc);
+            }
 
             doc.end();
         } catch (error) {
