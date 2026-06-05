@@ -138,6 +138,13 @@ export default function ProposalsPage() {
                                                         <CheckCircle size={18} />
                                                     </button>
                                                 )}
+                                                <Link
+                                                    href={`/admin/contracts?proposalId=${proposal.id}`}
+                                                    className="text-slate-400 hover:text-green-400 p-2 hover:bg-green-500/10 border border-transparent hover:border-green-500/20 rounded-lg transition-all flex items-center justify-center"
+                                                    title="Gerar Contrato"
+                                                >
+                                                    <FileText size={18} />
+                                                </Link>
                                                 <div className="w-[1px] h-6 bg-white/10 mx-2"></div>
                                                 <button
                                                     onClick={() => handleDelete(proposal.id)}

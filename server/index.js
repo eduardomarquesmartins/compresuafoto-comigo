@@ -117,7 +117,14 @@ app.use('/api/coupons', require('./routes/couponRoutes'));
 app.use('/api/webhooks/mercadopago', require('./controllers/webhookController').handleMercadoPagoWebhook);
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/proposals', require('./routes/proposalRoutes'));
+app.use('/api/contracts', require('./routes/contractRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/clients', require('./routes/clientRoutes'));
+app.use('/api/client-emails', require('./routes/clientEmailRoutes'));
+app.use('/api/financials', require('./routes/financialRoutes'));
+app.use('/api/excel', require('./routes/excelRoutes'));
+app.use('/api/debts', require('./routes/debtRoutes'));
+app.use('/api/demands', require('./routes/demandRoutes'));
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -217,6 +217,38 @@ exports.deleteEvent = async (req, res) => {
             return res.status(404).json({ error: 'Event not found' });
         }
 
+        // Verificação de segurança: impedir deleção se alguma foto do evento estiver vinculada a um pedido pago
+        const paidOrders = await prisma.order.findMany({
+            where: {
+                status: { in: ['PAID', 'approved'] }
+            },
+            select: {
+                id: true,
+                items: true
+            }
+        });
+
+        const photoIdsInEvent = new Set(event.photos.map(p => p.id));
+        const ordersWithEventPhotos = [];
+
+        for (const order of paidOrders) {
+            try {
+                const orderPhotoIds = JSON.parse(order.items);
+                if (Array.isArray(orderPhotoIds) && orderPhotoIds.some(photoId => photoIdsInEvent.has(photoId))) {
+                    ordersWithEventPhotos.push(order.id);
+                }
+            } catch (e) {
+                // ignorar erros de JSON malformado
+            }
+        }
+
+        if (ordersWithEventPhotos.length > 0) {
+            logToFile(`Block deletion of event ${eventId} because photos are in paid orders: ${ordersWithEventPhotos.join(', ')}`);
+            return res.status(400).json({
+                error: `Não é possível excluir o evento. Existem fotos deste evento vinculadas a pedidos pagos (Pedidos: ${ordersWithEventPhotos.join(', ')}).`
+            });
+        }
+
         // 2. Collect all Cloudinary URLs
         const urlsToDelete = [];
         if (event.coverImage) urlsToDelete.push(event.coverImage);

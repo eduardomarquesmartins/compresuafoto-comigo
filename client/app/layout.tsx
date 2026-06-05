@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
+import { Geist, Geist_Mono, Montserrat } from "next/font/google";
 import "./globals.css";
 import CartDrawer from "@/components/CartDrawer";
 import GoogleWrapper from "@/components/GoogleWrapper";
@@ -8,6 +8,18 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
+});
+
+const geist = Geist({
+  variable: "--font-geist",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -29,7 +41,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${montserrat.variable} font-sans antialiased text-foreground bg-background`}>
+      <body className={`${montserrat.variable} ${geist.variable} ${geistMono.variable} font-sans antialiased text-foreground bg-background`}>
         <SecurityWrapper>
           <GoogleWrapper>
             <BackgroundWrapper>

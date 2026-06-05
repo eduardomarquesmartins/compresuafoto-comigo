@@ -38,6 +38,7 @@
     "resend": "^4.1.2",
     "sharp": "^0.34.5",
     "sqlite3": "^5.1.7",
-    "streamifier": "^0.1.1"
+    "streamifier": "^0.1.1",
+    "xlsx": "^0.18.5"
   }
 }

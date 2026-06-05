@@ -39,11 +39,11 @@ exports.handleMercadoPagoWebhook = async (req, res) => {
                 }
             } catch (err) {
                 console.error('[WEBHOOK ERROR] Signature Verification Failed:', err.message);
-                // In production, you might want to block this
+                return res.status(401).send('Signature Verification Failed');
             }
-        } else if (!xSignature && process.env.NODE_ENV === 'production') {
-             console.warn('[WEBHOOK WARNING] Missing signature in production!');
-             // return res.status(401).send('Signature Required');
+        } else if (process.env.NODE_ENV === 'production') {
+            console.error('[WEBHOOK ERROR] Missing signature or webhook secret in production!');
+            return res.status(401).send('Signature Required');
         }
 
         const { type, data } = req.body;

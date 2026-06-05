@@ -55,3 +55,11 @@ build/
 .claude/settings.local.json
 .aiox/install-log.txt
 **/.env
+*.env
+*.tsbuildinfo
+work/
+*.xlsx
+*.pdf
+server/analyze_specific_sheets.js
+server/check_excel_sheets.js
+server/test_read_mai2026.js

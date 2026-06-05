@@ -21,7 +21,7 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
         const { data, error } = await resend.emails.send({
             from: 'contato@compresuafoto.econticomigo.com.br',
             to: [email],
-            subject: `Pedido #${orderId} - Suas fotos estao prontas para download`,
+            subject: `Pedido #${orderId} - Suas fotos estão prontas para download`,
             html: `
                 <div style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
                     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
@@ -45,7 +45,7 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
                                 Obrigado pela sua compra!
                             </h2>
                             <p style="color: #64748b; font-size: 15px; line-height: 1.6; text-align: center; margin: 0 0 30px;">
-                                Suas fotos foram processadas com sucesso e estao prontas para download.
+                                Suas fotos foram processadas com sucesso e estão prontas para download.
                             </p>
 
                             <!-- Order Summary Card -->
@@ -99,7 +99,7 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
 /**
  * Envia proposta comercial estilizada com anexo PDF
  */
-exports.sendProposalEmail = async (email, clientName, selectedServices, total, proposalType = 'empresarial') => {
+exports.sendProposalEmail = async (email, clientName, selectedServices, total) => {
     try {
         // Agrupar serviços por categoria para o corpo do e-mail
         const groupedServices = selectedServices.reduce((acc, service) => {
@@ -122,7 +122,7 @@ exports.sendProposalEmail = async (email, clientName, selectedServices, total, p
         `).join('');
 
         // Gerar o PDF usando o serviço centralizado
-        const pdfBuffer = await pdfService.generatePDFBuffer(clientName, selectedServices, total, proposalType);
+        const pdfBuffer = await pdfService.generatePDFBuffer(clientName, selectedServices, total);
 
         const { data, error } = await resend.emails.send({
             from: 'contato@compresuafoto.econticomigo.com.br',
@@ -166,4 +166,154 @@ exports.sendProposalEmail = async (email, clientName, selectedServices, total, p
         console.error('[PROPOSAL EMAIL ERROR]:', err);
         return { success: false, error: err.message };
     }
+};
+
+/**
+ * Envia contrato de prestação de serviços renovado com anexo PDF
+ */
+exports.sendContractEmail = async (email, clientName, pdfBuffer) => {
+    try {
+        const currentYear = new Date().getFullYear();
+
+        const { data, error } = await resend.emails.send({
+            from: 'contato@compresuafoto.econticomigo.com.br',
+            to: [email],
+            subject: `Contrato de Prestação de Serviços Renovado - ${clientName || 'CONTI Marketing Digital'} ✍️`,
+            attachments: [
+                {
+                    filename: `contrato_${clientName.replace(/\s+/g, '_').toLowerCase()}.pdf`,
+                    content: pdfBuffer,
+                }
+            ],
+            html: `
+                <div style="background-color: #f8fafc; font-family: sans-serif; padding: 40px 20px;">
+                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <div style="background-color: #000; padding: 40px; text-align: center;">
+                            <h2 style="color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 2px;">Renovação Contratual</h2>
+                            <p style="color: #2563eb; margin: 10px 0 0; font-weight: bold;">Contrato de Prestação de Serviços Renovado por 6 Meses 📎</p>
+                        </div>
+                        <div style="padding: 40px;">
+                            <p>Olá, <strong>${clientName}</strong>!</p>
+                            <p>Esperamos que esteja tudo bem.</p>
+                            <p>Estamos enviando em anexo o seu contrato de prestação de serviços de marketing digital renovado pelo período de **6 meses** para o ciclo atual.</p>
+                            <p>Por favor, analise o documento anexo. Caso tenha qualquer dúvida, estamos à inteira disposição para ajustes.</p>
+                        </div>
+                        <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                            <p><strong>EDUARDA CONTI & FERNANDO</strong></p>
+                            <p>&copy; ${currentYear} & CONTI Marketing Digital</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+
+        return { success: !error, data, error };
+    } catch (err) {
+        console.error('[CONTRACT EMAIL ERROR]:', err);
+        return { success: false, error: err.message };
+    }
+};
+
+const escapeHtml = (value) => {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+};
+
+const fillClientTemplate = (value, client) => {
+    return String(value ?? '')
+        .replace(/\{nome\}/g, client.name || '')
+        .replace(/\{cliente\}/g, client.name || '')
+        .replace(/\{email\}/g, client.email || '')
+        .replace(/\{cidade\}/g, client.cityState || '')
+        .replace(/\{documento\}/g, client.document || '');
+};
+
+const paragraphsToHtml = (text) => {
+    return String(text || '')
+        .split(/\n{2,}/)
+        .map(paragraph => paragraph.trim())
+        .filter(Boolean)
+        .map(paragraph => `<p style="color:#334155;font-size:15px;line-height:1.7;margin:0 0 18px;">${escapeHtml(paragraph).replace(/\n/g, '<br>')}</p>`)
+        .join('');
+};
+
+exports.sendClientBroadcastEmail = async ({ clients, subject, preheader, body, ctaLabel, ctaUrl, replyTo }) => {
+    const results = [];
+    const currentYear = new Date().getFullYear();
+
+    for (const client of clients) {
+        const finalSubject = fillClientTemplate(subject, client);
+        const finalPreheader = fillClientTemplate(preheader, client);
+        const finalBody = fillClientTemplate(body, client);
+        const finalCtaLabel = fillClientTemplate(ctaLabel, client);
+        const finalCtaUrl = fillClientTemplate(ctaUrl, client);
+
+        try {
+            const { data, error } = await resend.emails.send({
+                from: 'Compre Sua Foto <contato@compresuafoto.econticomigo.com.br>',
+                to: [client.email],
+                subject: finalSubject,
+                ...(replyTo ? { replyTo } : {}),
+                html: `
+                    <div style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;">
+                        <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">
+                            ${escapeHtml(finalPreheader)}
+                        </span>
+                        <div style="max-width:640px;margin:0 auto;padding:28px 16px;">
+                            <div style="overflow:hidden;border-radius:18px;background:#ffffff;border:1px solid #e2e8f0;box-shadow:0 18px 50px rgba(15,23,42,0.08);">
+                                <div style="background:#050505;padding:34px 34px 30px;text-align:left;">
+                                    <div style="color:#0ea5e9;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;">&amp; CONTI</div>
+                                    <h1 style="color:#ffffff;font-size:24px;line-height:1.2;margin:0;font-weight:700;">Compre Sua Foto</h1>
+                                    <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:10px 0 0;">${escapeHtml(finalPreheader || 'Uma mensagem importante para você.')}</p>
+                                </div>
+                                <div style="padding:34px;">
+                                    <p style="color:#0f172a;font-size:16px;line-height:1.7;margin:0 0 18px;">Olá, <strong>${escapeHtml(client.name || 'cliente')}</strong>.</p>
+                                    ${paragraphsToHtml(finalBody)}
+                                    ${finalCtaLabel && finalCtaUrl ? `
+                                        <div style="margin:30px 0 6px;text-align:left;">
+                                            <a href="${escapeHtml(finalCtaUrl)}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:12px;padding:15px 24px;font-size:14px;font-weight:800;letter-spacing:.4px;">
+                                                ${escapeHtml(finalCtaLabel)}
+                                            </a>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:22px 34px;text-align:left;">
+                                    <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0;">
+                                        &copy; ${currentYear} &amp; CONTI / Compre Sua Foto. Em caso de dúvidas, responda este e-mail.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            });
+
+            results.push({
+                clientId: client.id,
+                name: client.name,
+                email: client.email,
+                success: !error,
+                id: data?.id,
+                error: error?.message || error || null
+            });
+        } catch (error) {
+            results.push({
+                clientId: client.id,
+                name: client.name,
+                email: client.email,
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    return {
+        sent: results.filter(item => item.success).length,
+        failed: results.filter(item => !item.success).length,
+        results
+    };
 };

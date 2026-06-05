@@ -292,6 +292,14 @@ exports.uploadPhotos = async (req, res) => {
 exports.searchPhotos = async (req, res) => {
     try {
         const { eventId } = req.body;
+        const parsedEventId = parseInt(eventId, 10);
+
+        if (isNaN(parsedEventId)) {
+            if (req.file && fs.existsSync(req.file.path)) {
+                fs.unlinkSync(req.file.path);
+            }
+            return res.status(400).json({ error: 'ID do evento inválido ou ausente' });
+        }
 
         if (!req.file) {
             return res.status(400).json({ error: 'Selfie is required' });
@@ -300,7 +308,7 @@ exports.searchPhotos = async (req, res) => {
         // Read from disk storage
         let selfieBuffer = fs.readFileSync(req.file.path);
 
-        console.log(`[SEARCH] Searching for faces in event ${eventId}, selfie size: ${selfieBuffer.length} bytes`);
+        console.log(`[SEARCH] Searching for faces in event ${parsedEventId}, selfie size: ${selfieBuffer.length} bytes`);
 
         // AWS Rekognition has a 5MB limit for image bytes - resize if needed
         if (selfieBuffer.length > 5 * 1024 * 1024) {
@@ -310,7 +318,7 @@ exports.searchPhotos = async (req, res) => {
         }
 
         // Use AWS Rekognition
-        const matches = await rekognitionService.searchFacesByImage(selfieBuffer, eventId);
+        const matches = await rekognitionService.searchFacesByImage(selfieBuffer, parsedEventId);
 
         console.log(`[SEARCH] Found ${matches.length} matching photos`);
 

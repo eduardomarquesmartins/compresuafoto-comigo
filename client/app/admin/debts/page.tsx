@@ -1,0 +1,403 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Plus, ShieldAlert, Award, TrendingDown, DollarSign, Loader2, Edit2, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { getDebts, createDebt, updateDebt, deleteDebt } from "@/lib/api";
+
+export default function AdminDebtsPage() {
+    const [debts, setDebts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<"CPF" | "CNPJ">("CPF");
+
+    // Modal State
+    const [modalOpen, setModalOpen] = useState(false);
+    const [editingDebt, setEditingDebt] = useState<any | null>(null);
+    const [form, setForm] = useState({
+        priority: "",
+        credor: "",
+        holder: "",
+        originalAmount: "",
+        bestOffer: "",
+        type: "Serasa",
+        status: "Negociar agora",
+        obs: "",
+        isCnpj: "false"
+    });
+
+    const fetchDebts = async () => {
+        try {
+            setLoading(true);
+            const data = await getDebts();
+            setDebts(data);
+        } catch (error) {
+            console.error("Erro ao buscar dívidas:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDebts();
+    }, []);
+
+    // Filtrar dívidas conforme o modo selecionado
+    const filteredDebts = debts.filter(d => viewMode === "CNPJ" ? d.isCnpj : !d.isCnpj);
+
+    // Calcular Totais
+    const totalOriginal = filteredDebts.reduce((acc, d) => acc + d.originalAmount, 0);
+    const totalBestOffer = filteredDebts.reduce((acc, d) => acc + d.bestOffer, 0);
+    const totalSavings = totalOriginal - totalBestOffer;
+    const avgDiscount = totalOriginal > 0 ? (totalSavings / totalOriginal) * 100 : 0;
+
+    const handleOpenModal = (debt: any | null = null) => {
+        if (debt) {
+            setEditingDebt(debt);
+            setForm({
+                priority: debt.priority || "",
+                credor: debt.credor || "",
+                holder: debt.holder || "",
+                originalAmount: String(debt.originalAmount),
+                bestOffer: String(debt.bestOffer),
+                type: debt.type || "Serasa",
+                status: debt.status || "Negociar agora",
+                obs: debt.obs || "",
+                isCnpj: String(debt.isCnpj)
+            });
+        } else {
+            setEditingDebt(null);
+            setForm({
+                priority: viewMode === "CPF" ? "🟡 " : "",
+                credor: "",
+                holder: viewMode === "CPF" ? "CPF Eduarda" : "CNPJ &Conti",
+                originalAmount: "",
+                bestOffer: "",
+                type: viewMode === "CPF" ? "Serasa" : "Fiscal",
+                status: "Negociar agora",
+                obs: "",
+                isCnpj: String(viewMode === "CNPJ")
+            });
+        }
+        setModalOpen(true);
+    };
+
+    const handleSaveDebt = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!form.credor || !form.originalAmount) {
+            alert("Credor/Item e Valor Original são obrigatórios.");
+            return;
+        }
+
+        try {
+            setActionLoading("save");
+            const data = {
+                ...form,
+                originalAmount: parseFloat(form.originalAmount),
+                bestOffer: parseFloat(form.bestOffer || form.originalAmount),
+                isCnpj: form.isCnpj === "true"
+            };
+
+            if (editingDebt) {
+                await updateDebt(editingDebt.id, data);
+            } else {
+                await createDebt(data);
+            }
+            setModalOpen(false);
+            fetchDebts();
+        } catch (error) {
+            console.error("Erro ao salvar dívida:", error);
+            alert("Erro ao salvar dívida.");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleDeleteDebt = async (id: number) => {
+        if (confirm("Tem certeza que deseja remover este débito?")) {
+            try {
+                setActionLoading(`delete-${id}`);
+                await deleteDebt(id);
+                fetchDebts();
+            } catch (error) {
+                console.error("Erro ao excluir dívida:", error);
+                alert("Erro ao excluir dívida.");
+            } finally {
+                setActionLoading(null);
+            }
+        }
+    };
+
+    // Estilo de badge de prioridade/status
+    const getStatusStyle = (status: string, priority: string = "") => {
+        const fullStr = (status + " " + priority).toLowerCase();
+        if (fullStr.includes("🔴") || fullStr.includes("urgente") || fullStr.includes("processo ativo")) {
+            return "bg-red-500/10 border-red-500/20 text-red-400 shadow-[inset_0_0_10px_rgba(239,68,68,0.05)]";
+        }
+        if (fullStr.includes("🟡") || fullStr.includes("negociar")) {
+            return "bg-amber-500/10 border-amber-500/20 text-amber-400 shadow-[inset_0_0_10px_rgba(245,158,11,0.05)]";
+        }
+        if (fullStr.includes("pago") || fullStr.includes("quitado") || fullStr.includes("concluído")) {
+            return "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[inset_0_0_10px_rgba(16,185,129,0.05)]";
+        }
+        return "bg-slate-800 border-white/5 text-slate-400";
+    };
+
+    return (
+        <div className="pb-20 max-w-[1400px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div>
+                    <span className="text-blue-500 font-semibold tracking-widest uppercase text-xs">Gestão de Passivos</span>
+                    <h1 className="text-4xl font-extralight text-white tracking-tight flex items-center gap-4 mt-2">
+                        Controle de Dívidas
+                    </h1>
+                </div>
+                <button
+                    onClick={() => handleOpenModal()}
+                    className="group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] border border-white/5 active:scale-95 cursor-pointer"
+                >
+                    <Plus size={16} />
+                    Adicionar Débito
+                </button>
+            </div>
+
+            {/* View Mode Select */}
+            <div className="flex bg-[#121320] border border-slate-800 p-1.5 rounded-2xl w-fit shadow-inner">
+                <button
+                    onClick={() => setViewMode("CPF")}
+                    className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 cursor-pointer ${viewMode === 'CPF' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                    💛 Dívidas CPF (Eduarda & Fernando)
+                </button>
+                <button
+                    onClick={() => setViewMode("CNPJ")}
+                    className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 cursor-pointer ${viewMode === 'CNPJ' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                    🏢 Dívidas CNPJ (&Conti e Outros)
+                </button>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="group bg-[#161825]/90 border border-white/10 hover:border-slate-700 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Total Acumulado</span>
+                        <div className="w-10 h-10 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center border border-red-500/25">
+                            <TrendingDown size={18} />
+                        </div>
+                    </div>
+                    <div className="space-y-1 mt-6">
+                        <span className="text-3xl font-light text-white tracking-tight">
+                            R$ {totalOriginal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <p className="text-[10px] text-slate-400 font-semibold">Soma de todos os valores originais</p>
+                    </div>
+                </div>
+
+                <div className="group bg-[#161825]/90 border border-white/10 hover:border-slate-700 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Valor para Quitação</span>
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center border border-blue-500/25">
+                            <DollarSign size={18} />
+                        </div>
+                    </div>
+                    <div className="space-y-1 mt-6">
+                        <span className="text-3xl font-light text-white tracking-tight">
+                            R$ {totalBestOffer.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <p className="text-[10px] text-slate-400 font-semibold">Melhores propostas/ofertas para acordo</p>
+                    </div>
+                </div>
+
+                <div className="group bg-[#161825]/90 border border-white/10 hover:border-emerald-500/30 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.04] rounded-full blur-2xl"></div>
+                    <div className="flex items-center justify-between z-10">
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-emerald-400 transition-colors">Economia Potencial</span>
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/25 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                            <TrendingDown size={18} className="rotate-180" />
+                        </div>
+                    </div>
+                    <div className="space-y-1 mt-6 z-10">
+                        <span className="text-3xl font-semibold text-emerald-400 tracking-tight">
+                            R$ {totalSavings.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                        <p className="text-[10px] text-slate-400 font-semibold font-mono">Diferença de negociação</p>
+                    </div>
+                </div>
+
+                <div className="group bg-[#161825]/90 border border-white/10 hover:border-emerald-500/30 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.04] rounded-full blur-2xl"></div>
+                    <div className="flex items-center justify-between z-10">
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-emerald-400 transition-colors">Desconto Médio</span>
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/25 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                            <Award size={18} />
+                        </div>
+                    </div>
+                    <div className="space-y-1 mt-6 z-10">
+                        <span className="text-3xl font-bold text-emerald-400 tracking-tight">
+                            {avgDiscount.toFixed(1)}%
+                        </span>
+                        <p className="text-[10px] text-slate-400 font-semibold">Média de redução conquistada</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Debts Table */}
+            <div className="bg-[#161826]/95 border border-white/10 rounded-[32px] shadow-xl overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
+                {loading ? (
+                    <div className="py-24 flex justify-center items-center">
+                        <Loader2 className="animate-spin text-blue-500 w-10 h-10" />
+                    </div>
+                ) : filteredDebts.length === 0 ? (
+                    <div className="py-24 flex flex-col items-center justify-center text-center">
+                        <AlertCircle size={32} className="text-slate-400 mb-3" />
+                        <p className="text-slate-300 text-sm font-medium">Nenhum débito registrado para esta aba.</p>
+                        <p className="text-slate-500 text-xs mt-1">Carregue a planilha oficial na tela financeira ou adicione manualmente.</p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead className="bg-[#121320] border-b border-white/10">
+                                <tr>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 w-[120px]">Prioridade/CNPJ</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Credor / Item</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Titular / Empresa</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Valor Original</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Melhor Oferta</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Tipo</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Status / Obs</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5 text-slate-300">
+                                {filteredDebts.map(debt => (
+                                    <tr key={debt.id} className="hover:bg-white/[0.02] transition-colors group">
+                                        <td className="px-6 py-5 font-bold text-xs text-white/80">
+                                            {debt.priority || "-"}
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="font-bold text-white text-sm tracking-tight">{debt.credor}</div>
+                                        </td>
+                                        <td className="px-6 py-5 text-xs text-slate-400 font-medium">
+                                            {debt.holder || "-"}
+                                        </td>
+                                        <td className="px-6 py-5 font-mono text-sm text-slate-400 font-medium">
+                                            R$ {debt.originalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="px-6 py-5 font-mono text-sm text-white font-bold">
+                                            R$ {debt.bestOffer.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="px-6 py-5 text-xs text-slate-400 font-medium">
+                                            {debt.type}
+                                        </td>
+                                        <td className="px-6 py-5 max-w-[280px]">
+                                            <div className="space-y-1.5">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black tracking-wider uppercase border ${getStatusStyle(debt.status, debt.priority)}`}>
+                                                    {debt.status}
+                                                </span>
+                                                {debt.obs && (
+                                                    <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed font-medium">{debt.obs}</p>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5 text-right">
+                                            <div className="flex items-center justify-end gap-1.5">
+                                                <button
+                                                    onClick={() => handleOpenModal(debt)}
+                                                    className="text-slate-500 hover:text-white p-2 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-lg transition-all cursor-pointer"
+                                                    title="Editar Débito"
+                                                >
+                                                    <Edit2 size={12} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteDebt(debt.id)}
+                                                    disabled={actionLoading === `delete-${debt.id}`}
+                                                    className="text-slate-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                                                    title="Excluir Débito"
+                                                >
+                                                    {actionLoading === `delete-${debt.id}` ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* Debt Modal */}
+            {modalOpen && (
+                <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#1c1e2e] border border-white/10 rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 relative">
+                        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
+                        <div className="bg-black/30 px-8 py-5 border-b border-white/10 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-white">
+                                {editingDebt ? "Editar Débito" : "Adicionar Débito"}
+                            </h3>
+                            <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white text-2xl font-light cursor-pointer">&times;</button>
+                        </div>
+                        <form onSubmit={handleSaveDebt} className="p-8 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Credor / Item</span>
+                                    <input required value={form.credor} onChange={e => setForm({...form, credor: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Nome do credor" />
+                                </label>
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Titular / Empresa</span>
+                                    <input required value={form.holder} onChange={e => setForm({...form, holder: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: CPF Eduarda ou CNPJ &Conti" />
+                                </label>
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Prioridade / Identificador</span>
+                                    <input value={form.priority} onChange={e => setForm({...form, priority: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: 🔴 1 ou 🟡 4 ou CNPJ" />
+                                </label>
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Tipo de Dívida</span>
+                                    <input value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: Serasa, Protesto, Judicial, Fiscal" />
+                                </label>
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Valor Original (R$)</span>
+                                    <input required type="text" value={form.originalAmount} onChange={e => setForm({...form, originalAmount: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-mono" placeholder="0,00" />
+                                </label>
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Melhor Oferta de Acordo (R$)</span>
+                                    <input type="text" value={form.bestOffer} onChange={e => setForm({...form, bestOffer: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-mono" placeholder="Deixe em branco se for o mesmo valor" />
+                                </label>
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status</span>
+                                    <input value={form.status} onChange={e => setForm({...form, status: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: Negociar agora, Processo ativo, Pago" />
+                                </label>
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Dívida de CNPJ (Empresa)?</span>
+                                    <div className="relative">
+                                        <select value={form.isCnpj} onChange={e => setForm({...form, isCnpj: e.target.value})} className="w-full bg-[#111322] border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none text-sm appearance-none pr-8 cursor-pointer">
+                                            <option value="false">Não (Dívida CPF - Pessoal)</option>
+                                            <option value="true">Sim (Dívida CNPJ - Empresa)</option>
+                                        </select>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 text-xs">▼</div>
+                                    </div>
+                                </label>
+                                <label className="flex flex-col gap-2 md:col-span-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Observações / Detalhes</span>
+                                    <textarea rows={3} value={form.obs} onChange={e => setForm({...form, obs: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm resize-none" placeholder="Credor contatos, advogados, detalhes de desconto..." />
+                                </label>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                                <button type="button" onClick={() => setModalOpen(false)} className="px-5 py-3 text-sm font-bold text-slate-400 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 transition cursor-pointer">
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={actionLoading === "save"} className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl transition shadow-lg shadow-blue-950/30 cursor-pointer disabled:opacity-50">
+                                    {actionLoading === "save" && <Loader2 size={16} className="animate-spin" />}
+                                    Salvar Débito
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

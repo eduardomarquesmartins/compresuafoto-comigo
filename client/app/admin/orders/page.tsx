@@ -43,6 +43,7 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string; ico
 export default function AdminOrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [filter, setFilter] = useState("ALL");
     const [searchTerm, setSearchTerm] = useState("");
     const [filterEventId, setFilterEventId] = useState<number | "ALL">("ALL");
@@ -66,18 +67,22 @@ export default function AdminOrdersPage() {
     }, []);
 
     const fetchOrders = async () => {
+        setIsLoading(true);
+        setFetchError(null);
+
         try {
             const res = await api.get("/orders/admin/all");
             setOrders(res.data);
         } catch (error: any) {
-            console.error("Error fetching orders:", error);
             const status = error.response?.status;
-            const message = error.response?.data?.error || error.message;
-            alert(`Erro ao buscar pedidos (Status: ${status}): ${message}`);
-            if (status === 403 || status === 401) {
-                // If unauthorized, maybe token expired
-                console.log("Possibly unauthorized - checking session");
-            }
+            const message = error.code === 'ECONNABORTED'
+                ? 'A API demorou para responder. Tente novamente em instantes.'
+                : error.code === 'ERR_NETWORK'
+                    ? 'Não foi possível conectar na API. Verifique se o servidor está ativo.'
+                    : error.response?.data?.error || error.message || 'Erro inesperado ao buscar pedidos.';
+
+            setOrders([]);
+            setFetchError(status ? `Erro ${status}: ${message}` : message);
         } finally {
             setIsLoading(false);
         }
@@ -227,6 +232,28 @@ export default function AdminOrdersPage() {
                     </button>
                 </div>
             </div>
+
+            {/* Event Grouping/Filter */}
+            {fetchError && (
+                <div className="flex flex-col gap-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-5 text-amber-100 shadow-2xl shadow-amber-950/20 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
+                    <div className="flex gap-3">
+                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10 text-amber-300">
+                            <AlertTriangle size={18} />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-amber-50">Pedidos indisponíveis no momento</p>
+                            <p className="mt-1 text-sm text-amber-100/80">{fetchError}</p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={fetchOrders}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-sm font-medium text-amber-50 transition hover:bg-amber-400/20"
+                    >
+                        Tentar novamente
+                    </button>
+                </div>
+            )}
 
             {/* Event Grouping/Filter */}
             <div className="flex flex-wrap gap-4">

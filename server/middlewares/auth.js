@@ -33,6 +33,7 @@ exports.optionalAuth = (req, res, next) => {
 };
 
 exports.isAdmin = (req, res, next) => {
+    console.log('[isAdmin middleware] req.user:', req.user);
     if (req.user && req.user.role === 'ADMIN') {
         next();
     } else {

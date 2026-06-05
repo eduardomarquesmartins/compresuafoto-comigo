@@ -2,38 +2,8 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-// Assets locais — lidos do disco
+// Logo local — lido do disco
 const LOGO_PATH = path.join(__dirname, '../../client/public/logo.png');
-const BACKGROUND_PATH = path.join(__dirname, '../../client/public/background.jpg');
-
-const PROPOSAL_TYPES = {
-    empresarial: {
-        label: 'Empresarial',
-        title: 'PROPOSTA COMERCIAL',
-        coverBackground: BACKGROUND_PATH,
-        closingBackground: BACKGROUND_PATH,
-        coverOverlay: { color: '#000000', opacity: 0.68 },
-        closingOverlay: { color: '#ffffff', opacity: 0.82 }
-    },
-    casamento: {
-        label: 'Casamento',
-        title: 'PROPOSTA CASAMENTO',
-        coverBackground: path.join(__dirname, '../../client/public/proposals/wedding-cover.jpg'),
-        closingBackground: path.join(__dirname, '../../client/public/proposals/wedding-closing.jpg'),
-        coverOverlay: { color: '#000000', opacity: 0.55 },
-        closingOverlay: { color: '#ffffff', opacity: 0.72 }
-    },
-    '15anos': {
-        label: '15 anos',
-        title: 'PROPOSTA 15 ANOS',
-        coverBackground: path.join(__dirname, '../../client/public/proposals/quinze-anos-cover.jpg'),
-        closingBackground: path.join(__dirname, '../../client/public/proposals/quinze-anos-closing.jpg'),
-        coverOverlay: { color: '#000000', opacity: 0.52 },
-        closingOverlay: { color: '#ffffff', opacity: 0.70 }
-    }
-};
-
-const getProposalTheme = (proposalType = 'empresarial') => PROPOSAL_TYPES[proposalType] || PROPOSAL_TYPES.empresarial;
 
 const CATEGORY_DESCRIPTIONS = {
     "Social Media": "Postagens Facebook e Instagram, organização de feed, análise de mercado, estratégia, designer (cards), copyright, pesquisa do mês através do forms, Trello para organização.",
@@ -50,28 +20,8 @@ const SLATE_500 = '#64748b';
 const SLATE_400 = '#94a3b8';
 const SLATE_200 = '#e2e8f0';
 
-// Helper: Desenha imagem de fundo em página inteira com overlay
-const drawPageBackground = (doc, backgroundPath = BACKGROUND_PATH, overlayColor = '#000000', overlayOpacity = 0.55) => {
-    if (fs.existsSync(backgroundPath)) {
-        doc.save();
-        doc.image(backgroundPath, 0, 0, {
-            cover: [doc.page.width, doc.page.height],
-            align: 'center',
-            valign: 'center'
-        });
-        doc.restore();
-    }
-
-    doc.save();
-    doc.fillColor(overlayColor).opacity(overlayOpacity)
-        .rect(0, 0, doc.page.width, doc.page.height)
-        .fill();
-    doc.restore();
-    doc.opacity(1);
-};
-
 // Helper: Desenha Header e Footer nas páginas internas
-const drawHeaderFooter = (doc, dateStr, documentTitle = 'PROPOSTA COMERCIAL') => {
+const drawHeaderFooter = (doc, dateStr) => {
     // --- Header ---
     if (fs.existsSync(LOGO_PATH)) {
         doc.image(LOGO_PATH, 55, 30, { height: 25 });
@@ -81,7 +31,7 @@ const drawHeaderFooter = (doc, dateStr, documentTitle = 'PROPOSTA COMERCIAL') =>
     }
 
     doc.fillColor(SLATE_400).fontSize(9).font('Helvetica-Bold')
-        .text(documentTitle, 0, 38, { width: doc.page.width, align: 'center', characterSpacing: 2 });
+        .text('PROPOSTA COMERCIAL', 0, 38, { width: doc.page.width, align: 'center', characterSpacing: 2 });
 
     doc.fillColor(SLATE_400).fontSize(8).font('Helvetica')
         .text(dateStr, doc.page.width - 155, 38, { width: 100, align: 'right' });
@@ -97,15 +47,14 @@ const drawHeaderFooter = (doc, dateStr, documentTitle = 'PROPOSTA COMERCIAL') =>
 
 };
 
-exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType = 'empresarial') => {
-    const theme = getProposalTheme(proposalType);
+exports.generatePDFBuffer = (clientName, selectedServices, total) => {
     return new Promise((resolve, reject) => {
         try {
             const doc = new PDFDocument({
                 size: 'A4',
                 margin: 0,
                 info: {
-                    Title: `${theme.title} - ${clientName}`,
+                    Title: `Proposta Comercial - ${clientName}`,
                     Author: '& CONTI'
                 }
             });
@@ -120,7 +69,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
             // ──────────────────────────────────────────────────────────
             // PAGINA 1: CAPA
             // ──────────────────────────────────────────────────────────
-            drawPageBackground(doc, theme.coverBackground, theme.coverOverlay.color, theme.coverOverlay.opacity);
+            doc.rect(0, 0, doc.page.width, doc.page.height).fill('#000000');
             if (fs.existsSync(LOGO_PATH)) {
                 doc.image(LOGO_PATH, doc.page.width / 2 - 130, 80, { width: 260 });
             }
@@ -133,7 +82,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
             doc.fillColor('#ffffff').fontSize(40).font('Helvetica-Bold')
                 .text('PROPOSTA', 0, midY - 20, { align: 'center', characterSpacing: 6 });
             doc.fillColor(BLUE_ACCENT).fontSize(24).font('Helvetica')
-                .text(theme.label.toUpperCase(), 0, midY + 30, { align: 'center', characterSpacing: 10 });
+                .text('COMERCIAL', 0, midY + 30, { align: 'center', characterSpacing: 12 });
 
             doc.fillColor(SLATE_400).fontSize(14).font('Helvetica-Bold')
                 .text('PREPARADO EXCLUSIVAMENTE PARA:', 0, midY + 150, { align: 'center', characterSpacing: 3 });
@@ -150,7 +99,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
             // PAGINA 2: SERVIÇOS
             // ──────────────────────────────────────────────────────────
             doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 20 } });
-            drawHeaderFooter(doc, dateStr, theme.title);
+            drawHeaderFooter(doc, dateStr);
 
             let currentY = 90; // Start right below the header
 
@@ -168,7 +117,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
                 // Check if we need a new page for the category title
                 if (currentY > doc.page.height - 180) {
                     doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 20 } });
-                    drawHeaderFooter(doc, dateStr, theme.title);
+                    drawHeaderFooter(doc, dateStr);
                     currentY = 90; // Reset Y right below header
                 }
 
@@ -188,7 +137,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
                     // Check if we need a new page for an item
                     if (currentY > doc.page.height - 120) {
                         doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 20 } });
-                        drawHeaderFooter(doc, dateStr, theme.title);
+                        drawHeaderFooter(doc, dateStr);
                         currentY = 90;
                     }
 
@@ -208,7 +157,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
                 currentY += 15;
             });
 
-            // Resumo do Investimento fixo no rodape util da ultima pagina de servicos
+            // Resumo do investimento fixo no rodapé útil da última página de serviços
             const boxWidth = 220;
             const boxHeight = 70;
             const boxX = doc.page.width - 55 - boxWidth;
@@ -216,7 +165,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
 
             if (currentY > boxY - 20) {
                 doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 20 } });
-                drawHeaderFooter(doc, dateStr, theme.title);
+                drawHeaderFooter(doc, dateStr);
             }
 
             doc.fillColor('#f8fafc').rect(boxX, boxY, boxWidth, boxHeight).fill();
@@ -232,7 +181,6 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
             // PAGINA 3: FECHAMENTO
             // ──────────────────────────────────────────────────────────
             doc.addPage({ margin: 0 });
-            drawPageBackground(doc, theme.closingBackground, theme.closingOverlay.color, theme.closingOverlay.opacity);
             doc.fillColor('#000000').opacity(0.03).fontSize(400).font('Helvetica-Bold')
                 .text('&', 0, doc.page.height / 2 - 200, { align: 'center' });
             doc.opacity(1);

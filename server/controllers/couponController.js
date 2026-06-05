@@ -17,15 +17,17 @@ exports.createCoupon = async (req, res) => {
     try {
         const { code, discountType, discountValue, expiryDate, maxUses, isActive, freePhotos, oncePerCpf } = req.body;
 
+        const upperCode = String(code || '').toUpperCase();
+
         // Check if code already exists
-        const existing = await prisma.coupon.findUnique({ where: { code } });
+        const existing = await prisma.coupon.findUnique({ where: { code: upperCode } });
         if (existing) {
             return res.status(400).json({ error: "Este código de cupom já existe." });
         }
 
         const coupon = await prisma.coupon.create({
             data: {
-                code,
+                code: upperCode,
                 discountType,
                 discountValue,
                 expiryDate: expiryDate ? new Date(expiryDate) : null,
@@ -50,7 +52,7 @@ exports.updateCoupon = async (req, res) => {
         const coupon = await prisma.coupon.update({
             where: { id: parseInt(id) },
             data: {
-                code,
+                code: code ? code.toUpperCase() : undefined,
                 discountType,
                 discountValue,
                 expiryDate: expiryDate ? new Date(expiryDate) : null,

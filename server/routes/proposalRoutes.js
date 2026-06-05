@@ -6,6 +6,7 @@ const { authenticate, isAdmin } = require('../middlewares/auth');
 router.use(authenticate, isAdmin);
 
 router.get('/', proposalController.getProposals);
+router.get('/:id', proposalController.getProposalById);
 router.post('/', proposalController.createProposal);
 router.post('/send-email', proposalController.sendProposalEmail);
 router.post('/download', proposalController.downloadProposalPdf);

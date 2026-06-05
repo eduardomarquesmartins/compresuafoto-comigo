@@ -95,3 +95,80 @@ model Proposal {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
+
+model Client {
+  id             Int               @id @default(autoincrement())
+  name           String
+  email          String            @unique
+  document       String?           // CNPJ ou CPF
+  phone          String?
+  address        String?
+  cityState      String?
+  signerName     String?
+  signerDocument String?
+  status         String            @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  contracts      Contract[]
+  financials     FinancialRecord[]
+}
+
+model Contract {
+  id             Int      @id @default(autoincrement())
+  clientId       Int
+  scope          String
+  monthlyValue   Float
+  durationMonths Int      @default(6)
+  paymentDay     Int      @default(25)
+  startDate      DateTime @default(now())
+  endDate        DateTime?
+  status         String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
+  contractDate   String   // Data de vigência
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model FinancialRecord {
+  id          Int      @id @default(autoincrement())
+  type        String   // "INCOME" (Entrada) ou "EXPENSE" (Saída)
+  description String
+  amount      Float
+  date        DateTime @default(now())
+  category    String   // Ex: Mensalidades, Serviços, Infraestrutura, Impostos, etc.
+  status      String   @default("PENDING") // PAID, PENDING
+  account     String?  // Conta de origem/destino (Ex: CORA & CONTI)
+  obs         String?  // Observações adicionais
+  clientId    Int?     // Opcional, para relacionar a um cliente
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  client      Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+}
+
+model Debt {
+  id             Int      @id @default(autoincrement())
+  priority       String?  // Ex: "🔴 1", "🟡 4"
+  creditor       String
+  holder         String   // CPF Eduarda, CPF Fernando, CNPJ &Conti, etc.
+  originalAmount Float
+  bestOffer      Float
+  type           String   // Protesto, Judicial, Fiscal, Serasa, etc.
+  status         String   // Urgente, Processo ativo, Negociar, Pago
+  obs            String?
+  isCnpj         Boolean  @default(false) // true para dívidas de CNPJ, false para CPF
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model MentoriaDemand {
+  id          Int      @id @default(autoincrement())
+  area        String   // Precificação, Contas, Contratos, etc.
+  action      String   // Ação / Demanda
+  deadline    String?  // Prazo
+  responsible String   // Eduarda, Ambos, etc.
+  status      String   // Pendente, Monitorar, Realizada, Urgente
+  type        String?  // Estrutura, Operacional, Financeiro, etc.
+  obs         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
