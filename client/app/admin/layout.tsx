@@ -219,11 +219,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </div>
 
                     <nav className="admin-scroll flex-1 overflow-y-auto px-3 py-4">
-                        <Link href="/" className="admin-nav-link mb-5">
-                            <Home size={16} />
-                            <span>Voltar ao site</span>
-                        </Link>
-
                         <div className="space-y-6">
                             {navSections.map(section => (
                                 <div key={section.label}>
@@ -252,12 +247,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         </div>
                     </nav>
 
-                    <div className="border-t border-white/10 p-3">
-                        <button type="button" onClick={handleLogout} className="admin-nav-link w-full text-red-200/80 hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-100">
+                    <div className="border-t border-white/10 p-3 space-y-1">
+                        <button type="button" onClick={handleLogout} className="admin-nav-link is-danger w-full">
                             <LogOut size={16} />
-                            <span>Sair do admin</span>
+                            <span>Sair do Admin</span>
                         </button>
-                    </div>
+                        <Link href="/" className="admin-nav-link">
+                            <Home size={16} />
+                            <span>Voltar ao site</span>
+                        </Link>                    </div>
                 </aside>
 
                 <main className="relative z-10 min-w-0 flex-1 px-4 py-5 md:px-7 md:py-6 xl:px-9">
@@ -370,6 +368,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     background: linear-gradient(180deg, rgba(10,114,239,0.18), rgba(10,114,239,0.075));
                     color: #fff;
                     box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 16px 46px -34px rgba(10,114,239,0.95);
+                }
+
+                .admin-nav-link.is-danger {
+                    color: rgba(255, 91, 79, 0.85) !important;
+                }
+
+                .admin-nav-link.is-danger:hover {
+                    border-color: rgba(255, 91, 79, 0.3) !important;
+                    background: rgba(255, 91, 79, 0.12) !important;
+                    color: #fff !important;
                 }
 
                 .admin-topbar,
