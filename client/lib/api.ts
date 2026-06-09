@@ -261,7 +261,14 @@ export const downloadContractPdf = async (data: {
 };
 
 export const sendContractSignatureLink = async (data: {
-    clientId: number;
+    clientId?: number;
+    clientName?: string;
+    clientEmail?: string;
+    clientDocument?: string;
+    clientAddress?: string;
+    clientCityState?: string;
+    signerName?: string;
+    signerDocument?: string;
     scope: string;
     monthlyValue: number;
     durationMonths: string;

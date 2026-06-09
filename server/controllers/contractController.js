@@ -19,6 +19,13 @@ const getClientBaseUrl = () => {
 
 const buildSignatureLink = (token) => `${getClientBaseUrl()}/assinar-contrato/${token}`;
 
+const buildPlaceholderClientEmail = (clientName, clientDocument) => {
+    const namePart = sanitizeFileName(clientName || 'cliente') || 'cliente';
+    const documentPart = String(clientDocument || '').replace(/\D/g, '').slice(-6);
+    const fallbackPart = documentPart || Date.now().toString(36);
+    return `assinatura+${namePart}-${fallbackPart}@sem-email.local`;
+};
+
 const getContractPdfPayload = (contract) => ({
     clientName: contract.client?.name || contract.clientName || 'CONTRATANTE',
     clientDocument: contract.client?.document || '',
@@ -34,12 +41,100 @@ const getContractPdfPayload = (contract) => ({
     signedAt: contract.signedAt
 });
 
+const resolveContractClient = async ({
+    clientId,
+    clientName,
+    clientEmail,
+    clientDocument,
+    clientAddress,
+    clientCityState,
+    signerName,
+    signerDocument,
+    allowPlaceholderEmail = false
+}) => {
+    if (clientId) {
+        const parsedClientId = parseInt(clientId, 10);
+        const client = await prisma.client.findUnique({
+            where: { id: parsedClientId }
+        });
+
+        if (!client) {
+            throw new Error('CLIENT_NOT_FOUND');
+        }
+
+        const normalizedEmail = clientEmail ? String(clientEmail).trim().toLowerCase() : '';
+        const updateData = {};
+
+        if (clientName && clientName !== client.name) updateData.name = clientName;
+        if (normalizedEmail && normalizedEmail !== client.email) updateData.email = normalizedEmail;
+        if (clientDocument && clientDocument !== client.document) updateData.document = clientDocument;
+        if (clientAddress && clientAddress !== client.address) updateData.address = clientAddress;
+        if (clientCityState && clientCityState !== client.cityState) updateData.cityState = clientCityState;
+        if (signerName && signerName !== client.signerName) updateData.signerName = signerName;
+        if (signerDocument && signerDocument !== client.signerDocument) updateData.signerDocument = signerDocument;
+
+        if (Object.keys(updateData).length > 0) {
+            return prisma.client.update({
+                where: { id: parsedClientId },
+                data: updateData
+            });
+        }
+
+        return client;
+    }
+
+    if (!clientName) {
+        throw new Error('MANUAL_CLIENT_REQUIRES_NAME');
+    }
+
+    const normalizedEmail = clientEmail ? String(clientEmail).trim().toLowerCase() : '';
+
+    if (!normalizedEmail && !allowPlaceholderEmail) {
+        throw new Error('MANUAL_CLIENT_REQUIRES_EMAIL');
+    }
+
+    const clientEmailValue = normalizedEmail || buildPlaceholderClientEmail(clientName, clientDocument);
+    const existingClient = normalizedEmail
+        ? await prisma.client.findUnique({
+            where: { email: normalizedEmail }
+        })
+        : null;
+
+    if (existingClient) {
+        return prisma.client.update({
+            where: { id: existingClient.id },
+            data: {
+                name: clientName || existingClient.name,
+                email: clientEmailValue,
+                document: clientDocument || existingClient.document,
+                address: clientAddress || existingClient.address,
+                cityState: clientCityState || existingClient.cityState,
+                signerName: signerName || existingClient.signerName,
+                signerDocument: signerDocument || existingClient.signerDocument
+            }
+        });
+    }
+
+    return prisma.client.create({
+        data: {
+            name: clientName,
+            email: clientEmailValue,
+            document: clientDocument || null,
+            address: clientAddress || null,
+            cityState: clientCityState || null,
+            signerName: signerName || null,
+            signerDocument: signerDocument || null,
+            status: 'ACTIVE'
+        }
+    });
+};
+
 exports.generateContract = async (req, res) => {
     try {
         const { clientName, clientDocument } = req.body;
 
         if (!clientName || !clientDocument) {
-            return res.status(400).json({ error: 'Nome/Razão social e CPF ou CNPJ são obrigatórios.' });
+            return res.status(400).json({ error: 'Nome/Razao social e CPF ou CNPJ sao obrigatorios.' });
         }
 
         const pdfBuffer = await contractService.generateContractBuffer(req.body);
@@ -81,12 +176,12 @@ exports.createContract = async (req, res) => {
     try {
         const { clientId, scope, monthlyValue, durationMonths, paymentDay, startDate, contractDate } = req.body;
         if (!clientId || !scope || !monthlyValue) {
-            return res.status(400).json({ error: 'Cliente, escopo e valor mensal são obrigatórios.' });
+            return res.status(400).json({ error: 'Cliente, escopo e valor mensal sao obrigatorios.' });
         }
 
-        const parsedClientId = parseInt(clientId);
+        const parsedClientId = parseInt(clientId, 10);
         const start = startDate ? new Date(startDate) : new Date();
-        const duration = parseInt(durationMonths || 6);
+        const duration = parseInt(durationMonths || 6, 10);
         const end = new Date(start);
         end.setMonth(end.getMonth() + duration);
 
@@ -96,11 +191,11 @@ exports.createContract = async (req, res) => {
                 scope,
                 monthlyValue: parseFloat(monthlyValue),
                 durationMonths: duration,
-                paymentDay: parseInt(paymentDay || 25),
+                paymentDay: parseInt(paymentDay || 25, 10),
                 startDate: start,
                 endDate: end,
                 status: 'ACTIVE',
-                contractDate: contractDate || new Date().toLocaleDateString("pt-BR")
+                contractDate: contractDate || new Date().toLocaleDateString('pt-BR')
             },
             include: {
                 client: true
@@ -115,19 +210,55 @@ exports.createContract = async (req, res) => {
 
 exports.sendSignatureLink = async (req, res) => {
     try {
-        const { clientId, scope, monthlyValue, durationMonths, paymentDay, startDate, contractDate, delivery = 'email' } = req.body;
+        const {
+            clientId,
+            clientName,
+            clientEmail,
+            clientDocument,
+            clientAddress,
+            clientCityState,
+            signerName,
+            signerDocument,
+            scope,
+            monthlyValue,
+            durationMonths,
+            paymentDay,
+            startDate,
+            contractDate,
+            delivery = 'email'
+        } = req.body;
 
-        if (!clientId || !scope || !monthlyValue) {
-            return res.status(400).json({ error: 'Cliente, escopo e valor mensal são obrigatórios.' });
+        if (!scope || !monthlyValue) {
+            return res.status(400).json({ error: 'Escopo e valor mensal sao obrigatorios.' });
         }
 
-        const parsedClientId = parseInt(clientId);
-        const client = await prisma.client.findUnique({
-            where: { id: parsedClientId }
-        });
+        let client;
+        try {
+            client = await resolveContractClient({
+                clientId,
+                clientName,
+                clientEmail,
+                clientDocument,
+                clientAddress,
+                clientCityState,
+                signerName,
+                signerDocument,
+                allowPlaceholderEmail: delivery === 'copy'
+            });
+        } catch (error) {
+            if (error instanceof Error && error.message === 'CLIENT_NOT_FOUND') {
+                return res.status(404).json({ error: 'Cliente nao encontrado.' });
+            }
 
-        if (!client) {
-            return res.status(404).json({ error: 'Cliente não encontrado.' });
+            if (error instanceof Error && error.message === 'MANUAL_CLIENT_REQUIRES_NAME') {
+                return res.status(400).json({ error: 'Para gerar o link sem selecionar um cliente, preencha o nome do contratante.' });
+            }
+
+            if (error instanceof Error && error.message === 'MANUAL_CLIENT_REQUIRES_EMAIL') {
+                return res.status(400).json({ error: 'Para enviar o link por e-mail sem selecionar um cliente, preencha o e-mail do contratante.' });
+            }
+
+            throw error;
         }
 
         if (delivery === 'email' && !client.email) {
@@ -135,22 +266,22 @@ exports.sendSignatureLink = async (req, res) => {
         }
 
         const start = startDate ? new Date(startDate) : new Date();
-        const duration = parseInt(durationMonths || 6);
+        const duration = parseInt(durationMonths || 6, 10);
         const end = new Date(start);
         end.setMonth(end.getMonth() + duration);
         const signatureToken = crypto.randomBytes(24).toString('hex');
 
         const contract = await prisma.contract.create({
             data: {
-                clientId: parsedClientId,
+                clientId: client.id,
                 scope,
                 monthlyValue: parseFloat(monthlyValue),
                 durationMonths: duration,
-                paymentDay: parseInt(paymentDay || 25),
+                paymentDay: parseInt(paymentDay || 25, 10),
                 startDate: start,
                 endDate: end,
                 status: 'PENDING_SIGNATURE',
-                contractDate: contractDate || new Date().toLocaleDateString("pt-BR"),
+                contractDate: contractDate || new Date().toLocaleDateString('pt-BR'),
                 signatureToken
             },
             include: {
@@ -163,6 +294,7 @@ exports.sendSignatureLink = async (req, res) => {
             clientName: contract.client?.name || contract.clientName
         });
         const signLink = buildSignatureLink(signatureToken);
+
         if (delivery === 'email') {
             const emailResult = await emailService.sendContractSignatureLinkEmail(
                 client.email,
@@ -173,7 +305,7 @@ exports.sendSignatureLink = async (req, res) => {
 
             if (!emailResult.success) {
                 return res.status(500).json({
-                    error: 'Contrato criado, mas não consegui enviar o e-mail de assinatura.',
+                    error: 'Contrato criado, mas nao consegui enviar o e-mail de assinatura.',
                     contract,
                     signLink
                 });
@@ -197,9 +329,9 @@ exports.deleteContract = async (req, res) => {
     try {
         const { id } = req.params;
         await prisma.contract.delete({
-            where: { id: parseInt(id) }
+            where: { id: parseInt(id, 10) }
         });
-        res.json({ message: 'Contrato excluído com sucesso.' });
+        res.json({ message: 'Contrato excluido com sucesso.' });
     } catch (err) {
         console.error('[DELETE CONTRACT ERROR]:', err);
         res.status(500).json({ error: 'Erro ao excluir contrato.' });
@@ -217,7 +349,7 @@ exports.getPublicContractByToken = async (req, res) => {
         });
 
         if (!contract) {
-            return res.status(404).json({ error: 'Contrato não encontrado.' });
+            return res.status(404).json({ error: 'Contrato nao encontrado.' });
         }
 
         res.json({
@@ -241,7 +373,7 @@ exports.getPublicContractPdfByToken = async (req, res) => {
         });
 
         if (!contract) {
-            return res.status(404).json({ error: 'Contrato não encontrado.' });
+            return res.status(404).json({ error: 'Contrato nao encontrado.' });
         }
 
         const pdfBuffer = await contractService.generateContractBuffer(getContractPdfPayload(contract));
@@ -262,7 +394,7 @@ exports.signPublicContract = async (req, res) => {
         const { signerName, signerDocument } = req.body;
 
         if (!signerName || !signerDocument) {
-            return res.status(400).json({ error: 'Nome e documento do assinante são obrigatórios.' });
+            return res.status(400).json({ error: 'Nome e documento do assinante sao obrigatorios.' });
         }
 
         const contract = await prisma.contract.findFirst({
@@ -273,11 +405,11 @@ exports.signPublicContract = async (req, res) => {
         });
 
         if (!contract) {
-            return res.status(404).json({ error: 'Contrato não encontrado.' });
+            return res.status(404).json({ error: 'Contrato nao encontrado.' });
         }
 
         if (contract.signedAt) {
-            return res.status(409).json({ error: 'Este contrato já foi assinado.' });
+            return res.status(409).json({ error: 'Este contrato ja foi assinado.' });
         }
 
         const signedAt = new Date();
@@ -335,4 +467,3 @@ exports.signPublicContract = async (req, res) => {
         res.status(500).json({ error: 'Erro ao assinar contrato.' });
     }
 };
-

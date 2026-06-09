@@ -7,12 +7,13 @@ import { createContract, downloadContractPdf, getClients, getProposal, sendContr
 const initialForm = {
     clientId: "",
     clientName: "",
+    clientEmail: "",
     clientDocument: "",
     clientAddress: "",
     clientCityState: "",
     signerName: "",
     signerDocument: "",
-    scope: "gestão de redes sociais, incluindo planejamento, criação de conteúdo, publicações, acompanhamento estratégico e serviços de marketing digital conforme proposta aprovada",
+    scope: "gestao de redes sociais, incluindo planejamento, criacao de conteudo, publicacoes, acompanhamento estrategico e servicos de marketing digital conforme proposta aprovada",
     monthlyValue: "1000",
     durationMonths: "6",
     paymentDay: "25",
@@ -77,7 +78,7 @@ export default function AdminContractsPage() {
     useEffect(() => {
         if (typeof window === "undefined") return;
 
-        setForm(prev => ({
+        setForm((prev) => ({
             ...prev,
             contractDate: prev.contractDate || new Date().toLocaleDateString("pt-BR")
         }));
@@ -107,18 +108,19 @@ export default function AdminContractsPage() {
 
                 const services = proposal.selectedServices || [];
                 const servicesList = services
-                    .map((s: any) => `**- ${s.name} (${s.category}): R$ ${Number(s.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}**${s.description ? ` - ${s.description}` : ""}`)
+                    .map((service: any) => `**- ${service.name} (${service.category}): R$ ${Number(service.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}**${service.description ? ` - ${service.description}` : ""}`)
                     .join("\n");
 
-                const scopeText = `prestação de serviços de marketing digital e produção de conteúdo, compreendendo os seguintes itens da proposta comercial aprovada:\n\n${servicesList}`;
+                const scopeText = `prestacao de servicos de marketing digital e producao de conteudo, compreendendo os seguintes itens da proposta comercial aprovada:\n\n${servicesList}`;
                 const formattedTotal = typeof proposal.total === "number"
                     ? proposal.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
                     : String(proposal.total || "");
 
-                setForm(prev => ({
+                setForm((prev) => ({
                     ...prev,
                     clientId: proposal.clientId ? String(proposal.clientId) : proposal.client?.id ? String(proposal.client.id) : prev.clientId,
-                    clientName: proposal.clientName || "",
+                    clientName: proposal.clientName || proposal.client?.name || prev.clientName,
+                    clientEmail: proposal.client?.email || proposal.clientEmail || prev.clientEmail,
                     clientDocument: proposal.client?.document || prev.clientDocument,
                     clientAddress: proposal.client?.address || prev.clientAddress,
                     clientCityState: proposal.client?.cityState || prev.clientCityState,
@@ -127,7 +129,7 @@ export default function AdminContractsPage() {
                 }));
             } catch (error) {
                 console.warn("Erro ao carregar dados da proposta:", error);
-                setErrorMessage("Não consegui carregar os dados da proposta.");
+                setErrorMessage("Nao consegui carregar os dados da proposta.");
             } finally {
                 setLoading(false);
             }
@@ -137,7 +139,7 @@ export default function AdminContractsPage() {
     }, []);
 
     const updateField = (field: keyof typeof initialForm, value: string) => {
-        setForm(prev => ({ ...prev, [field]: value }));
+        setForm((prev) => ({ ...prev, [field]: value }));
     };
 
     const updateDocument = (value: string) => {
@@ -145,24 +147,43 @@ export default function AdminContractsPage() {
     };
 
     const handleClientSelect = (clientId: string) => {
-        const client = clients.find(item => String(item.id) === clientId);
-        setForm(prev => ({
+        const client = clients.find((item) => String(item.id) === clientId);
+        setForm((prev) => ({
             ...prev,
             clientId,
             clientName: client?.name || prev.clientName,
+            clientEmail: client?.email || prev.clientEmail,
             clientDocument: client?.document ? formatCpfCnpj(client.document) : prev.clientDocument,
             clientAddress: client?.address || prev.clientAddress,
             clientCityState: client?.cityState || prev.clientCityState
         }));
     };
 
-    const selectedClient = clients.find(client => String(client.id) === form.clientId);
+    const selectedClient = clients.find((client) => String(client.id) === form.clientId);
+    const resolvedClientEmail = (form.clientEmail || selectedClient?.email || "").trim();
+
+    const getSignaturePayload = (delivery: "email" | "copy") => ({
+        clientId: form.clientId ? Number(form.clientId) : undefined,
+        clientName: form.clientName.trim(),
+        clientEmail: resolvedClientEmail || undefined,
+        clientDocument: form.clientDocument.trim() || undefined,
+        clientAddress: form.clientAddress.trim() || undefined,
+        clientCityState: form.clientCityState.trim() || undefined,
+        signerName: form.signerName.trim() || undefined,
+        signerDocument: form.signerDocument.trim() || undefined,
+        scope: form.scope,
+        monthlyValue: moneyToNumber(form.monthlyValue),
+        durationMonths: form.durationMonths,
+        paymentDay: form.paymentDay,
+        contractDate: form.contractDate,
+        delivery
+    });
 
     const handleGenerate = async () => {
         setErrorMessage(null);
 
         if (!form.clientName.trim() || !form.clientDocument.trim()) {
-            setErrorMessage("Informe o nome/razão social e o CPF ou CNPJ do contratante.");
+            setErrorMessage("Informe o nome/razao social e o CPF ou CNPJ do contratante.");
             return;
         }
 
@@ -189,19 +210,16 @@ export default function AdminContractsPage() {
             const pdfBlob = new Blob([blob], { type: "application/pdf" });
             const url = window.URL.createObjectURL(pdfBlob);
             const filename = filenameFromClient(form.clientName);
-
-            // Safari-compatible download: use an anchor with target="_blank" as fallback
             const link = document.createElement("a");
+
             link.href = url;
             link.download = filename;
             link.style.display = "none";
             document.body.appendChild(link);
 
-            // Safari needs a slight delay before clicking the programmatic link
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             link.click();
 
-            // Give the browser time to start the download before cleanup
             setTimeout(() => {
                 link.remove();
                 window.URL.revokeObjectURL(url);
@@ -212,7 +230,7 @@ export default function AdminContractsPage() {
                 : undefined;
 
             if (status === 404) {
-                setErrorMessage("Não encontrei o endpoint de geração do contrato. Confirme se o backend local está rodando na porta 3002.");
+                setErrorMessage("Nao encontrei o endpoint de geracao do contrato. Confirme se o backend local esta rodando na porta 3002.");
             } else {
                 setErrorMessage("Houve um erro ao gerar o contrato.");
             }
@@ -223,16 +241,16 @@ export default function AdminContractsPage() {
         }
     };
 
-    const validateSignatureLinkRequest = () => {
+    const validateSignatureLinkRequest = (delivery: "email" | "copy") => {
         setErrorMessage(null);
 
-        if (!form.clientId) {
-            setErrorMessage("Selecione um cliente para enviar o link de assinatura.");
+        if (!form.clientName.trim()) {
+            setErrorMessage("Informe o nome do contratante para gerar o link de assinatura.");
             return false;
         }
 
-        if (!selectedClient?.email) {
-            setErrorMessage("O cliente selecionado precisa ter e-mail cadastrado.");
+        if (delivery === "email" && !resolvedClientEmail) {
+            setErrorMessage("Preencha um e-mail do contratante para enviar o link de assinatura.");
             return false;
         }
 
@@ -240,22 +258,14 @@ export default function AdminContractsPage() {
     };
 
     const handleSendSignatureLinkEmail = async () => {
-        if (!validateSignatureLinkRequest()) return;
+        if (!validateSignatureLinkRequest("email")) return;
 
         try {
             setSendingEmailLink(true);
-            const result = await sendContractSignatureLink({
-                clientId: Number(form.clientId),
-                scope: form.scope,
-                monthlyValue: moneyToNumber(form.monthlyValue),
-                durationMonths: form.durationMonths,
-                paymentDay: form.paymentDay,
-                contractDate: form.contractDate,
-                delivery: "email"
-            });
+            const result = await sendContractSignatureLink(getSignaturePayload("email"));
 
             setErrorMessage(null);
-            alert(result?.message || `Link enviado com sucesso para ${selectedClient?.email}.`);
+            alert(result?.message || `Link enviado com sucesso para ${resolvedClientEmail}.`);
             console.log("Link de assinatura:", result?.signLink);
         } catch (error) {
             console.warn("Erro ao enviar link de assinatura:", error);
@@ -266,27 +276,14 @@ export default function AdminContractsPage() {
     };
 
     const handleCopySignatureLink = async () => {
-        setErrorMessage(null);
-
-        if (!form.clientId) {
-            setErrorMessage("Selecione um cliente para gerar o link de assinatura.");
-            return;
-        }
+        if (!validateSignatureLinkRequest("copy")) return;
 
         try {
             setCopyingLink(true);
-            const result = await sendContractSignatureLink({
-                clientId: Number(form.clientId),
-                scope: form.scope,
-                monthlyValue: moneyToNumber(form.monthlyValue),
-                durationMonths: form.durationMonths,
-                paymentDay: form.paymentDay,
-                contractDate: form.contractDate,
-                delivery: "copy"
-            });
+            const result = await sendContractSignatureLink(getSignaturePayload("copy"));
 
             if (!result?.signLink) {
-                setErrorMessage("Não consegui gerar o link de assinatura.");
+                setErrorMessage("Nao consegui gerar o link de assinatura.");
                 return;
             }
 
@@ -328,9 +325,9 @@ export default function AdminContractsPage() {
                         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                             <label className="space-y-2 md:col-span-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Cliente vinculado</span>
-                                <select value={form.clientId} onChange={e => handleClientSelect(e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35">
-                                    <option value="">Sem vínculo / preencher manualmente</option>
-                                    {clients.map(client => (
+                                <select value={form.clientId} onChange={(e) => handleClientSelect(e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35">
+                                    <option value="">Sem vinculo / preencher manualmente</option>
+                                    {clients.map((client) => (
                                         <option key={client.id} value={client.id}>
                                             {client.name} {client.email ? `- ${client.email}` : ""}
                                         </option>
@@ -338,24 +335,28 @@ export default function AdminContractsPage() {
                                 </select>
                             </label>
                             <label className="space-y-2">
-                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Nome / Razão Social</span>
-                                <input value={form.clientName} onChange={e => updateField("clientName", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Empresa" />
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Nome / Razao Social</span>
+                                <input value={form.clientName} onChange={(e) => updateField("clientName", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Empresa" />
                             </label>
                             <label className="space-y-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">CPF / CNPJ</span>
-                                <input value={form.clientDocument} onChange={e => updateDocument(e.target.value)} inputMode="numeric" className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="000.000.000-00 ou 00.000.000/0001-00" />
+                                <input value={form.clientDocument} onChange={(e) => updateDocument(e.target.value)} inputMode="numeric" className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="000.000.000-00 ou 00.000.000/0001-00" />
                             </label>
                             <label className="space-y-2 md:col-span-2">
-                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Endereço</span>
-                                <input value={form.clientAddress} onChange={e => updateField("clientAddress", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Rua, numero, sala, bairro" />
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">E-mail</span>
+                                <input value={form.clientEmail} onChange={(e) => updateField("clientEmail", e.target.value)} type="email" className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="cliente@empresa.com" />
+                            </label>
+                            <label className="space-y-2 md:col-span-2">
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Endereco</span>
+                                <input value={form.clientAddress} onChange={(e) => updateField("clientAddress", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Rua, numero, sala, bairro" />
                             </label>
                             <label className="space-y-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Cidade / UF</span>
-                                <input value={form.clientCityState} onChange={e => updateField("clientCityState", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Porto Alegre/RS" />
+                                <input value={form.clientCityState} onChange={(e) => updateField("clientCityState", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Porto Alegre/RS" />
                             </label>
                             <label className="space-y-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Data do Contrato</span>
-                                <input value={form.contractDate} onChange={e => updateField("contractDate", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="03/06/2026" />
+                                <input value={form.contractDate} onChange={(e) => updateField("contractDate", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="03/06/2026" />
                             </label>
                         </div>
                     </div>
@@ -363,37 +364,37 @@ export default function AdminContractsPage() {
                     <div className="space-y-5">
                         <h2 className="text-lg font-semibold text-white">Escopo e Pagamento</h2>
                         <label className="block space-y-2">
-                            <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Escopo dos Serviços</span>
-                            <textarea value={form.scope} onChange={e => updateField("scope", e.target.value)} rows={5} className="w-full resize-none rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" />
+                            <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Escopo dos Servicos</span>
+                            <textarea value={form.scope} onChange={(e) => updateField("scope", e.target.value)} rows={5} className="w-full resize-none rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" />
                         </label>
                         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
                             <label className="space-y-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Valor Mensal</span>
-                                <input value={form.monthlyValue} onChange={e => updateField("monthlyValue", e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="1000,00" />
+                                <input value={form.monthlyValue} onChange={(e) => updateField("monthlyValue", e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="1000,00" />
                             </label>
                             <label className="space-y-2">
-                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Vigência (meses)</span>
-                                <input value={form.durationMonths} onChange={e => updateField("durationMonths", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="6" />
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Vigencia (meses)</span>
+                                <input value={form.durationMonths} onChange={(e) => updateField("durationMonths", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="6" />
                             </label>
                             <label className="space-y-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Dia de Pagamento</span>
-                                <input value={form.paymentDay} onChange={e => updateField("paymentDay", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="25" />
+                                <input value={form.paymentDay} onChange={(e) => updateField("paymentDay", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="25" />
                             </label>
                         </div>
                     </div>
-
                 </section>
 
-                <aside className="h-fit space-y-5 rounded-2xl border border-white/10 bg-[#161826] p-6 shadow-2xl sticky top-6">
+                <aside className="sticky top-6 h-fit space-y-5 rounded-2xl border border-white/10 bg-[#161826] p-6 shadow-2xl">
                     <div>
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Contrato</p>
                         <h2 className="mt-1 text-xl font-semibold text-white">{form.clientName || "Novo contrato"}</h2>
                     </div>
                     <div className="space-y-3 text-sm text-slate-400">
                         <p><span className="text-slate-500">Documento:</span> {form.clientDocument || "-"}</p>
-                        <p><span className="text-slate-500">Cliente:</span> {form.clientId ? "Vinculado" : "Sem vínculo"}</p>
+                        <p><span className="text-slate-500">Cliente:</span> {form.clientId ? "Vinculado" : "Sem vinculo"}</p>
+                        <p><span className="text-slate-500">E-mail:</span> {resolvedClientEmail || "-"}</p>
                         <p><span className="text-slate-500">Valor:</span> R$ {form.monthlyValue || "0"}</p>
-                        <p><span className="text-slate-500">Vigência:</span> {form.durationMonths || "0"} meses</p>
+                        <p><span className="text-slate-500">Vigencia:</span> {form.durationMonths || "0"} meses</p>
                         <p><span className="text-slate-500">Pagamento:</span> todo dia {form.paymentDay || "-"}</p>
                     </div>
                     <button
