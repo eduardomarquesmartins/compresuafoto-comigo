@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, FileText, Loader2, Mail, MessageCircle } from "lucide-react";
+import { Copy, Download, FileText, Loader2, Mail } from "lucide-react";
 import { createContract, downloadContractPdf, getClients, getProposal, sendContractSignatureLink } from "@/lib/api";
 
 const initialForm = {
@@ -55,13 +55,6 @@ const filenameFromClient = (clientName: string) => {
     return `contrato_${slug || "cliente"}.pdf`;
 };
 
-const normalizeWhatsappNumber = (value: string) => {
-    const digits = onlyDigits(value);
-    if (!digits) return "";
-    if (digits.startsWith("55")) return digits;
-    return `55${digits}`;
-};
-
 const getErrorMessage = (error: unknown, fallback: string) => {
     if (typeof error === "object" && error !== null && "response" in error) {
         const response = (error as { response?: { data?: { error?: string } } }).response;
@@ -78,7 +71,7 @@ export default function AdminContractsPage() {
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [sendingEmailLink, setSendingEmailLink] = useState(false);
-    const [sendingWhatsappLink, setSendingWhatsappLink] = useState(false);
+    const [copyingLink, setCopyingLink] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
@@ -272,21 +265,16 @@ export default function AdminContractsPage() {
         }
     };
 
-    const handleSendSignatureLinkWhatsapp = async () => {
+    const handleCopySignatureLink = async () => {
         setErrorMessage(null);
 
         if (!form.clientId) {
-            setErrorMessage("Selecione um cliente para enviar o link de assinatura.");
-            return;
-        }
-
-        if (!selectedClient?.phone) {
-            setErrorMessage("O cliente selecionado precisa ter telefone cadastrado para WhatsApp.");
+            setErrorMessage("Selecione um cliente para gerar o link de assinatura.");
             return;
         }
 
         try {
-            setSendingWhatsappLink(true);
+            setCopyingLink(true);
             const result = await sendContractSignatureLink({
                 clientId: Number(form.clientId),
                 scope: form.scope,
@@ -294,27 +282,21 @@ export default function AdminContractsPage() {
                 durationMonths: form.durationMonths,
                 paymentDay: form.paymentDay,
                 contractDate: form.contractDate,
-                delivery: "whatsapp"
+                delivery: "copy"
             });
 
-            const phone = normalizeWhatsappNumber(selectedClient.phone);
-            if (!phone) {
-                setErrorMessage("O telefone do cliente está inválido para WhatsApp.");
+            if (!result?.signLink) {
+                setErrorMessage("Não consegui gerar o link de assinatura.");
                 return;
             }
 
-            const message = [
-                `Olá, ${selectedClient.name || form.clientName}!`,
-                "Segue o link para revisar e assinar o seu contrato digitalmente:",
-                result?.signLink
-            ].join("\n\n");
-
-            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+            await navigator.clipboard.writeText(result.signLink);
+            alert("Link de assinatura copiado.");
         } catch (error) {
-            console.warn("Erro ao preparar link de assinatura no WhatsApp:", error);
-            setErrorMessage(getErrorMessage(error, "Houve um erro ao preparar o link para WhatsApp."));
+            console.warn("Erro ao copiar link de assinatura:", error);
+            setErrorMessage(getErrorMessage(error, "Houve um erro ao copiar o link de assinatura."));
         } finally {
-            setSendingWhatsappLink(false);
+            setCopyingLink(false);
         }
     };
 
@@ -426,7 +408,7 @@ export default function AdminContractsPage() {
                     </button>
                     <button
                         onClick={handleSendSignatureLinkEmail}
-                        disabled={loading || sendingEmailLink || sendingWhatsappLink}
+                        disabled={loading || sendingEmailLink || copyingLink}
                         className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-4 font-bold text-white transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 disabled:bg-slate-800 disabled:text-slate-500"
                     >
                         <span key={sendingEmailLink ? "sending-email" : "idle-email"} className="inline-flex items-center gap-3">
@@ -435,13 +417,13 @@ export default function AdminContractsPage() {
                         </span>
                     </button>
                     <button
-                        onClick={handleSendSignatureLinkWhatsapp}
-                        disabled={loading || sendingEmailLink || sendingWhatsappLink}
-                        className="flex w-full items-center justify-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4 font-bold text-white transition-colors hover:border-emerald-400/40 hover:bg-emerald-500/15 disabled:bg-slate-800 disabled:text-slate-500"
+                        onClick={handleCopySignatureLink}
+                        disabled={loading || sendingEmailLink || copyingLink}
+                        className="flex w-full items-center justify-center gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-5 py-4 font-bold text-white transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/15 disabled:bg-slate-800 disabled:text-slate-500"
                     >
-                        <span key={sendingWhatsappLink ? "sending-whatsapp" : "idle-whatsapp"} className="inline-flex items-center gap-3">
-                            {sendingWhatsappLink ? <Loader2 size={20} className="animate-spin" /> : <MessageCircle size={20} />}
-                            {sendingWhatsappLink ? "Abrindo WhatsApp..." : "Enviar link por WhatsApp"}
+                        <span key={copyingLink ? "copying-link" : "idle-copy"} className="inline-flex items-center gap-3">
+                            {copyingLink ? <Loader2 size={20} className="animate-spin" /> : <Copy size={20} />}
+                            {copyingLink ? "Copiando link..." : "Copiar link de assinatura"}
                         </span>
                     </button>
                 </aside>

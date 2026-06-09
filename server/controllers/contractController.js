@@ -130,7 +130,7 @@ exports.sendSignatureLink = async (req, res) => {
             return res.status(404).json({ error: 'Cliente não encontrado.' });
         }
 
-        if (!client.email) {
+        if (delivery === 'email' && !client.email) {
             return res.status(400).json({ error: 'O cliente precisa ter e-mail cadastrado para receber o link de assinatura.' });
         }
 
