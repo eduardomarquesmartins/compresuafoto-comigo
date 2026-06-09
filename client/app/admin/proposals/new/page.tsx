@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, Plus, Mail, Send, CheckCircle2, Loader2 } from 'lucide-react';
-import { sendProposalEmail, downloadProposalPdf, createProposal, getClients } from '@/lib/api';
+import { sendProposalEmail, downloadProposalPdf, createProposal, getClients, getProposal, updateProposal } from '@/lib/api';
 import Link from 'next/link';
 import ProposalCover from "@/components/proposals/ProposalCover";
 import ProposalServices from "@/components/proposals/ProposalServices";
@@ -157,10 +157,12 @@ interface ProposalItem {
 
 export default function NewProposalPage() {
     const [clients, setClients] = useState<any[]>([]);
+    const [editingProposalId, setEditingProposalId] = useState<string | null>(null);
     const [selectedClientId, setSelectedClientId] = useState("");
     const [clientName, setClientName] = useState("");
     const [clientEmail, setClientEmail] = useState('');
     const [isDownloading, setIsDownloading] = useState(false);
+    const [isLoadingProposal, setIsLoadingProposal] = useState(false);
     const [emailStatus, setEmailStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
     const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
@@ -176,6 +178,44 @@ export default function NewProposalPage() {
         };
 
         loadClients();
+    }, []);
+
+    useEffect(() => {
+        const proposalId = new URLSearchParams(window.location.search).get("edit");
+        if (!proposalId) return;
+
+        setEditingProposalId(proposalId);
+
+        const loadProposal = async () => {
+            try {
+                setIsLoadingProposal(true);
+                const proposal = await getProposal(proposalId);
+                const services = Array.isArray(proposal.selectedServices) ? proposal.selectedServices : [];
+                const normalizedServices = services.map((service: any) => ({
+                    id: service.id,
+                    category: service.category,
+                    name: service.name,
+                    price: Number(service.price) || 0,
+                    description: service.description
+                }));
+
+                setSelectedClientId(proposal.clientId || proposal.client?.id ? String(proposal.clientId || proposal.client?.id) : "");
+                setClientName(proposal.client?.name || proposal.clientName || "");
+                setClientEmail(proposal.client?.email || proposal.clientEmail || "");
+                setSelectedServices(normalizedServices);
+                setPriceDrafts(normalizedServices.reduce((drafts: Record<string, string>, service: SelectedService) => {
+                    drafts[service.id] = String(service.price);
+                    return drafts;
+                }, {}));
+            } catch (error) {
+                console.error("Erro ao carregar proposta para edicao:", error);
+                alert("Nao consegui carregar a proposta para edicao.");
+            } finally {
+                setIsLoadingProposal(false);
+            }
+        };
+
+        loadProposal();
     }, []);
 
     const handleClientSelect = (clientId: string) => {
@@ -289,7 +329,7 @@ export default function NewProposalPage() {
                         </Link>
                         <h1 className="text-4xl font-bold uppercase tracking-tighter text-white flex items-center gap-3">
                             <Plus className="w-8 h-8 text-blue-500" />
-                            Nova Proposta
+                            {editingProposalId ? "Editar Proposta" : "Nova Proposta"}
                         </h1>
                     </div>
                 </div>
@@ -304,6 +344,13 @@ export default function NewProposalPage() {
                             <p className="font-bold leading-tight">Sucesso!</p>
                             <p className="text-sm opacity-90">Proposta enviada para o e-mail do cliente.</p>
                         </div>
+                    </div>
+                )}
+
+                {isLoadingProposal && (
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex items-center gap-3 text-slate-300">
+                        <Loader2 className="animate-spin text-blue-500" size={20} />
+                        <span className="text-sm font-bold uppercase tracking-widest">Carregando proposta...</span>
                     </div>
                 )}
 
@@ -404,13 +451,19 @@ export default function NewProposalPage() {
                                     }
 
                                     // 2. Salva a proposta no banco de dados
-                                    await createProposal({
+                                    const proposalPayload = {
                                         clientId: selectedClientId ? Number(selectedClientId) : undefined,
                                         clientName,
                                         clientEmail,
                                         selectedServices,
                                         total
-                                    });
+                                    };
+
+                                    if (editingProposalId) {
+                                        await updateProposal(editingProposalId, proposalPayload);
+                                    } else {
+                                        await createProposal(proposalPayload);
+                                    }
 
                                     // 3. Faz o download do PDF
                                     const blob = await downloadProposalPdf({
@@ -434,7 +487,7 @@ export default function NewProposalPage() {
                                     setIsDownloading(false);
                                 }
                             }}
-                            disabled={isDownloading || selectedServices.length === 0}
+                            disabled={isDownloading || isLoadingProposal || selectedServices.length === 0}
                             className={`group relative overflow-hidden flex items-center justify-center gap-4 px-10 py-4 rounded-xl font-bold uppercase tracking-[0.15em] transition-all shadow-xl ${isDownloading
                                 ? 'bg-slate-800 text-slate-500 cursor-wait'
                                 : 'bg-blue-600 hover:bg-blue-500 text-white hover:scale-[1.02] active:scale-[0.98] shadow-blue-600/30'
@@ -448,7 +501,9 @@ export default function NewProposalPage() {
                             ) : (
                                 <>
                                     {clientEmail ? <Send size={20} /> : <ArrowLeft className="rotate-[-90deg]" size={20} />}
-                                    <span className="text-sm">{clientEmail ? 'Enviar e Baixar' : 'Baixar Proposta'}</span>
+                                    <span className="text-sm">
+                                        {editingProposalId ? (clientEmail ? 'Salvar, Enviar e Baixar' : 'Salvar e Baixar') : (clientEmail ? 'Enviar e Baixar' : 'Baixar Proposta')}
+                                    </span>
                                 </>
                             )}
                         </button>

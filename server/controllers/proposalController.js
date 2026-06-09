@@ -59,6 +59,41 @@ exports.createProposal = async (req, res) => {
     }
 };
 
+exports.updateProposal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { clientId, clientName, clientEmail, selectedServices, total } = req.body;
+        const parsedClientId = clientId ? parseInt(clientId) : null;
+        const matchedClient = parsedClientId
+            ? await prisma.client.findUnique({ where: { id: parsedClientId } })
+            : clientEmail
+                ? await prisma.client.findUnique({ where: { email: clientEmail } })
+                : null;
+
+        const proposal = await prisma.proposal.update({
+            where: { id: parseInt(id) },
+            data: {
+                clientId: matchedClient?.id || null,
+                clientName: matchedClient?.name || clientName,
+                clientEmail: matchedClient?.email || clientEmail,
+                selectedServices: JSON.stringify(selectedServices),
+                total
+            },
+            include: {
+                client: true
+            }
+        });
+
+        res.json({
+            ...proposal,
+            selectedServices: typeof proposal.selectedServices === 'string' ? JSON.parse(proposal.selectedServices) : proposal.selectedServices
+        });
+    } catch (err) {
+        console.error('[UPDATE PROPOSAL ERROR]:', err);
+        res.status(500).json({ error: 'Erro ao atualizar a proposta: ' + err.message });
+    }
+};
+
 exports.getProposals = async (req, res) => {
     try {
         const proposals = await prisma.proposal.findMany({

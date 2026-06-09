@@ -195,6 +195,11 @@ export const createProposal = async (data: { clientId?: number; clientName: stri
     return response.data;
 };
 
+export const updateProposal = async (id: number | string, data: { clientId?: number; clientName: string; clientEmail?: string; selectedServices: any[]; total: number }) => {
+    const response = await api.put(`proposals/${id}`, data);
+    return response.data;
+};
+
 export const getProposals = async () => {
     const response = await api.get('proposals');
     return response.data;

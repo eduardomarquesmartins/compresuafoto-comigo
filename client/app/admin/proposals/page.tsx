@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { FileText, Plus, Search, Trash2, CheckCircle, Clock } from "lucide-react";
+import { FileText, Plus, Trash2, CheckCircle, Clock, Pencil } from "lucide-react";
 import Link from 'next/link';
 import { getClients, getProposals, deleteProposal, approveProposal, linkProposalClient } from "@/lib/api";
 
@@ -168,6 +168,13 @@ export default function ProposalsPage() {
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex justify-end items-center gap-2">
+                                                <Link
+                                                    href={`/admin/proposals/new?edit=${proposal.id}`}
+                                                    className="text-slate-400 hover:text-white p-2 hover:bg-white/10 border border-transparent hover:border-white/20 rounded-lg transition-all flex items-center justify-center"
+                                                    title="Editar Orçamento"
+                                                >
+                                                    <Pencil size={18} />
+                                                </Link>
                                                 {proposal.status !== 'APPROVED' && (
                                                     <button
                                                         onClick={() => handleApprove(proposal.id)}
