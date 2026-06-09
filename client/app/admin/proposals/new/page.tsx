@@ -465,7 +465,6 @@ export default function NewProposalPage() {
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex flex-col text-center md:text-left gap-1">
                         <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">{selectedServices.length} serviços selecionados</span>
-                        <span className="text-slate-300 text-sm font-semibold">Subtotal: R$ {formatMoney(subtotal)}</span>
                         <span className="text-white text-xl font-black tracking-tighter flex items-center gap-2 justify-center md:justify-start">
                             Total final: R$ {formatMoney(totalFinal)}
                             {isManualTotal && (

@@ -93,18 +93,7 @@ const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, s
                 </div>
 
                 {/* Bloco de Total */}
-                <div className="mt-auto bg-blue-50 border-2 border-blue-100 p-[10mm] rounded-3xl space-y-4 break-inside-avoid">
-                    <div className="flex justify-between items-center gap-6 pb-4 border-b border-blue-100">
-                        <div className="flex flex-col text-left">
-                            <span className="text-[3.5mm] uppercase tracking-[0.2em] text-blue-600 font-bold mb-1">Subtotal dos serviços</span>
-                            <span className="text-[4mm] text-slate-500 font-medium tracking-tight">Soma automática dos itens selecionados</span>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-[8mm] font-bold text-slate-900 leading-none font-mono tracking-tighter">
-                                R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </span>
-                        </div>
-                    </div>
+                <div className="mt-auto bg-blue-50 border-2 border-blue-100 p-[10mm] rounded-3xl break-inside-avoid">
                     <div className="flex justify-between items-center gap-6">
                         <div className="flex flex-col text-left">
                             <span className="text-[3.5mm] uppercase tracking-[0.2em] text-blue-600 font-bold mb-1">Total final da proposta</span>
