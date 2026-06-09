@@ -66,6 +66,7 @@ export default function AdminDashboard() {
     const [chartData, setChartData] = useState<ChartPoint[]>([]);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [chartMounted, setChartMounted] = useState(false);
     const hasChartData = chartData.some((point) => Number(point.sales) > 0);
 
     useEffect(() => {
@@ -107,6 +108,14 @@ export default function AdminDashboard() {
             isMounted = false;
         };
     }, []);
+
+    // Delay chart rendering to ensure container has proper dimensions (fixes Safari Recharts warning)
+    useEffect(() => {
+        if (!loading) {
+            const timer = requestAnimationFrame(() => setChartMounted(true));
+            return () => cancelAnimationFrame(timer);
+        }
+    }, [loading]);
 
     const metrics = useMemo<MetricCard[]>(() => [
         {
@@ -204,7 +213,7 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
                         )}
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={300}>
+                        {chartMounted ? <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={300}>
                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
@@ -246,7 +255,7 @@ export default function AdminDashboard() {
                                 />
                                 <Area type="monotone" dataKey="sales" stroke="#0a72ef" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
                             </AreaChart>
-                        </ResponsiveContainer>
+                        </ResponsiveContainer> : <div className="flex h-full items-center justify-center"><div className="admin-loader" /></div>}
                     </div>
                 </section>
 

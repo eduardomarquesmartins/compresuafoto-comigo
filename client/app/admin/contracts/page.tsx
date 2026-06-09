@@ -166,14 +166,26 @@ export default function AdminContractsPage() {
                 });
             }
 
-            const url = window.URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+            const pdfBlob = new Blob([blob], { type: "application/pdf" });
+            const url = window.URL.createObjectURL(pdfBlob);
+            const filename = filenameFromClient(form.clientName);
+
+            // Safari-compatible download: use an anchor with target="_blank" as fallback
             const link = document.createElement("a");
             link.href = url;
-            link.download = filenameFromClient(form.clientName);
+            link.download = filename;
+            link.style.display = "none";
             document.body.appendChild(link);
+
+            // Safari needs a slight delay before clicking the programmatic link
+            await new Promise(resolve => setTimeout(resolve, 100));
             link.click();
-            link.remove();
-            window.URL.revokeObjectURL(url);
+
+            // Give the browser time to start the download before cleanup
+            setTimeout(() => {
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            }, 1000);
         } catch (error) {
             const status = typeof error === "object" && error !== null && "response" in error
                 ? (error as { response?: { status?: number } }).response?.status
@@ -292,8 +304,10 @@ export default function AdminContractsPage() {
                         disabled={loading}
                         className="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-4 font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500"
                     >
-                        {loading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
-                        {loading ? "Gerando..." : "Gerar Contrato"}
+                        <span key={loading ? "loading" : "idle"} className="inline-flex items-center gap-3">
+                            {loading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+                            {loading ? "Gerando..." : "Gerar Contrato"}
+                        </span>
                     </button>
                 </aside>
             </div>
