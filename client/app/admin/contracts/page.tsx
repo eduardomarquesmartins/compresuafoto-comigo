@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, FileText, Loader2, Send } from "lucide-react";
+import { Download, FileText, Loader2, Mail, MessageCircle } from "lucide-react";
 import { createContract, downloadContractPdf, getClients, getProposal, sendContractSignatureLink } from "@/lib/api";
 
 const initialForm = {
@@ -16,7 +16,7 @@ const initialForm = {
     monthlyValue: "1000",
     durationMonths: "6",
     paymentDay: "25",
-    contractDate: new Date().toLocaleDateString("pt-BR")
+    contractDate: ""
 };
 
 const moneyToNumber = (value: string) => {
@@ -55,15 +55,39 @@ const filenameFromClient = (clientName: string) => {
     return `contrato_${slug || "cliente"}.pdf`;
 };
 
+const normalizeWhatsappNumber = (value: string) => {
+    const digits = onlyDigits(value);
+    if (!digits) return "";
+    if (digits.startsWith("55")) return digits;
+    return `55${digits}`;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+    if (typeof error === "object" && error !== null && "response" in error) {
+        const response = (error as { response?: { data?: { error?: string } } }).response;
+        if (response?.data?.error) {
+            return response.data.error;
+        }
+    }
+
+    return fallback;
+};
+
 export default function AdminContractsPage() {
     const [form, setForm] = useState(initialForm);
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [sendingLink, setSendingLink] = useState(false);
+    const [sendingEmailLink, setSendingEmailLink] = useState(false);
+    const [sendingWhatsappLink, setSendingWhatsappLink] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
+
+        setForm(prev => ({
+            ...prev,
+            contractDate: prev.contractDate || new Date().toLocaleDateString("pt-BR")
+        }));
 
         const loadClients = async () => {
             try {
@@ -206,7 +230,49 @@ export default function AdminContractsPage() {
         }
     };
 
-    const handleSendSignatureLink = async () => {
+    const validateSignatureLinkRequest = () => {
+        setErrorMessage(null);
+
+        if (!form.clientId) {
+            setErrorMessage("Selecione um cliente para enviar o link de assinatura.");
+            return false;
+        }
+
+        if (!selectedClient?.email) {
+            setErrorMessage("O cliente selecionado precisa ter e-mail cadastrado.");
+            return false;
+        }
+
+        return true;
+    };
+
+    const handleSendSignatureLinkEmail = async () => {
+        if (!validateSignatureLinkRequest()) return;
+
+        try {
+            setSendingEmailLink(true);
+            const result = await sendContractSignatureLink({
+                clientId: Number(form.clientId),
+                scope: form.scope,
+                monthlyValue: moneyToNumber(form.monthlyValue),
+                durationMonths: form.durationMonths,
+                paymentDay: form.paymentDay,
+                contractDate: form.contractDate,
+                delivery: "email"
+            });
+
+            setErrorMessage(null);
+            alert(result?.message || `Link enviado com sucesso para ${selectedClient?.email}.`);
+            console.log("Link de assinatura:", result?.signLink);
+        } catch (error) {
+            console.warn("Erro ao enviar link de assinatura:", error);
+            setErrorMessage(getErrorMessage(error, "Houve um erro ao enviar o link por e-mail."));
+        } finally {
+            setSendingEmailLink(false);
+        }
+    };
+
+    const handleSendSignatureLinkWhatsapp = async () => {
         setErrorMessage(null);
 
         if (!form.clientId) {
@@ -214,30 +280,41 @@ export default function AdminContractsPage() {
             return;
         }
 
-        if (!selectedClient?.email) {
-            setErrorMessage("O cliente selecionado precisa ter e-mail cadastrado.");
+        if (!selectedClient?.phone) {
+            setErrorMessage("O cliente selecionado precisa ter telefone cadastrado para WhatsApp.");
             return;
         }
 
         try {
-            setSendingLink(true);
+            setSendingWhatsappLink(true);
             const result = await sendContractSignatureLink({
                 clientId: Number(form.clientId),
                 scope: form.scope,
                 monthlyValue: moneyToNumber(form.monthlyValue),
                 durationMonths: form.durationMonths,
                 paymentDay: form.paymentDay,
-                contractDate: form.contractDate
+                contractDate: form.contractDate,
+                delivery: "whatsapp"
             });
 
-            setErrorMessage(null);
-            alert(`Link enviado com sucesso para ${selectedClient.email}.`);
-            console.log("Link de assinatura:", result?.signLink);
+            const phone = normalizeWhatsappNumber(selectedClient.phone);
+            if (!phone) {
+                setErrorMessage("O telefone do cliente está inválido para WhatsApp.");
+                return;
+            }
+
+            const message = [
+                `Olá, ${selectedClient.name || form.clientName}!`,
+                "Segue o link para revisar e assinar o seu contrato digitalmente:",
+                result?.signLink
+            ].join("\n\n");
+
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
         } catch (error) {
-            console.warn("Erro ao enviar link de assinatura:", error);
-            setErrorMessage("Houve um erro ao enviar o link de assinatura.");
+            console.warn("Erro ao preparar link de assinatura no WhatsApp:", error);
+            setErrorMessage(getErrorMessage(error, "Houve um erro ao preparar o link para WhatsApp."));
         } finally {
-            setSendingLink(false);
+            setSendingWhatsappLink(false);
         }
     };
 
@@ -348,13 +425,23 @@ export default function AdminContractsPage() {
                         </span>
                     </button>
                     <button
-                        onClick={handleSendSignatureLink}
-                        disabled={loading || sendingLink}
+                        onClick={handleSendSignatureLinkEmail}
+                        disabled={loading || sendingEmailLink || sendingWhatsappLink}
                         className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-4 font-bold text-white transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 disabled:bg-slate-800 disabled:text-slate-500"
                     >
-                        <span key={sendingLink ? "sending" : "idle"} className="inline-flex items-center gap-3">
-                            {sendingLink ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
-                            {sendingLink ? "Enviando link..." : "Enviar link de assinatura"}
+                        <span key={sendingEmailLink ? "sending-email" : "idle-email"} className="inline-flex items-center gap-3">
+                            {sendingEmailLink ? <Loader2 size={20} className="animate-spin" /> : <Mail size={20} />}
+                            {sendingEmailLink ? "Enviando e-mail..." : "Enviar link por e-mail"}
+                        </span>
+                    </button>
+                    <button
+                        onClick={handleSendSignatureLinkWhatsapp}
+                        disabled={loading || sendingEmailLink || sendingWhatsappLink}
+                        className="flex w-full items-center justify-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4 font-bold text-white transition-colors hover:border-emerald-400/40 hover:bg-emerald-500/15 disabled:bg-slate-800 disabled:text-slate-500"
+                    >
+                        <span key={sendingWhatsappLink ? "sending-whatsapp" : "idle-whatsapp"} className="inline-flex items-center gap-3">
+                            {sendingWhatsappLink ? <Loader2 size={20} className="animate-spin" /> : <MessageCircle size={20} />}
+                            {sendingWhatsappLink ? "Abrindo WhatsApp..." : "Enviar link por WhatsApp"}
                         </span>
                     </button>
                 </aside>

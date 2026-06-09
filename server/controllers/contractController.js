@@ -115,7 +115,7 @@ exports.createContract = async (req, res) => {
 
 exports.sendSignatureLink = async (req, res) => {
     try {
-        const { clientId, scope, monthlyValue, durationMonths, paymentDay, startDate, contractDate } = req.body;
+        const { clientId, scope, monthlyValue, durationMonths, paymentDay, startDate, contractDate, delivery = 'email' } = req.body;
 
         if (!clientId || !scope || !monthlyValue) {
             return res.status(400).json({ error: 'Cliente, escopo e valor mensal são obrigatórios.' });
@@ -163,25 +163,29 @@ exports.sendSignatureLink = async (req, res) => {
             clientName: contract.client?.name || contract.clientName
         });
         const signLink = buildSignatureLink(signatureToken);
-        const emailResult = await emailService.sendContractSignatureLinkEmail(
-            client.email,
-            client.name,
-            pdfBuffer,
-            signLink
-        );
-
-        if (!emailResult.success) {
-            return res.status(500).json({
-                error: 'Contrato criado, mas não consegui enviar o e-mail de assinatura.',
-                contract,
+        if (delivery === 'email') {
+            const emailResult = await emailService.sendContractSignatureLinkEmail(
+                client.email,
+                client.name,
+                pdfBuffer,
                 signLink
-            });
+            );
+
+            if (!emailResult.success) {
+                return res.status(500).json({
+                    error: 'Contrato criado, mas não consegui enviar o e-mail de assinatura.',
+                    contract,
+                    signLink
+                });
+            }
         }
 
         res.status(201).json({
             contract,
             signLink,
-            message: 'Link de assinatura enviado com sucesso.'
+            message: delivery === 'email'
+                ? 'Link de assinatura enviado com sucesso.'
+                : 'Link de assinatura criado com sucesso.'
         });
     } catch (err) {
         console.error('[SEND SIGNATURE LINK ERROR]:', err);

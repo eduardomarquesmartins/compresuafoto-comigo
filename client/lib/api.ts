@@ -268,6 +268,7 @@ export const sendContractSignatureLink = async (data: {
     paymentDay: string;
     startDate?: string;
     contractDate?: string;
+    delivery?: 'email' | 'whatsapp';
 }) => {
     const response = await api.post('contracts/send-sign-link', data);
     return response.data;
