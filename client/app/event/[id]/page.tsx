@@ -57,8 +57,8 @@ export default function EventDetailPage() {
     useEffect(() => {
         if (params.id) {
             getEvent(Array.isArray(params.id) ? params.id[0] : params.id)
-                .then(setEvent)
-                .catch(console.error);
+                .then(data => setEvent(data || null))
+                .catch(() => setEvent(null));
         }
     }, [params.id]);
 

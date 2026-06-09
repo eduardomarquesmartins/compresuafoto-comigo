@@ -41,13 +41,18 @@ export default function AdminClientsPage() {
         contractDate: new Date().toLocaleDateString("pt-BR")
     });
 
+    const normalizeClient = (client: any) => ({
+        ...client,
+        contracts: Array.isArray(client?.contracts) ? client.contracts : []
+    });
+
     const fetchClients = async () => {
         setLoading(true);
         setFetchError(null);
 
         try {
             const data = await getClients();
-            setClients(Array.isArray(data) ? data : []);
+            setClients(Array.isArray(data) ? data.map(normalizeClient) : []);
         } catch (error: any) {
             const status = error.response?.status;
             const message = error.code === 'ECONNABORTED'
@@ -69,7 +74,7 @@ export default function AdminClientsPage() {
 
     const handleOpenClientModal = (client: any | null = null) => {
         if (client) {
-            setEditingClient(client);
+            setEditingClient(normalizeClient(client));
             setClientForm({
                 name: client.name || "",
                 email: client.email || "",
@@ -138,7 +143,7 @@ export default function AdminClientsPage() {
     };
 
     const handleOpenContractModal = (client: any) => {
-        setSelectedClientForContract(client);
+        setSelectedClientForContract(normalizeClient(client));
         setContractForm({
             scope: "gestão de redes sociais, incluindo planejamento, criação de conteúdo, publicações, acompanhamento estratégico e serviços de marketing digital conforme proposta aprovada",
             monthlyValue: "",
@@ -253,7 +258,10 @@ export default function AdminClientsPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-8">
-                    {clients.map(client => (
+                    {clients.map(client => {
+                        const clientContracts = Array.isArray(client.contracts) ? client.contracts : [];
+
+                        return (
                         <div key={client.id} className="group bg-gradient-to-br from-[#161826] to-[#11131e] border border-white/10 hover:border-blue-500/25 rounded-[32px] shadow-2xl overflow-hidden relative transition-all duration-500 p-6 md:p-8 space-y-6">
                             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
                             
@@ -317,13 +325,13 @@ export default function AdminClientsPage() {
                                     <FileText size={13} className="text-slate-500" />
                                     <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Contratos Contratados</h4>
                                 </div>
-                                {(!client.contracts || client.contracts.length === 0) ? (
+                                {clientContracts.length === 0 ? (
                                     <div className="bg-[#0f111a]/40 border border-dashed border-white/10 rounded-2xl p-6 text-center">
                                         <p className="text-xs text-slate-500 italic">Nenhum contrato ativo cadastrado para este cliente.</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-4">
-                                        {client.contracts.map((contract: any) => (
+                                        {clientContracts.map((contract: any) => (
                                             <div key={contract.id} className="bg-[#0f111a]/60 border border-white/10 hover:border-white/20 rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-all">
                                                 <div className="space-y-3 flex-1">
                                                     <div className="flex flex-wrap items-center gap-3">
@@ -360,7 +368,8 @@ export default function AdminClientsPage() {
                                 )}
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 

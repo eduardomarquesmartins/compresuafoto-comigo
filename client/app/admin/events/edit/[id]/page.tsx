@@ -27,6 +27,11 @@ export default function EditEventPage() {
     const loadEvent = async (id: string) => {
         try {
             const event = await getEvent(id);
+            if (!event) {
+                alert('Evento indisponível no momento');
+                router.push('/admin/events');
+                return;
+            }
             setFormData({
                 name: event.name,
                 date: event.date.split('T')[0], // Extract YYYY-MM-DD

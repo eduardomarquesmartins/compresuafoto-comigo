@@ -1,4 +1,9 @@
 const prisma = require('../lib/prisma');
+const { readFinancialNote } = require('../services/financialNoteReader');
+
+const safeOriginalName = (name) => String(name || 'nota')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+    .slice(0, 160);
 
 exports.getFinancials = async (req, res) => {
     try {
@@ -71,6 +76,72 @@ exports.createFinancial = async (req, res) => {
     } catch (err) {
         console.error('[CREATE FINANCIAL ERROR]:', err);
         res.status(500).json({ error: 'Erro ao criar registro financeiro.' });
+    }
+};
+
+exports.createFinancialFromNote = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Envie uma nota, recibo ou comprovante.' });
+        }
+
+        const { status, account, obs } = req.body;
+        const originalName = safeOriginalName(req.file.originalname);
+        const readResult = await readFinancialNote(req.file);
+        const finalAmount = readResult.amount;
+
+        if (!finalAmount) {
+            return res.status(422).json({
+                error: 'Nao consegui identificar o valor total da nota automaticamente.',
+                extractedText: readResult.extractedText,
+                fileName: originalName
+            });
+        }
+
+        const publicPath = `/uploads/financial-notes/${req.file.filename}`;
+        const requestProtocol = req.get('x-forwarded-proto') || req.protocol;
+        const fileUrl = `${requestProtocol}://${req.get('host')}${publicPath}`;
+        const noteData = {
+            type: 'uploaded-cost-note',
+            fileUrl,
+            publicPath,
+            originalName,
+            mimeType: req.file.mimetype,
+            size: req.file.size,
+            uploadedAt: new Date().toISOString(),
+            reader: {
+                source: readResult.source,
+                confidence: readResult.confidence,
+                vendor: readResult.vendor,
+                extractedText: readResult.extractedText
+            },
+            notes: obs || ''
+        };
+
+        const record = await prisma.financialRecord.create({
+            data: {
+                type: 'EXPENSE',
+                description: readResult.description || `Nota de custo - ${originalName.replace(/\.[^.]+$/, '')}`,
+                amount: finalAmount,
+                date: new Date(readResult.date),
+                category: readResult.category || 'Outros',
+                status: status || 'PAID',
+                account: account || 'CORA & CONTI',
+                obs: JSON.stringify(noteData)
+            },
+            include: {
+                client: {
+                    select: {
+                        name: true
+                    }
+                }
+            }
+        });
+
+        res.status(201).json(record);
+    } catch (err) {
+        console.error('[CREATE FINANCIAL NOTE ERROR]:', err);
+        res.status(500).json({ error: 'Erro ao criar despesa a partir da nota.' });
     }
 };
 

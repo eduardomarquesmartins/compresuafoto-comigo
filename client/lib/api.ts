@@ -31,7 +31,7 @@ const isMissingOnlineAdminEndpoint = (error: unknown) => {
 };
 
 const adminEndpointFallback = <T>(endpoint: string, fallback: T, error: unknown): T => {
-    if (isMissingOnlineAdminEndpoint(error)) {
+    if (isMissingOnlineAdminEndpoint(error) || (axios.isAxiosError(error) && !error.response)) {
         console.warn(
             `[Admin API] Endpoint /${endpoint} não está disponível na API configurada (${baseURL}). ` +
             `Renderizando fallback local até o backend online ser atualizado.`
@@ -80,8 +80,12 @@ api.interceptors.response.use(
 );
 
 export const getEvents = async (status?: string) => {
-    const response = await api.get('events', { params: { status } });
-    return response.data;
+    try {
+        const response = await api.get('events', { params: { status } });
+        return response.data;
+    } catch (error) {
+        return adminEndpointFallback('events', [], error);
+    }
 };
 
 export const updateEvent = async (id: number, data: any) => {
@@ -99,8 +103,12 @@ export const updateEvent = async (id: number, data: any) => {
 };
 
 export const getEvent = async (id: string) => {
-    const response = await api.get(`events/${id}`);
-    return response.data;
+    try {
+        const response = await api.get(`events/${id}`);
+        return response.data;
+    } catch (error) {
+        return adminEndpointFallback(`events/${id}`, null, error);
+    }
 };
 
 export const uploadPhotos = async (eventId: number, formData: FormData, onProgress?: (progress: number) => void) => {
@@ -201,13 +209,21 @@ export const updateProposal = async (id: number | string, data: { clientId?: num
 };
 
 export const getProposals = async () => {
-    const response = await api.get('proposals');
-    return response.data;
+    try {
+        const response = await api.get('proposals');
+        return response.data;
+    } catch (error) {
+        return adminEndpointFallback('proposals', [], error);
+    }
 };
 
 export const getProposal = async (id: number | string) => {
-    const response = await api.get(`proposals/${id}`);
-    return response.data;
+    try {
+        const response = await api.get(`proposals/${id}`);
+        return response.data;
+    } catch (error) {
+        return adminEndpointFallback(`proposals/${id}`, null, error);
+    }
 };
 
 export const deleteProposal = async (id: number) => {
@@ -304,8 +320,12 @@ export const sendClientEmail = async (data: {
 
 // --- Contratos de Banco (Contract Database API) ---
 export const getContracts = async () => {
-    const response = await api.get('contracts');
-    return response.data;
+    try {
+        const response = await api.get('contracts');
+        return response.data;
+    } catch (error) {
+        return adminEndpointFallback('contracts', [], error);
+    }
 };
 
 export const createContract = async (data: any) => {
@@ -339,6 +359,25 @@ export const getFinancialStats = async (params: { month: string; year: string })
 
 export const createFinancial = async (data: any) => {
     const response = await api.post('financials', data);
+    return response.data;
+};
+
+export const uploadFinancialNote = async (data: {
+    note: File;
+    status?: string;
+    account?: string;
+    obs?: string;
+}) => {
+    const formData = new FormData();
+    formData.append('note', data.note);
+    formData.append('status', data.status || '');
+    formData.append('account', data.account || '');
+    formData.append('obs', data.obs || '');
+
+    const response = await api.post('financials/note-upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000
+    });
     return response.data;
 };
 

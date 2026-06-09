@@ -29,9 +29,10 @@ export default function AdminEventsPage() {
         try {
             const statusParam = filterStatus === 'ALL' ? undefined : filterStatus;
             const data = await getEvents(statusParam);
-            setEvents(data);
+            setEvents(Array.isArray(data) ? data : []);
         } catch (error) {
-            console.error("Failed to fetch events:", error);
+            console.warn("Failed to fetch events. Rendering empty event list.");
+            setEvents([]);
         } finally {
             setLoading(false);
         }

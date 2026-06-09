@@ -41,9 +41,10 @@ export default function CouponsPage() {
     const fetchCoupons = async () => {
         try {
             const res = await api.get("/coupons");
-            setCoupons(res.data);
+            setCoupons(Array.isArray(res.data) ? res.data : []);
         } catch (error) {
-            console.error("Erro ao buscar cupons:", error);
+            console.warn("Erro ao buscar cupons. Renderizando lista vazia.");
+            setCoupons([]);
         } finally {
             setIsLoading(false);
         }

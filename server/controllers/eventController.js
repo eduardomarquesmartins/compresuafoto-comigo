@@ -315,11 +315,13 @@ exports.createEventFromDrive = async (req, res) => {
         if (req.file) {
             logToFile(`Uploading provided cover image: ${req.file.originalname}`);
             try {
-                const result = await cloudinaryService.uploadStream(req.file.buffer, 'events/covers');
+                const result = await cloudinaryService.uploadFromFile(req.file.path, 'events/covers');
                 coverImage = result.secure_url;
                 logToFile('Cover image uploaded successfully');
+                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
             } catch (cloudErr) {
                 logToFile(`Cloudinary Cover Error: ${cloudErr.message}`);
+                if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
                 return res.status(500).json({ error: 'Cloudinary cover upload failed: ' + cloudErr.message });
             }
         }

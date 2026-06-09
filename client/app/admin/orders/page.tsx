@@ -108,7 +108,7 @@ export default function AdminOrdersPage() {
             const res = await api.get(`/orders/${order.publicId || order.id}`);
             setOrderPhotos(res.data.photos || []);
         } catch (error) {
-            console.error("Error fetching order details:", error);
+            console.warn("Error fetching order details. Rendering empty photo list.");
             setOrderPhotos([]);
         } finally {
             setIsLoadingPhotos(false);
@@ -122,9 +122,10 @@ export default function AdminOrdersPage() {
         setEventPhotos([]);
         try {
             const res = await api.get("/events");
-            setEvents(res.data);
+            setEvents(Array.isArray(res.data) ? res.data : []);
         } catch (error) {
-            console.error("Error fetching events:", error);
+            console.warn("Error fetching events. Rendering empty event list.");
+            setEvents([]);
         }
     };
 
@@ -134,7 +135,8 @@ export default function AdminOrdersPage() {
             const res = await api.get(`/events/${eventId}`);
             setEventPhotos(res.data.photos || []);
         } catch (error) {
-            console.error("Error fetching event photos:", error);
+            console.warn("Error fetching event photos. Rendering empty photo list.");
+            setEventPhotos([]);
         }
     };
 

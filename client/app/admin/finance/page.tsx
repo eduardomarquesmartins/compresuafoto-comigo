@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { 
     Plus, DollarSign, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, 
-    Calendar, Trash2, CheckCircle, Clock, Loader2, Filter, AlertCircle
+    Calendar, Trash2, CheckCircle, Clock, Loader2, Filter, AlertCircle, FileUp, FileText
 } from "lucide-react";
 import { 
-    getFinancials, getFinancialStats, createFinancial, updateFinancial, deleteFinancial, getClients
+    getFinancials, getFinancialStats, createFinancial, updateFinancial, deleteFinancial, getClients, uploadFinancialNote
 } from "@/lib/api";
 
 const CATEGORIES = {
@@ -39,6 +39,17 @@ const CATEGORY_COLORS: Record<string, string> = {
     "Outros": "bg-slate-700/10 text-slate-400 border-slate-700/20"
 };
 
+const parseUploadedNote = (obs?: string) => {
+    if (!obs) return null;
+
+    try {
+        const data = JSON.parse(obs);
+        return data?.type === "uploaded-cost-note" ? data : null;
+    } catch {
+        return null;
+    }
+};
+
 const getInitialFinanceFilters = () => {
     if (typeof window === "undefined") {
         return {
@@ -61,6 +72,8 @@ export default function AdminFinancePage() {
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [noteModalOpen, setNoteModalOpen] = useState(false);
+    const [noteFile, setNoteFile] = useState<File | null>(null);
 
     // Filtros
     const [month, setMonth] = useState(initialFilters.month);
@@ -79,6 +92,11 @@ export default function AdminFinancePage() {
         account: "CORA & CONTI",
         clientId: ""
     });
+    const [noteForm, setNoteForm] = useState({
+        status: "PAID",
+        account: "CORA & CONTI",
+        obs: ""
+    });
 
     const fetchFinanceData = async () => {
         try {
@@ -88,14 +106,15 @@ export default function AdminFinancePage() {
                 year,
                 type: typeFilter !== "ALL" ? typeFilter : undefined
             };
-            const [recordsData, statsData, clientsData] = await Promise.all([
+            const [recordsResult, statsResult, clientsResult] = await Promise.allSettled([
                 getFinancials(params),
                 getFinancialStats({ month, year }),
                 getClients()
             ]);
-            setRecords(recordsData);
-            setStats(statsData);
-            setClients(clientsData);
+
+            setRecords(recordsResult.status === "fulfilled" ? recordsResult.value : []);
+            setStats(statsResult.status === "fulfilled" ? statsResult.value : { incomes: 0, expenses: 0, balance: 0, forecast: 0 });
+            setClients(clientsResult.status === "fulfilled" ? clientsResult.value : []);
         } catch (error) {
             console.error("Erro ao carregar dados financeiros:", error);
         } finally {
@@ -119,6 +138,45 @@ export default function AdminFinancePage() {
             clientId: ""
         });
         setModalOpen(true);
+    };
+
+    const handleOpenNoteModal = () => {
+        setNoteFile(null);
+        setNoteForm({
+            status: "PAID",
+            account: "CORA & CONTI",
+            obs: ""
+        });
+        setNoteModalOpen(true);
+    };
+
+    const handleNoteFileChange = (file?: File) => {
+        if (!file) return;
+
+        setNoteFile(file);
+    };
+
+    const handleUploadNote = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!noteFile) {
+            alert("Selecione a nota ou comprovante.");
+            return;
+        }
+
+        try {
+            setActionLoading("note-upload");
+            await uploadFinancialNote({
+                note: noteFile,
+                ...noteForm
+            });
+            setNoteModalOpen(false);
+            fetchFinanceData();
+        } catch (error) {
+            console.error("Erro ao subir nota financeira:", error);
+            alert("Erro ao subir nota e criar despesa.");
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     const handleSaveRecord = async (e: React.FormEvent) => {
@@ -184,6 +242,13 @@ export default function AdminFinancePage() {
                     </h1>
                 </div>
                 <div className="flex flex-wrap gap-4 items-center">
+                    <button
+                        onClick={handleOpenNoteModal}
+                        className="group flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all border border-white/10 active:scale-95 cursor-pointer"
+                    >
+                        <FileUp size={14} />
+                        Subir Nota
+                    </button>
                     <button
                         onClick={() => handleOpenModal("INCOME")}
                         className="group flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] border border-white/5 active:scale-95 cursor-pointer"
@@ -373,7 +438,10 @@ export default function AdminFinancePage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5 text-slate-300">
-                                {records.map(record => (
+                                {records.map(record => {
+                                    const uploadedNote = parseUploadedNote(record.obs);
+
+                                    return (
                                     <tr key={record.id} className="hover:bg-white/[0.02] transition-colors group">
                                         <td className="px-8 py-5">
                                             <div className="flex items-center gap-4">
@@ -385,6 +453,17 @@ export default function AdminFinancePage() {
                                                     <span className={`inline-block border text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider mt-1.5 ${CATEGORY_COLORS[record.category] || 'bg-slate-800 text-slate-400 border-white/5'}`}>
                                                         {record.category}
                                                     </span>
+                                                    {uploadedNote && (
+                                                        <a
+                                                            href={uploadedNote.fileUrl}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="ml-2 inline-flex items-center gap-1 border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-blue-300 hover:bg-blue-500/20 rounded-full"
+                                                        >
+                                                            <FileText size={10} />
+                                                            Nota
+                                                        </a>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>
@@ -438,12 +517,79 @@ export default function AdminFinancePage() {
                                             </button>
                                         </td>
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
                 )}
             </div>
+
+            {/* Upload de Nota de Custo */}
+            {noteModalOpen && (
+                <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#1c1e2e] border border-white/10 rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 relative">
+                        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-rose-500/30 to-transparent"></div>
+                        <div className="bg-black/30 px-8 py-5 border-b border-white/10 flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-rose-300 font-bold">Despesa automatica</p>
+                                <h3 className="text-xl font-bold text-white">Subir nota de custo</h3>
+                            </div>
+                            <button onClick={() => setNoteModalOpen(false)} className="text-slate-400 hover:text-white text-2xl font-light cursor-pointer">&times;</button>
+                        </div>
+                        <form onSubmit={handleUploadNote} className="p-8 space-y-6">
+                            <label className="flex min-h-[150px] cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/15 bg-black/25 px-6 py-8 text-center hover:border-rose-400/40 hover:bg-rose-500/5 transition">
+                                <FileUp size={30} className="text-rose-300" />
+                                <div>
+                                    <p className="text-sm font-bold text-white">{noteFile ? noteFile.name : "Clique para escolher a nota"}</p>
+                                    <p className="mt-1 text-xs text-slate-500">O sistema le valor, data, fornecedor e categoria automaticamente.</p>
+                                    <p className="mt-1 text-xs text-slate-600">PDF com texto, JPG, PNG ou WEBP ate 12MB</p>
+                                </div>
+                                <input
+                                    type="file"
+                                    accept="application/pdf,image/jpeg,image/png,image/webp"
+                                    onChange={e => handleNoteFileChange(e.target.files?.[0])}
+                                    className="hidden"
+                                />
+                            </label>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Conta de pagamento</span>
+                                    <select value={noteForm.account} onChange={e => setNoteForm({...noteForm, account: e.target.value})} className="w-full bg-[#111322] border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none text-sm cursor-pointer">
+                                        {ACCOUNTS.map(acc => (
+                                            <option key={acc} value={acc}>{acc}</option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status</span>
+                                    <select value={noteForm.status} onChange={e => setNoteForm({...noteForm, status: e.target.value})} className="w-full bg-[#111322] border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none text-sm cursor-pointer">
+                                        <option value="PAID">Pago</option>
+                                        <option value="PENDING">Pendente</option>
+                                    </select>
+                                </label>
+
+                                <label className="flex flex-col gap-2 md:col-span-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Observacoes</span>
+                                    <textarea value={noteForm.obs} onChange={e => setNoteForm({...noteForm, obs: e.target.value})} rows={3} className="w-full resize-none bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Detalhes opcionais sobre a nota" />
+                                </label>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                                <button type="button" onClick={() => setNoteModalOpen(false)} className="px-5 py-3 text-sm font-bold text-slate-400 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 transition cursor-pointer">
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={actionLoading === "note-upload"} className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white rounded-xl transition shadow-lg cursor-pointer disabled:opacity-50 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 shadow-rose-950/30">
+                                    {actionLoading === "note-upload" && <Loader2 size={16} className="animate-spin" />}
+                                    Ler nota e criar despesa
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Record Modal (Receita/Despesa) */}
             {modalOpen && (

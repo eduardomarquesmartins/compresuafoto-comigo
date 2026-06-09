@@ -8,20 +8,26 @@ export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-    const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+    const [user, setUser] = useState<{ name: string; role: string } | null>(() => {
+        if (typeof window !== 'undefined') {
+            const token = localStorage.getItem('token');
+            const userData = localStorage.getItem('user');
+            if (token && userData) {
+                try {
+                    return JSON.parse(userData);
+                } catch {
+                    return null;
+                }
+            }
+        }
+        return null;
+    });
 
     useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
         };
         window.addEventListener('scroll', handleScroll);
-
-        // Check auth status
-        const token = localStorage.getItem('token');
-        const userData = localStorage.getItem('user');
-        if (token && userData) {
-            setUser(JSON.parse(userData));
-        }
 
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
