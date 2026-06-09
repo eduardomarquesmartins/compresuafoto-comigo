@@ -10,6 +10,7 @@ interface SelectedService {
 
 interface ProposalServicesProps {
     selectedServices: SelectedService[];
+    subtotal: number;
     total: number;
 }
 
@@ -21,7 +22,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
     "Artes Adicionais": "Criação de identidades visuais e artes gráficas exclusivas para fortalecer a comunicação da sua marca."
 };
 
-const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, total }) => {
+const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, subtotal, total }) => {
     // Agrupar serviços por categoria
     const groupedServices = selectedServices.reduce((acc, service) => {
         if (!acc[service.category]) {
@@ -92,15 +93,28 @@ const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, t
                 </div>
 
                 {/* Bloco de Total */}
-                <div className="mt-auto bg-blue-50 border-2 border-blue-100 p-[10mm] rounded-3xl flex justify-between items-center break-inside-avoid">
-                    <div className="flex flex-col text-left">
-                        <span className="text-[3.5mm] uppercase tracking-[0.2em] text-blue-600 font-bold mb-1">Total do Investimento</span>
-                        <span className="text-[4mm] text-slate-500 font-medium tracking-tight">Fee Mensal / Valor do Projeto</span>
+                <div className="mt-auto bg-blue-50 border-2 border-blue-100 p-[10mm] rounded-3xl space-y-4 break-inside-avoid">
+                    <div className="flex justify-between items-center gap-6 pb-4 border-b border-blue-100">
+                        <div className="flex flex-col text-left">
+                            <span className="text-[3.5mm] uppercase tracking-[0.2em] text-blue-600 font-bold mb-1">Subtotal dos serviços</span>
+                            <span className="text-[4mm] text-slate-500 font-medium tracking-tight">Soma automática dos itens selecionados</span>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[8mm] font-bold text-slate-900 leading-none font-mono tracking-tighter">
+                                R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                        </div>
                     </div>
-                    <div className="text-right">
-                        <span className="text-[12mm] font-bold text-slate-900 leading-none font-mono tracking-tighter">
-                            R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </span>
+                    <div className="flex justify-between items-center gap-6">
+                        <div className="flex flex-col text-left">
+                            <span className="text-[3.5mm] uppercase tracking-[0.2em] text-blue-600 font-bold mb-1">Total final da proposta</span>
+                            <span className="text-[4mm] text-slate-500 font-medium tracking-tight">Valor que será salvo, enviado e gerado no PDF</span>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[12mm] font-bold text-slate-900 leading-none font-mono tracking-tighter">
+                                R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>

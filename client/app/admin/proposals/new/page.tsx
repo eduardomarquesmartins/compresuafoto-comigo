@@ -155,6 +155,25 @@ interface ProposalItem {
     description?: string;
 }
 
+const formatMoney = (value: number) => value.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+});
+
+const parseMoneyInput = (value: string) => {
+    const normalized = value
+        .replace(/[^\d,.-]/g, '')
+        .replace(/\./g, '')
+        .replace(',', '.');
+
+    if (!normalized || normalized === '-' || normalized === '.') {
+        return null;
+    }
+
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+};
+
 export default function NewProposalPage() {
     const [clients, setClients] = useState<any[]>([]);
     const [editingProposalId, setEditingProposalId] = useState<string | null>(null);
@@ -166,6 +185,8 @@ export default function NewProposalPage() {
     const [emailStatus, setEmailStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
     const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
+    const [totalFinalDraft, setTotalFinalDraft] = useState('');
+    const [isManualTotal, setIsManualTotal] = useState(false);
 
     useEffect(() => {
         const loadClients = async () => {
@@ -207,6 +228,9 @@ export default function NewProposalPage() {
                     drafts[service.id] = String(service.price);
                     return drafts;
                 }, {}));
+                const initialTotal = Number(proposal.total) || 0;
+                setTotalFinalDraft(formatMoney(initialTotal));
+                setIsManualTotal(true);
             } catch (error) {
                 console.error("Erro ao carregar proposta para edicao:", error);
                 alert("Nao consegui carregar a proposta para edicao.");
@@ -259,7 +283,25 @@ export default function NewProposalPage() {
     };
 
     const isSelected = (id: string) => selectedServices.some(s => s.id === id);
-    const total = selectedServices.reduce((acc, curr) => acc + curr.price, 0);
+    const subtotal = selectedServices.reduce((acc, curr) => acc + curr.price, 0);
+    const parsedManualTotal = parseMoneyInput(totalFinalDraft);
+    const totalFinal = isManualTotal && parsedManualTotal !== null ? parsedManualTotal : subtotal;
+
+    const handleManualTotalFocus = () => {
+        if (isManualTotal) return;
+        setIsManualTotal(true);
+        setTotalFinalDraft(formatMoney(subtotal));
+    };
+
+    const handleManualTotalChange = (value: string) => {
+        setIsManualTotal(true);
+        setTotalFinalDraft(value);
+    };
+
+    const handleResetTotal = () => {
+        setIsManualTotal(false);
+        setTotalFinalDraft('');
+    };
 
     const renderCategory = (title: string, data: ProposalItem[], categoryStr: string) => (
         <div key={categoryStr} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
@@ -421,12 +463,45 @@ export default function NewProposalPage() {
             {/* Header Fixo Inferior com Resumo e Ação */}
             <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-slate-800 py-3 px-6 z-40 print:hidden shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex flex-col text-center md:text-left">
+                    <div className="flex flex-col text-center md:text-left gap-1">
                         <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">{selectedServices.length} serviços selecionados</span>
-                        <span className="text-white text-xl font-black tracking-tighter">Total: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        <span className="text-slate-300 text-sm font-semibold">Subtotal: R$ {formatMoney(subtotal)}</span>
+                        <span className="text-white text-xl font-black tracking-tighter flex items-center gap-2 justify-center md:justify-start">
+                            Total final: R$ {formatMoney(totalFinal)}
+                            {isManualTotal && (
+                                <span className="text-[10px] px-2 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30 uppercase tracking-[0.2em]">
+                                    Manual
+                                </span>
+                            )}
+                        </span>
                     </div>
 
-                    <div className="flex justify-center w-full md:w-auto">
+                    <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                        <div className="flex items-center gap-3 w-full md:w-[320px]">
+                            <input
+                                type="text"
+                                inputMode="decimal"
+                                value={isManualTotal ? totalFinalDraft : formatMoney(subtotal)}
+                                onFocus={handleManualTotalFocus}
+                                onChange={e => handleManualTotalChange(e.target.value)}
+                                onBlur={() => {
+                                    if (!isManualTotal) return;
+                                    const parsed = parseMoneyInput(totalFinalDraft);
+                                    if (parsed === null) {
+                                        setTotalFinalDraft(formatMoney(subtotal));
+                                    }
+                                }}
+                                className="w-full bg-slate-950/70 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono text-lg focus:border-blue-500 focus:outline-none"
+                                aria-label="Valor final da proposta"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleResetTotal}
+                                className="whitespace-nowrap px-4 py-3 rounded-xl border border-slate-700 text-slate-200 hover:border-blue-500 hover:text-white transition-colors text-sm font-bold uppercase tracking-[0.15em]"
+                            >
+                                Automático
+                            </button>
+                        </div>
                         <button
                             onClick={async () => {
                                 if (!clientName || selectedServices.length === 0) {
@@ -436,6 +511,7 @@ export default function NewProposalPage() {
 
                                 try {
                                     setIsDownloading(true);
+                                    const finalTotal = isManualTotal && parsedManualTotal !== null ? parsedManualTotal : subtotal;
 
                                     // 1. Se tiver e-mail, envia primeiro
                                     if (clientEmail) {
@@ -444,7 +520,7 @@ export default function NewProposalPage() {
                                             email: clientEmail,
                                             clientName,
                                             selectedServices,
-                                            total
+                                            total: finalTotal
                                         });
                                         setEmailStatus('success');
                                         setTimeout(() => setEmailStatus('idle'), 5000);
@@ -456,7 +532,7 @@ export default function NewProposalPage() {
                                         clientName,
                                         clientEmail,
                                         selectedServices,
-                                        total
+                                        total: finalTotal
                                     };
 
                                     if (editingProposalId) {
@@ -469,7 +545,7 @@ export default function NewProposalPage() {
                                     const blob = await downloadProposalPdf({
                                         clientName,
                                         selectedServices,
-                                        total
+                                        total: finalTotal
                                     });
 
                                     const url = window.URL.createObjectURL(new Blob([blob]));
@@ -555,7 +631,7 @@ export default function NewProposalPage() {
                 `}} />
 
                 <ProposalCover clientName={clientName} />
-                <ProposalServices selectedServices={selectedServices} total={total} />
+                <ProposalServices selectedServices={selectedServices} subtotal={subtotal} total={totalFinal} />
                 <ProposalClosing />
             </div>
         </div>
