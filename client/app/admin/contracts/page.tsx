@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, FileText, Loader2 } from "lucide-react";
-import { createContract, downloadContractPdf, getClients, getProposal } from "@/lib/api";
+import { Download, FileText, Loader2, Send } from "lucide-react";
+import { createContract, downloadContractPdf, getClients, getProposal, sendContractSignatureLink } from "@/lib/api";
 
 const initialForm = {
     clientId: "",
@@ -59,6 +59,7 @@ export default function AdminContractsPage() {
     const [form, setForm] = useState(initialForm);
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [sendingLink, setSendingLink] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
@@ -138,6 +139,8 @@ export default function AdminContractsPage() {
         }));
     };
 
+    const selectedClient = clients.find(client => String(client.id) === form.clientId);
+
     const handleGenerate = async () => {
         setErrorMessage(null);
 
@@ -200,6 +203,41 @@ export default function AdminContractsPage() {
             console.warn("Erro ao gerar contrato:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSendSignatureLink = async () => {
+        setErrorMessage(null);
+
+        if (!form.clientId) {
+            setErrorMessage("Selecione um cliente para enviar o link de assinatura.");
+            return;
+        }
+
+        if (!selectedClient?.email) {
+            setErrorMessage("O cliente selecionado precisa ter e-mail cadastrado.");
+            return;
+        }
+
+        try {
+            setSendingLink(true);
+            const result = await sendContractSignatureLink({
+                clientId: Number(form.clientId),
+                scope: form.scope,
+                monthlyValue: moneyToNumber(form.monthlyValue),
+                durationMonths: form.durationMonths,
+                paymentDay: form.paymentDay,
+                contractDate: form.contractDate
+            });
+
+            setErrorMessage(null);
+            alert(`Link enviado com sucesso para ${selectedClient.email}.`);
+            console.log("Link de assinatura:", result?.signLink);
+        } catch (error) {
+            console.warn("Erro ao enviar link de assinatura:", error);
+            setErrorMessage("Houve um erro ao enviar o link de assinatura.");
+        } finally {
+            setSendingLink(false);
         }
     };
 
@@ -307,6 +345,16 @@ export default function AdminContractsPage() {
                         <span key={loading ? "loading" : "idle"} className="inline-flex items-center gap-3">
                             {loading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
                             {loading ? "Gerando..." : "Gerar Contrato"}
+                        </span>
+                    </button>
+                    <button
+                        onClick={handleSendSignatureLink}
+                        disabled={loading || sendingLink}
+                        className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-4 font-bold text-white transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 disabled:bg-slate-800 disabled:text-slate-500"
+                    >
+                        <span key={sendingLink ? "sending" : "idle"} className="inline-flex items-center gap-3">
+                            {sendingLink ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+                            {sendingLink ? "Enviando link..." : "Enviar link de assinatura"}
                         </span>
                     </button>
                 </aside>

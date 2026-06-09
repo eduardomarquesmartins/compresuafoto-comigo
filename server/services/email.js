@@ -4,7 +4,15 @@ const pdfService = require('./pdfService');
 if (!process.env.RESEND_API_KEY) {
     console.error('[ERROR] RESEND_API_KEY is missing in environment variables');
 }
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+const sendEmailOrFail = async (payload) => {
+    if (!resend) {
+        return { data: null, error: 'RESEND_API_KEY is missing' };
+    }
+
+    return resend.emails.send(payload);
+};
 
 /**
  * Envia e-mail de confirmação de pedido com link de download
@@ -18,7 +26,7 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
         const downloadLink = `${finalClientUrl}/orders/success?id=${orderId}`;
         const currentYear = new Date().getFullYear();
 
-        const { data, error } = await resend.emails.send({
+        const { data, error } = await sendEmailOrFail({
             from: 'contato@compresuafoto.econticomigo.com.br',
             to: [email],
             subject: `Pedido #${orderId} - Suas fotos estão prontas para download`,
@@ -124,7 +132,7 @@ exports.sendProposalEmail = async (email, clientName, selectedServices, total) =
         // Gerar o PDF usando o serviço centralizado
         const pdfBuffer = await pdfService.generatePDFBuffer(clientName, selectedServices, total);
 
-        const { data, error } = await resend.emails.send({
+        const { data, error } = await sendEmailOrFail({
             from: 'contato@compresuafoto.econticomigo.com.br',
             to: [email],
             subject: `Proposta Comercial - ${clientName || 'CONTI Marketing Digital'} 🚀`,
@@ -175,13 +183,13 @@ exports.sendContractEmail = async (email, clientName, pdfBuffer) => {
     try {
         const currentYear = new Date().getFullYear();
 
-        const { data, error } = await resend.emails.send({
+        const { data, error } = await sendEmailOrFail({
             from: 'contato@compresuafoto.econticomigo.com.br',
             to: [email],
             subject: `Contrato de Prestação de Serviços Renovado - ${clientName || 'CONTI Marketing Digital'} ✍️`,
             attachments: [
                 {
-                    filename: `contrato_${clientName.replace(/\s+/g, '_').toLowerCase()}.pdf`,
+                    filename: `contrato_${String(clientName || 'cliente').replace(/\s+/g, '_').toLowerCase()}.pdf`,
                     content: pdfBuffer,
                 }
             ],
@@ -210,6 +218,95 @@ exports.sendContractEmail = async (email, clientName, pdfBuffer) => {
         return { success: !error, data, error };
     } catch (err) {
         console.error('[CONTRACT EMAIL ERROR]:', err);
+        return { success: false, error: err.message };
+    }
+};
+
+exports.sendContractSignatureLinkEmail = async (email, clientName, pdfBuffer, contractLink) => {
+    try {
+        const currentYear = new Date().getFullYear();
+
+        const { data, error } = await sendEmailOrFail({
+            from: 'contato@compresuafoto.econticomigo.com.br',
+            to: [email],
+            subject: `Assine seu contrato - ${clientName || 'CONTI Marketing Digital'}`,
+            attachments: [
+                {
+                    filename: `contrato_${String(clientName || 'cliente').replace(/\s+/g, '_').toLowerCase()}.pdf`,
+                    content: pdfBuffer,
+                }
+            ],
+            html: `
+                <div style="background-color: #f8fafc; font-family: sans-serif; padding: 40px 20px;">
+                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <div style="background-color: #000; padding: 40px; text-align: center;">
+                            <h2 style="color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 2px;">Contrato pronto para assinatura</h2>
+                            <p style="color: #2563eb; margin: 10px 0 0; font-weight: bold;">Clique no link abaixo para revisar e assinar</p>
+                        </div>
+                        <div style="padding: 40px;">
+                            <p>Olá, <strong>${clientName}</strong>!</p>
+                            <p>Segue em anexo o contrato em PDF e o link para assinatura digital.</p>
+                            <div style="margin: 30px 0; text-align: center;">
+                                <a href="${contractLink}" style="display: inline-block; background-color: #0f172a; color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; letter-spacing: 1px; text-transform: uppercase;">
+                                    Assinar contrato
+                                </a>
+                            </div>
+                            <p style="color: #64748b; font-size: 14px; line-height: 1.6;">Se o botão não abrir, copie e cole este link no navegador:</p>
+                            <p style="word-break: break-all; color: #2563eb; font-size: 13px;">${contractLink}</p>
+                        </div>
+                        <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                            <p><strong>EDUARDA CONTI & FERNANDO</strong></p>
+                            <p>&copy; ${currentYear} & CONTI Marketing Digital</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+
+        return { success: !error, data, error };
+    } catch (err) {
+        console.error('[CONTRACT SIGN LINK EMAIL ERROR]:', err);
+        return { success: false, error: err.message };
+    }
+};
+
+exports.sendSignedContractEmail = async (email, clientName, pdfBuffer) => {
+    try {
+        const currentYear = new Date().getFullYear();
+
+        const { data, error } = await sendEmailOrFail({
+            from: 'contato@compresuafoto.econticomigo.com.br',
+            to: [email],
+            subject: `Contrato assinado - ${clientName || 'CONTI Marketing Digital'}`,
+            attachments: [
+                {
+                    filename: `contrato_assinado_${String(clientName || 'cliente').replace(/\s+/g, '_').toLowerCase()}.pdf`,
+                    content: pdfBuffer,
+                }
+            ],
+            html: `
+                <div style="background-color: #f8fafc; font-family: sans-serif; padding: 40px 20px;">
+                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <div style="background-color: #000; padding: 40px; text-align: center;">
+                            <h2 style="color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 2px;">Contrato assinado</h2>
+                            <p style="color: #2563eb; margin: 10px 0 0; font-weight: bold;">Seu contrato assinado está em anexo</p>
+                        </div>
+                        <div style="padding: 40px;">
+                            <p>Olá, <strong>${clientName}</strong>!</p>
+                            <p>Recebemos sua assinatura e estamos enviando a versão final do contrato.</p>
+                        </div>
+                        <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                            <p><strong>EDUARDA CONTI & FERNANDO</strong></p>
+                            <p>&copy; ${currentYear} & CONTI Marketing Digital</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+
+        return { success: !error, data, error };
+    } catch (err) {
+        console.error('[SIGNED CONTRACT EMAIL ERROR]:', err);
         return { success: false, error: err.message };
     }
 };

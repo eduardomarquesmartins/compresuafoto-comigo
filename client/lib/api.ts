@@ -260,6 +260,39 @@ export const downloadContractPdf = async (data: {
     return response.data;
 };
 
+export const sendContractSignatureLink = async (data: {
+    clientId: number;
+    scope: string;
+    monthlyValue: number;
+    durationMonths: string;
+    paymentDay: string;
+    startDate?: string;
+    contractDate?: string;
+}) => {
+    const response = await api.post('contracts/send-sign-link', data);
+    return response.data;
+};
+
+export const getPublicContract = async (token: string) => {
+    const response = await api.get(`public-contracts/${token}`);
+    return response.data;
+};
+
+export const downloadPublicContractPdf = async (token: string) => {
+    const response = await api.get(`public-contracts/${token}/pdf`, {
+        responseType: 'blob'
+    });
+    return response.data;
+};
+
+export const signPublicContract = async (token: string, data: {
+    signerName: string;
+    signerDocument: string;
+}) => {
+    const response = await api.post(`public-contracts/${token}/sign`, data);
+    return response.data;
+};
+
 // --- Clientes (Client API) ---
 export const getClients = async () => {
     try {

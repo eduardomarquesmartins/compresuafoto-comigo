@@ -101,6 +101,7 @@ const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const photoRoutes = require('./routes/photoRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const publicContractRoutes = require('./routes/publicContractRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
@@ -118,6 +119,7 @@ app.use('/api/webhooks/mercadopago', require('./controllers/webhookController').
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/proposals', require('./routes/proposalRoutes'));
 app.use('/api/contracts', require('./routes/contractRoutes'));
+app.use('/api/public-contracts', publicContractRoutes);
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/clients', require('./routes/clientRoutes'));
 app.use('/api/client-emails', require('./routes/clientEmailRoutes'));

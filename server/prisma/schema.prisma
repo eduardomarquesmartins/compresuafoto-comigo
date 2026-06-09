@@ -43,6 +43,10 @@ model Photo {
   originalUrl    String
   watermarkedUrl String?
   price          Float    @default(10.0)
+  signatureToken String?  @unique
+  signedAt       DateTime?
+  signedName     String?
+  signedDocument String?
   createdAt      DateTime @default(now())
   embedding      String?
   event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)

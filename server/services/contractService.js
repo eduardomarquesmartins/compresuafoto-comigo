@@ -315,6 +315,10 @@ const drawSignatureBlock = (doc, data) => {
     doc.font('Helvetica').fontSize(8).text(`${getDocumentLabel(data.clientDocument)}: ${sanitize(data.clientDocument)}`, 340, y + 25, { width: 185, align: 'center' });
     if (data.signerName) doc.text(`Representante: ${sanitize(data.signerName)}`, 340, y + 38, { width: 185, align: 'center' });
     if (data.signerDocument) doc.text(`CPF: ${sanitize(data.signerDocument)}`, 340, y + 51, { width: 185, align: 'center' });
+    if (data.signedAt) {
+        const signedLabel = new Date(data.signedAt).toLocaleString('pt-BR');
+        doc.text(`Assinado em: ${signedLabel}`, 340, y + 64, { width: 185, align: 'center' });
+    }
 
 };
 
