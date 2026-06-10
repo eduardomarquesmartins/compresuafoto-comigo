@@ -13,7 +13,7 @@ const initialForm = {
     clientCityState: "",
     signerName: "",
     signerDocument: "",
-    scope: "gestao de redes sociais, incluindo planejamento, criacao de conteudo, publicacoes, acompanhamento estrategico e servicos de marketing digital conforme proposta aprovada",
+    scope: "gestáo de redes sociais, incluindo planejamento, criacao de conteudo, publicacoes, acompanhamento estrategico e serviços de marketing digital conforme proposta aprovada",
     monthlyValue: "1000",
     durationMonths: "6",
     paymentDay: "25",
@@ -122,7 +122,7 @@ export default function AdminContractsPage() {
                     .map((service: any) => `**- ${service.name} (${service.category}): R$ ${Number(service.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}**${service.description ? ` - ${service.description}` : ""}`)
                     .join("\n");
 
-                const scopeText = `prestacao de servicos de marketing digital e producao de conteudo, compreendendo os seguintes itens da proposta comercial aprovada:\n\n${servicesList}`;
+                const scopeText = `prestácao de serviços de marketing digital e producao de conteudo, compreendendo os seguintes itens da proposta comercial aprovada:\n\n${servicesList}`;
                 const formattedTotal = typeof proposal.total === "number"
                     ? proposal.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
                     : String(proposal.total || "");
@@ -140,7 +140,7 @@ export default function AdminContractsPage() {
                 }));
             } catch (error) {
                 console.warn("Erro ao carregar dados da proposta:", error);
-                setErrorMessage("Nao consegui carregar os dados da proposta.");
+                setErrorMessage("Não consegui carregar os dados da proposta.");
             } finally {
                 setLoading(false);
             }
@@ -194,7 +194,7 @@ export default function AdminContractsPage() {
         setErrorMessage(null);
 
         if (!form.clientName.trim() || !form.clientDocument.trim()) {
-            setErrorMessage("Informe o nome/razao social e o CPF ou CNPJ do contratante.");
+            setErrorMessage("Informe o nome/razão social e o CPF ou CNPJ do contratante.");
             return;
         }
 
@@ -241,7 +241,7 @@ export default function AdminContractsPage() {
                 : undefined;
 
             if (status === 404) {
-                setErrorMessage("Nao encontrei o endpoint de geracao do contrato. Confirme se o backend local esta rodando na porta 3002.");
+                setErrorMessage("Não encontrei o endpoint de geração do contrato. Confirme se o backend local está rodando na porta 3002.");
             } else {
                 setErrorMessage("Houve um erro ao gerar o contrato.");
             }
@@ -294,7 +294,7 @@ export default function AdminContractsPage() {
             const result = await sendContractSignatureLink(getSignaturePayload("copy"));
 
             if (!result?.signLink) {
-                setErrorMessage("Nao consegui gerar o link de assinatura.");
+                setErrorMessage("Não consegui gerar o link de assinatura.");
                 return;
             }
 
@@ -325,7 +325,7 @@ export default function AdminContractsPage() {
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.warn("Erro ao baixar contrato assinado:", error);
-            setErrorMessage("Nao consegui baixar o contrato assinado.");
+            setErrorMessage("Não consegui baixar o contrato assinado.");
         }
     };
 
@@ -358,7 +358,7 @@ export default function AdminContractsPage() {
                             <label className="space-y-2 md:col-span-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Cliente vinculado</span>
                                 <select value={form.clientId} onChange={(e) => handleClientSelect(e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35">
-                                    <option value="">Sem vinculo / preencher manualmente</option>
+                                    <option value="">Sem vínculo / preencher manualmente</option>
                                     {clients.map((client) => (
                                         <option key={client.id} value={client.id}>
                                             {client.name} {client.email ? `- ${client.email}` : ""}
@@ -367,7 +367,7 @@ export default function AdminContractsPage() {
                                 </select>
                             </label>
                             <label className="space-y-2">
-                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Nome / Razao Social</span>
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Nome / Razão Social</span>
                                 <input value={form.clientName} onChange={(e) => updateField("clientName", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Empresa" />
                             </label>
                             <label className="space-y-2">
@@ -379,7 +379,7 @@ export default function AdminContractsPage() {
                                 <input value={form.clientEmail} onChange={(e) => updateField("clientEmail", e.target.value)} type="email" className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="cliente@empresa.com" />
                             </label>
                             <label className="space-y-2 md:col-span-2">
-                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Endereco</span>
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Endereço</span>
                                 <input value={form.clientAddress} onChange={(e) => updateField("clientAddress", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Rua, numero, sala, bairro" />
                             </label>
                             <label className="space-y-2">
@@ -396,7 +396,7 @@ export default function AdminContractsPage() {
                     <div className="space-y-5">
                         <h2 className="text-lg font-semibold text-white">Escopo e Pagamento</h2>
                         <label className="block space-y-2">
-                            <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Escopo dos Servicos</span>
+                            <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Escopo dos Serviços</span>
                             <textarea value={form.scope} onChange={(e) => updateField("scope", e.target.value)} rows={5} className="w-full resize-none rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" />
                         </label>
                         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -405,7 +405,7 @@ export default function AdminContractsPage() {
                                 <input value={form.monthlyValue} onChange={(e) => updateField("monthlyValue", e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="1000,00" />
                             </label>
                             <label className="space-y-2">
-                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Vigencia (meses)</span>
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Vigência (meses)</span>
                                 <input value={form.durationMonths} onChange={(e) => updateField("durationMonths", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="6" />
                             </label>
                             <label className="space-y-2">
@@ -423,10 +423,10 @@ export default function AdminContractsPage() {
                     </div>
                     <div className="space-y-3 text-sm text-slate-400">
                         <p><span className="text-slate-500">Documento:</span> {form.clientDocument || "-"}</p>
-                        <p><span className="text-slate-500">Cliente:</span> {form.clientId ? "Vinculado" : "Sem vinculo"}</p>
+                        <p><span className="text-slate-500">Cliente:</span> {form.clientId ? "Vinculado" : "Sem vínculo"}</p>
                         <p><span className="text-slate-500">E-mail:</span> {resolvedClientEmail || "-"}</p>
                         <p><span className="text-slate-500">Valor:</span> R$ {form.monthlyValue || "0"}</p>
-                        <p><span className="text-slate-500">Vigencia:</span> {form.durationMonths || "0"} meses</p>
+                        <p><span className="text-slate-500">Vigência:</span> {form.durationMonths || "0"} meses</p>
                         <p><span className="text-slate-500">Pagamento:</span> todo dia {form.paymentDay || "-"}</p>
                     </div>
                     <button

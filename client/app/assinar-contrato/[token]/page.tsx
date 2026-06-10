@@ -146,7 +146,7 @@ export default function SignContractPage() {
                 setHasSignatureDrawing(Boolean(data.signedSignatureData));
             } catch (err) {
                 console.warn("Erro ao carregar contrato publico:", err);
-                setError("Nao consegui carregar esse contrato.");
+                setError("Não consegui carregar esse contrato.");
             } finally {
                 setLoading(false);
             }
@@ -221,7 +221,7 @@ export default function SignContractPage() {
             window.URL.revokeObjectURL(url);
         } catch (err) {
             console.warn("Erro ao baixar PDF do contrato:", err);
-            setError("Nao consegui baixar o PDF do contrato.");
+            setError("Não consegui baixar o PDF do contrato.");
         }
     };
 
@@ -240,7 +240,7 @@ export default function SignContractPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#090b12] p-6 text-white">
                 <div className="max-w-xl rounded-3xl border border-white/10 bg-[#161826] p-8 text-center">
-                    <p className="text-xl font-bold">Contrato indisponivel</p>
+                    <p className="text-xl font-bold">Contrato indisponível</p>
                     <p className="mt-3 text-slate-400">{error}</p>
                 </div>
             </div>
@@ -254,7 +254,7 @@ export default function SignContractPage() {
                     <div className="max-w-2xl">
                         <p className="text-xs font-bold uppercase tracking-[0.35em] text-blue-400">Assinatura Digital</p>
                         <h1 className="mt-3 text-4xl font-light tracking-tight text-white md:text-6xl">
-                            Validacao final do contrato
+                            Validação final do contrato
                         </h1>
                         <p className="mt-4 max-w-xl text-sm leading-6 text-slate-400 md:text-base">
                             Revise os dados do contrato e assine no quadro abaixo. A assinatura fica registrada no sistema e no PDF final.
@@ -297,7 +297,7 @@ export default function SignContractPage() {
                                     <p className="mt-2 text-sm text-slate-200">{contract?.client?.document || "-"}</p>
                                 </div>
                                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Vigencia</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Vigência</p>
                                     <p className="mt-2 text-sm text-slate-200">{contract?.durationMonths || "-"} meses</p>
                                 </div>
                                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -326,7 +326,7 @@ export default function SignContractPage() {
                                 <div>
                                     <p className="text-2xl font-semibold text-white">Contrato assinado</p>
                                     <p className="mt-2 text-sm leading-6 text-slate-400">
-                                        A assinatura foi registrada no sistema e o PDF final ja pode ser baixado.
+                                        A assinatura foi registrada no sistema e o PDF final já pode ser baixado.
                                     </p>
                                 </div>
                                 {contract?.signedSignatureData && (
@@ -343,7 +343,7 @@ export default function SignContractPage() {
                                     className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white transition-colors hover:bg-blue-500"
                                 >
                                     <Download size={16} />
-                                    Baixar versao final
+                                    Baixar versão final
                                 </button>
                             </div>
                         ) : (
@@ -356,7 +356,7 @@ export default function SignContractPage() {
                                         <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500">Assinatura</p>
                                         <h2 className="mt-1 text-2xl font-semibold text-white">Assine no quadro</h2>
                                         <p className="mt-2 text-sm leading-6 text-slate-400">
-                                            O sistema vai registrar a assinatura usando os dados ja vinculados ao contrato.
+                                            O sistema vai registrar a assinatura usando os dados já vinculados ao contrato.
                                         </p>
                                     </div>
                                 </div>
