@@ -18,8 +18,8 @@ const PROPOSAL_TYPES = {
     casamento: {
         label: 'Casamento',
         title: 'PROPOSTA CASAMENTO',
-        coverBackground: path.join(__dirname, '../../client/public/proposals/wedding-cover.jpg'),
-        closingBackground: path.join(__dirname, '../../client/public/proposals/wedding-closing.jpg'),
+        coverBackground: path.join(__dirname, '../../client/public/proposals/wedding-closing.jpg'),
+        closingBackground: path.join(__dirname, '../../client/public/proposals/wedding-cover.jpg'),
         coverOverlay: { color: '#000000', opacity: 0.55 },
         closingOverlay: { color: '#ffffff', opacity: 0.72 }
     },
