@@ -33,6 +33,20 @@ export default function SignContractPage() {
     const isDrawingRef = useRef(false);
     const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
+    const drawPoint = (context: CanvasRenderingContext2D, point: { x: number; y: number }) => {
+        context.beginPath();
+        context.arc(point.x, point.y, 1.6, 0, Math.PI * 2);
+        context.fillStyle = "#f8fafc";
+        context.fill();
+    };
+
+    const drawLine = (context: CanvasRenderingContext2D, from: { x: number; y: number }, to: { x: number; y: number }) => {
+        context.beginPath();
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y);
+        context.stroke();
+    };
+
     useEffect(() => {
         if (!token) return;
 
@@ -103,6 +117,8 @@ export default function SignContractPage() {
             isDrawingRef.current = true;
             lastPointRef.current = point;
             canvas.setPointerCapture(event.pointerId);
+            drawPoint(context, point);
+            setHasSignatureDrawing(true);
         };
 
         const handlePointerMove = (event: PointerEvent) => {
@@ -110,10 +126,7 @@ export default function SignContractPage() {
             event.preventDefault();
 
             const point = getCanvasPoint(canvas, event);
-            context.beginPath();
-            context.moveTo(lastPointRef.current.x, lastPointRef.current.y);
-            context.lineTo(point.x, point.y);
-            context.stroke();
+            drawLine(context, lastPointRef.current, point);
 
             lastPointRef.current = point;
             setHasSignatureDrawing(true);
@@ -132,6 +145,7 @@ export default function SignContractPage() {
         canvas.addEventListener("pointerup", stopDrawing);
         canvas.addEventListener("pointerleave", stopDrawing);
         canvas.addEventListener("pointercancel", stopDrawing);
+        canvas.style.touchAction = "none";
 
         return () => {
             canvas.removeEventListener("pointerdown", handlePointerDown);

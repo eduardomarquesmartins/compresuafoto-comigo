@@ -20,7 +20,16 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
     "VÃ­deo": "Cobertura em vÃ­deo para cerimÃ´nia, recepÃ§Ã£o e momentos especiais, com opÃ§Ãµes de teaser, filme, drone e entrega prioritÃ¡ria.",
     "Combos Foto + VÃ­deo": "Pacotes combinados de fotografia e vÃ­deo com economia progressiva, equipe completa e entregas integradas para o evento.",
     "Storymaker": "Cobertura em tempo real para redes sociais, com profissionais especializados em conteÃºdo, stories criativos e entrega de todos os arquivos.",
-    "15 anos": "Pacotes de foto, vÃ­deo e combos para festas de 15 anos, com opÃ§Ãµes de ensaio externo, retrospectiva, drone, Ã¡lbum fÃ­sico e Same Day Edit."
+    "15 anos": "Pacotes de foto, vÃ­deo e combos para festas de 15 anos, com opÃ§Ãµes de ensaio externo, retrospectiva, drone, Ã¡lbum fÃ­sico e Same Day Edit.",
+    "Fotografia Aniversário": "Pacotes de fotografia para aniversários.",
+    "Vídeo Aniversário": "Pacotes de vídeo para aniversários.",
+    "Combos Foto + Vídeo Aniversário": "Combos completos para aniversários.",
+    "Fotografia — Chá Revelação & Chá de Fralda": "Pacotes de fotografia para chá revelação e chá de fralda.",
+    "Vídeo — Chá Revelação": "Pacotes de vídeo para chá revelação.",
+    "Vídeo — Chá de Fralda": "Pacotes de vídeo para chá de fralda.",
+    "Combo Foto + Vídeo — Chá Revelação": "Combos completos para chá revelação.",
+    "Combo Foto + Vídeo — Chá de Fralda": "Combos completos para chá de fralda.",
+    "Combo Especial — Chá Revelação + Chá de Fralda Juntos": "Pacotes conjuntos para os dois eventos."
 };
 
 const dataSocialMedia = [
@@ -139,6 +148,57 @@ const data15Anos = [
     { id: "15_combo_ensaio_externo", name: "Combo 15 anos â€” Adicional: Ensaio externo foto + vÃ­deo", defaultPrice: 2000, description: "Ensaio externo com foto + vÃ­deo adicional." },
     { id: "15_combo_retrospectiva_telao", name: "Combo 15 anos â€” Adicional: VÃ­deo retrospectiva telÃ£o", defaultPrice: 500, description: "VÃ­deo retrospectiva para exibiÃ§Ã£o no telÃ£o." },
     { id: "15_combo_same_day", name: "Combo 15 anos â€” Adicional: Same Day Edit", defaultPrice: 1200, description: "EdiÃ§Ã£o para exibiÃ§Ã£o no mesmo dia." },
+];
+
+const dataAniversarioFoto = [
+    { id: "aniv_foto_2h", name: "2 Horas", defaultPrice: 700, description: "Fotos ilimitadas do evento | 30 fotos editadas | Entrega digital em alta resolução" },
+    { id: "aniv_foto_3h", name: "3 Horas", defaultPrice: 1000, description: "Fotos ilimitadas do evento | 50 fotos editadas | Entrega digital em alta resolução" },
+    { id: "aniv_foto_4h", name: "4 Horas", defaultPrice: 1500, description: "Fotos ilimitadas do evento | 100 fotos editadas | Entrega digital em alta resolução" },
+    { id: "aniv_foto_6h", name: "6 Horas", defaultPrice: 2200, description: "Fotos ilimitadas do evento | 200 fotos editadas | Drone incluso | Entrega digital em alta resolução" },
+];
+
+const dataAniversarioVideo = [
+    { id: "aniv_video_2h", name: "2 Horas", defaultPrice: 700, description: "1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
+    { id: "aniv_video_3h", name: "3 Horas", defaultPrice: 1000, description: "1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
+    { id: "aniv_video_4h", name: "4 Horas", defaultPrice: 1500, description: "1 Reels completo (até 1min30s) | Drone incluso | Entrega digital em alta resolução" },
+    { id: "aniv_video_6h", name: "6 Horas", defaultPrice: 2200, description: "2 Reels completos (até 1min30s cada) | Drone incluso | Entrega digital em alta resolução" },
+];
+
+const dataAniversarioCombo = [
+    { id: "aniv_combo_2h", name: "Combo 2h", defaultPrice: 1200, description: "Fotos ilimitadas + 30 fotos editadas | 1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
+    { id: "aniv_combo_3h", name: "Combo 3h", defaultPrice: 1700, description: "Fotos ilimitadas + 50 fotos editadas | 1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
+    { id: "aniv_combo_4h", name: "Combo 4h", defaultPrice: 2500, description: "Fotos ilimitadas + 100 fotos editadas | 1 Reels completo (até 1min30s) | Drone incluso | Entrega digital em alta resolução" },
+    { id: "aniv_combo_6h", name: "Combo 6h", defaultPrice: 3800, description: "Fotos ilimitadas + 200 fotos editadas | 2 Reels completos (até 1min30s cada) | Drone incluso | Entrega digital em alta resolução" },
+];
+
+const dataChaRevelacaoFoto = [
+    { id: "cha_rev_foto_2h", name: "2 Horas", defaultPrice: 700, description: "Fotos ilimitadas do evento | 30 fotos editadas | Entrega digital em alta resolução" },
+    { id: "cha_rev_foto_3h", name: "3 Horas", defaultPrice: 950, description: "Fotos ilimitadas do evento | 50 fotos editadas | Entrega digital em alta resolução" },
+];
+
+const dataChaRevelacaoVideo = [
+    { id: "cha_rev_video_2h", name: "2 Horas", defaultPrice: 900, description: "1 Reels completo (até 1min30s) | Drone no momento da revelação | Entrega digital em alta resolução" },
+    { id: "cha_rev_video_3h", name: "3 Horas", defaultPrice: 1100, description: "1 Reels completo (até 1min30s) | Drone no momento da revelação | Entrega digital em alta resolução" },
+];
+
+const dataChaFraldaVideo = [
+    { id: "cha_fralda_video_2h", name: "2 Horas", defaultPrice: 800, description: "1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
+    { id: "cha_fralda_video_3h", name: "3 Horas", defaultPrice: 1000, description: "1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
+];
+
+const dataChaRevelacaoCombo = [
+    { id: "cha_rev_combo_2h", name: "2 Horas", defaultPrice: 1400, description: "Fotos ilimitadas + 30 fotos editadas | 1 Reels completo + drone na revelação | Drone incluso | Entrega digital em alta resolução" },
+    { id: "cha_rev_combo_3h", name: "3 Horas", defaultPrice: 1800, description: "Fotos ilimitadas + 50 fotos editadas | 1 Reels completo + drone na revelação | Drone incluso | Entrega digital em alta resolução" },
+];
+
+const dataChaFraldaCombo = [
+    { id: "cha_fralda_combo_2h", name: "2 Horas", defaultPrice: 1300, description: "Fotos ilimitadas + 30 fotos editadas | 1 Reels completo | Entrega digital em alta resolução" },
+    { id: "cha_fralda_combo_3h", name: "3 Horas", defaultPrice: 1700, description: "Fotos ilimitadas + 50 fotos editadas | 1 Reels completo | Entrega digital em alta resolução" },
+];
+
+const dataChaJuntosCombo = [
+    { id: "cha_juntos_3h", name: "3 Horas", defaultPrice: 2000, description: "Cobertura completa dos dois eventos | Fotos ilimitadas + Reels completo | Drone na revelação | Entrega digital em alta resolução" },
+    { id: "cha_juntos_5h", name: "5 Horas", defaultPrice: 2600, description: "Cobertura completa dos dois eventos | Fotos ilimitadas + 2 Reels completos | Drone na revelação | Entrega digital em alta resolução" },
 ];
 
 interface SelectedService {
@@ -521,6 +581,15 @@ export default function NewProposalPage() {
                     {renderCategory("Combos Foto + VÃ­deo", dataCombos, "Combos Foto + VÃ­deo")}
                     {renderCategory("Storymaker", dataStorymaker, "Storymaker")}
                     {renderCategory("15 anos", data15Anos, "15 anos")}
+                    {renderCategory("Fotografia Aniversário", dataAniversarioFoto, "Fotografia Aniversário")}
+                    {renderCategory("Vídeo Aniversário", dataAniversarioVideo, "Vídeo Aniversário")}
+                    {renderCategory("Combos Foto + Vídeo Aniversário", dataAniversarioCombo, "Combos Foto + Vídeo Aniversário")}
+                    {renderCategory("Fotografia — Chá Revelação & Chá de Fralda", dataChaRevelacaoFoto, "Fotografia — Chá Revelação & Chá de Fralda")}
+                    {renderCategory("Vídeo — Chá Revelação", dataChaRevelacaoVideo, "Vídeo — Chá Revelação")}
+                    {renderCategory("Vídeo — Chá de Fralda", dataChaFraldaVideo, "Vídeo — Chá de Fralda")}
+                    {renderCategory("Combo Foto + Vídeo — Chá Revelação", dataChaRevelacaoCombo, "Combo Foto + Vídeo — Chá Revelação")}
+                    {renderCategory("Combo Foto + Vídeo — Chá de Fralda", dataChaFraldaCombo, "Combo Foto + Vídeo — Chá de Fralda")}
+                    {renderCategory("Combo Especial — Chá Revelação + Chá de Fralda Juntos", dataChaJuntosCombo, "Combo Especial — Chá Revelação + Chá de Fralda Juntos")}
                 </div>
             </div>
 
