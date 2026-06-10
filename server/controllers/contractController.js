@@ -394,10 +394,6 @@ exports.signPublicContract = async (req, res) => {
         const { token } = req.params;
         const { signerName, signerDocument, signedSignatureData } = req.body;
 
-        if (!signerName || !signerDocument || !signedSignatureData) {
-            return res.status(400).json({ error: 'Nome, documento e assinatura desenhada sao obrigatorios.' });
-        }
-
         if (!String(signedSignatureData).startsWith('data:image/')) {
             return res.status(400).json({ error: 'Formato de assinatura invalido.' });
         }
@@ -417,14 +413,28 @@ exports.signPublicContract = async (req, res) => {
             return res.status(409).json({ error: 'Este contrato ja foi assinado.' });
         }
 
+        const resolvedSignerName =
+            signerName ||
+            contract.client?.signerName ||
+            contract.client?.name ||
+            contract.clientName;
+        const resolvedSignerDocument =
+            signerDocument ||
+            contract.client?.signerDocument ||
+            contract.client?.document;
+
+        if (!resolvedSignerName || !resolvedSignerDocument || !signedSignatureData) {
+            return res.status(400).json({ error: 'Nao encontrei os dados do assinante vinculados ao contrato.' });
+        }
+
         const signedAt = new Date();
         const updatedContract = await prisma.contract.update({
             where: { id: contract.id },
             data: {
                 status: 'ACTIVE',
                 signedAt,
-                signedName: signerName,
-                signedDocument: signerDocument,
+                signedName: resolvedSignerName,
+                signedDocument: resolvedSignerDocument,
                 signedSignatureData
             },
             include: {
@@ -436,8 +446,8 @@ exports.signPublicContract = async (req, res) => {
             await prisma.client.update({
                 where: { id: updatedContract.clientId },
                 data: {
-                    signerName,
-                    signerDocument
+                    signerName: resolvedSignerName,
+                    signerDocument: resolvedSignerDocument
                 }
             });
         }
@@ -448,8 +458,8 @@ exports.signPublicContract = async (req, res) => {
                 signedAt
             }),
             clientName: updatedContract.client?.name || updatedContract.clientName || 'CONTRATANTE',
-            signerName,
-            signerDocument,
+            signerName: resolvedSignerName,
+            signerDocument: resolvedSignerDocument,
             signedSignatureData,
             signedAt
         });

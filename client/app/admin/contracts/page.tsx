@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Download, FileText, Loader2, Mail } from "lucide-react";
-import { createContract, downloadContractPdf, getClients, getProposal, sendContractSignatureLink } from "@/lib/api";
+import { Copy, Download, Eye, FileText, Loader2, Mail, Signature } from "lucide-react";
+import { createContract, downloadContractPdf, downloadPublicContractPdf, getClients, getContracts, getProposal, sendContractSignatureLink } from "@/lib/api";
 
 const initialForm = {
     clientId: "",
@@ -74,6 +74,7 @@ export default function AdminContractsPage() {
     const [sendingEmailLink, setSendingEmailLink] = useState(false);
     const [copyingLink, setCopyingLink] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [contracts, setContracts] = useState<any[]>([]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -92,7 +93,17 @@ export default function AdminContractsPage() {
             }
         };
 
+        const loadContracts = async () => {
+            try {
+                const data = await getContracts();
+                setContracts(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.warn("Erro ao carregar contratos:", error);
+            }
+        };
+
         loadClients();
+        loadContracts();
 
         const params = new URLSearchParams(window.location.search);
         const proposalId = params.get("proposalId");
@@ -297,6 +308,27 @@ export default function AdminContractsPage() {
         }
     };
 
+    const handleOpenPublicContract = (token: string) => {
+        window.open(`/assinar-contrato/${token}`, "_blank", "noopener,noreferrer");
+    };
+
+    const handleDownloadSignedPdf = async (token: string) => {
+        try {
+            const blob = await downloadPublicContractPdf(token);
+            const url = window.URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `contrato_assinado.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.warn("Erro ao baixar contrato assinado:", error);
+            setErrorMessage("Nao consegui baixar o contrato assinado.");
+        }
+    };
+
     return (
         <div className="mx-auto max-w-6xl space-y-8 pb-20">
             <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -429,6 +461,73 @@ export default function AdminContractsPage() {
                     </button>
                 </aside>
             </div>
+
+            <section className="rounded-2xl border border-white/10 bg-[#161826] p-6 shadow-2xl space-y-4">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400">
+                        <Signature size={20} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Contratos</p>
+                        <h2 className="text-lg font-semibold text-white">Assinados e pendentes</h2>
+                    </div>
+                </div>
+
+                <div className="overflow-hidden rounded-2xl border border-white/10">
+                    <table className="w-full text-left">
+                        <thead className="bg-black/30">
+                            <tr className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                                <th className="px-4 py-3">Cliente</th>
+                                <th className="px-4 py-3">Status</th>
+                                <th className="px-4 py-3">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5 text-sm text-slate-300">
+                            {contracts.length === 0 ? (
+                                <tr>
+                                    <td className="px-4 py-4" colSpan={3}>Nenhum contrato encontrado.</td>
+                                </tr>
+                            ) : contracts.map((contract) => (
+                                <tr key={contract.id} className="hover:bg-white/[0.02]">
+                                    <td className="px-4 py-4">
+                                        <div className="font-medium text-white">{contract.client?.name || "-"}</div>
+                                        <div className="text-xs text-slate-500">{contract.client?.email || "-"}</div>
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        <span className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${contract.signedAt ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
+                                            {contract.signedAt ? "Assinado" : "Pendente"}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        <div className="flex flex-wrap gap-2">
+                                            {contract.signatureToken && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleOpenPublicContract(contract.signatureToken)}
+                                                    className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-slate-200 hover:border-blue-500/40 hover:bg-blue-500/10"
+                                                >
+                                                    <Eye size={14} />
+                                                    Ver
+                                                </button>
+                                            )}
+                                            {contract.signedAt && contract.signatureToken && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDownloadSignedPdf(contract.signatureToken)}
+                                                    className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-emerald-200 hover:border-emerald-400/40 hover:bg-emerald-500/15"
+                                                >
+                                                    <Download size={14} />
+                                                    PDF assinado
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     );
 }

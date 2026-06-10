@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Download, Eraser, FileText, Loader2, PenLine } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CheckCircle2, Download, Eraser, FileText, Loader2, PenLine, ShieldCheck } from "lucide-react";
 import { downloadPublicContractPdf, getPublicContract, signPublicContract } from "@/lib/api";
 import { useParams } from "next/navigation";
 
-const money = (value: number) => value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = (value: number) => value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+});
 
-const getCanvasPoint = (canvas: HTMLCanvasElement, event: PointerEvent) => {
+const getPoint = (canvas: HTMLCanvasElement, clientX: number, clientY: number) => {
     const rect = canvas.getBoundingClientRect();
     return {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top
+        x: clientX - rect.left,
+        y: clientY - rect.top
     };
 };
 
@@ -24,27 +27,110 @@ export default function SignContractPage() {
     const [signing, setSigning] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [signed, setSigned] = useState(false);
-    const [signerName, setSignerName] = useState("");
-    const [signerDocument, setSignerDocument] = useState("");
     const [accepted, setAccepted] = useState(false);
     const [hasSignatureDrawing, setHasSignatureDrawing] = useState(false);
+    const [canvasReady, setCanvasReady] = useState(false);
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const isDrawingRef = useRef(false);
+    const drawingRef = useRef(false);
     const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
-    const drawPoint = (context: CanvasRenderingContext2D, point: { x: number; y: number }) => {
+    const signerName = useMemo(
+        () => contract?.signedName || contract?.client?.signerName || contract?.client?.name || contract?.clientName || "",
+        [contract]
+    );
+    const signerDocument = useMemo(
+        () => contract?.signedDocument || contract?.client?.signerDocument || contract?.client?.document || "",
+        [contract]
+    );
+
+    const drawGuide = (context: CanvasRenderingContext2D, width: number, height: number) => {
+        context.clearRect(0, 0, width, height);
+
+        context.strokeStyle = "rgba(96,165,250,0.15)";
+        context.lineWidth = 1;
+        context.setLineDash([6, 6]);
         context.beginPath();
-        context.arc(point.x, point.y, 1.6, 0, Math.PI * 2);
-        context.fillStyle = "#f8fafc";
+        context.moveTo(20, height * 0.72);
+        context.lineTo(width - 20, height * 0.72);
+        context.stroke();
+        context.setLineDash([]);
+
+        context.fillStyle = "rgba(148,163,184,0.45)";
+        context.font = "500 16px Inter, Arial, sans-serif";
+        context.fillText("Assine aqui com o dedo ou mouse", 24, 34);
+    };
+
+    const configureCanvas = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const context = canvas.getContext("2d");
+        if (!context) return;
+
+        const ratio = window.devicePixelRatio || 1;
+        const width = canvas.clientWidth || 520;
+        const height = canvas.clientHeight || 220;
+
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.scale(ratio, ratio);
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        context.lineWidth = 3.5;
+        context.strokeStyle = "#60a5fa";
+        drawGuide(context, width, height);
+        setCanvasReady(true);
+    };
+
+    const drawDot = (point: { x: number; y: number }) => {
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext("2d");
+        if (!canvas || !context) return;
+
+        context.beginPath();
+        context.fillStyle = "#60a5fa";
+        context.arc(point.x, point.y, 2.2, 0, Math.PI * 2);
         context.fill();
     };
 
-    const drawLine = (context: CanvasRenderingContext2D, from: { x: number; y: number }, to: { x: number; y: number }) => {
+    const drawSegment = (from: { x: number; y: number }, to: { x: number; y: number }) => {
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext("2d");
+        if (!canvas || !context) return;
+
         context.beginPath();
         context.moveTo(from.x, from.y);
         context.lineTo(to.x, to.y);
         context.stroke();
+    };
+
+    const beginDrawing = (clientX: number, clientY: number) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const point = getPoint(canvas, clientX, clientY);
+        drawingRef.current = true;
+        lastPointRef.current = point;
+        drawDot(point);
+        setHasSignatureDrawing(true);
+        setError(null);
+    };
+
+    const continueDrawing = (clientX: number, clientY: number) => {
+        const canvas = canvasRef.current;
+        if (!canvas || !drawingRef.current || !lastPointRef.current) return;
+
+        const nextPoint = getPoint(canvas, clientX, clientY);
+        drawSegment(lastPointRef.current, nextPoint);
+        lastPointRef.current = nextPoint;
+        setHasSignatureDrawing(true);
+    };
+
+    const stopDrawing = () => {
+        drawingRef.current = false;
+        lastPointRef.current = null;
     };
 
     useEffect(() => {
@@ -56,8 +142,6 @@ export default function SignContractPage() {
                 setError(null);
                 const data = await getPublicContract(token);
                 setContract(data);
-                setSignerName(data.signedName || data.client?.signerName || "");
-                setSignerDocument(data.signedDocument || data.client?.signerDocument || "");
                 setSigned(Boolean(data.signedAt));
                 setHasSignatureDrawing(Boolean(data.signedSignatureData));
             } catch (err) {
@@ -74,94 +158,13 @@ export default function SignContractPage() {
     useEffect(() => {
         if (signed) return;
 
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const context = canvas.getContext("2d");
-        if (!context) return;
-
-        const setupCanvas = () => {
-            const ratio = window.devicePixelRatio || 1;
-            const width = canvas.clientWidth || 520;
-            const height = canvas.clientHeight || 180;
-
-            canvas.width = Math.floor(width * ratio);
-            canvas.height = Math.floor(height * ratio);
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context.scale(ratio, ratio);
-            context.lineCap = "round";
-            context.lineJoin = "round";
-            context.lineWidth = 2.2;
-            context.strokeStyle = "#f8fafc";
-            context.clearRect(0, 0, width, height);
-        };
-
-        setupCanvas();
-        window.addEventListener("resize", setupCanvas);
-
-        return () => window.removeEventListener("resize", setupCanvas);
-    }, [signed]);
-
-    useEffect(() => {
-        if (signed) return;
-
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const context = canvas.getContext("2d");
-        if (!context) return;
-
-        const handlePointerDown = (event: PointerEvent) => {
-            event.preventDefault();
-            const point = getCanvasPoint(canvas, event);
-            isDrawingRef.current = true;
-            lastPointRef.current = point;
-            canvas.setPointerCapture(event.pointerId);
-            drawPoint(context, point);
-            setHasSignatureDrawing(true);
-        };
-
-        const handlePointerMove = (event: PointerEvent) => {
-            if (!isDrawingRef.current || !lastPointRef.current) return;
-            event.preventDefault();
-
-            const point = getCanvasPoint(canvas, event);
-            drawLine(context, lastPointRef.current, point);
-
-            lastPointRef.current = point;
-            setHasSignatureDrawing(true);
-        };
-
-        const stopDrawing = (event?: PointerEvent) => {
-            if (event) {
-                event.preventDefault();
-            }
-            isDrawingRef.current = false;
-            lastPointRef.current = null;
-        };
-
-        canvas.addEventListener("pointerdown", handlePointerDown);
-        canvas.addEventListener("pointermove", handlePointerMove);
-        canvas.addEventListener("pointerup", stopDrawing);
-        canvas.addEventListener("pointerleave", stopDrawing);
-        canvas.addEventListener("pointercancel", stopDrawing);
-        canvas.style.touchAction = "none";
-
-        return () => {
-            canvas.removeEventListener("pointerdown", handlePointerDown);
-            canvas.removeEventListener("pointermove", handlePointerMove);
-            canvas.removeEventListener("pointerup", stopDrawing);
-            canvas.removeEventListener("pointerleave", stopDrawing);
-            canvas.removeEventListener("pointercancel", stopDrawing);
-        };
+        configureCanvas();
+        window.addEventListener("resize", configureCanvas);
+        return () => window.removeEventListener("resize", configureCanvas);
     }, [signed]);
 
     const clearSignature = () => {
-        const canvas = canvasRef.current;
-        const context = canvas?.getContext("2d");
-        if (!canvas || !context) return;
-
-        context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+        configureCanvas();
         setHasSignatureDrawing(false);
     };
 
@@ -172,18 +175,13 @@ export default function SignContractPage() {
     };
 
     const handleSign = async () => {
-        if (!signerName.trim() || !signerDocument.trim()) {
-            setError("Preencha o nome e o documento do assinante.");
-            return;
-        }
-
         if (!hasSignatureDrawing) {
-            setError("Desenhe sua assinatura no quadro antes de concluir.");
+            setError("Desenhe a assinatura no quadro antes de concluir.");
             return;
         }
 
         if (!accepted) {
-            setError("Voce precisa aceitar os termos antes de assinar.");
+            setError("Confirme a leitura do contrato para concluir a assinatura.");
             return;
         }
 
@@ -193,24 +191,18 @@ export default function SignContractPage() {
 
             const signedSignatureData = getSignatureDataUrl();
             const result = await signPublicContract(token, {
-                signerName,
-                signerDocument,
                 signedSignatureData
             });
 
             setContract((prev: any) => prev ? {
                 ...prev,
-                signedAt: result?.contract?.signedAt,
-                signedName: signerName,
-                signedDocument: signerDocument,
-                signedSignatureData,
-                status: "ACTIVE"
+                ...result?.contract,
+                signedSignatureData
             } : prev);
             setSigned(true);
-            setHasSignatureDrawing(true);
         } catch (err) {
             console.warn("Erro ao assinar contrato:", err);
-            setError("Houve um erro ao registrar sua assinatura.");
+            setError("Houve um erro ao registrar a assinatura.");
         } finally {
             setSigning(false);
         }
@@ -235,7 +227,7 @@ export default function SignContractPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0b0d14] text-white">
+            <div className="min-h-screen flex items-center justify-center bg-[#090b12] text-white">
                 <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
                     <Loader2 className="animate-spin text-blue-500" size={20} />
                     <span className="text-sm font-bold uppercase tracking-[0.2em]">Carregando contrato</span>
@@ -246,7 +238,7 @@ export default function SignContractPage() {
 
     if (error && !contract) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0b0d14] p-6 text-white">
+            <div className="min-h-screen flex items-center justify-center bg-[#090b12] p-6 text-white">
                 <div className="max-w-xl rounded-3xl border border-white/10 bg-[#161826] p-8 text-center">
                     <p className="text-xl font-bold">Contrato indisponivel</p>
                     <p className="mt-3 text-slate-400">{error}</p>
@@ -256,16 +248,22 @@ export default function SignContractPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0b0d14] text-white">
-            <div className="mx-auto max-w-5xl px-4 py-10">
-                <div className="mb-8 flex items-center justify-between gap-4">
-                    <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-400">Assinatura digital</p>
-                        <h1 className="mt-2 text-4xl font-light tracking-tight">Contrato para assinatura</h1>
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top,#1a2a55_0%,#0b0d14_28%,#090b12_100%)] text-white">
+            <div className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
+                <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+                    <div className="max-w-2xl">
+                        <p className="text-xs font-bold uppercase tracking-[0.35em] text-blue-400">Assinatura Digital</p>
+                        <h1 className="mt-3 text-4xl font-light tracking-tight text-white md:text-6xl">
+                            Validacao final do contrato
+                        </h1>
+                        <p className="mt-4 max-w-xl text-sm leading-6 text-slate-400 md:text-base">
+                            Revise os dados do contrato e assine no quadro abaixo. A assinatura fica registrada no sistema e no PDF final.
+                        </p>
                     </div>
+
                     <button
                         onClick={handleDownload}
-                        className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold uppercase tracking-[0.15em] text-white transition-colors hover:border-blue-500/40 hover:bg-blue-500/10"
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white transition-colors hover:border-blue-500/40 hover:bg-blue-500/10"
                     >
                         <Download size={16} />
                         Baixar PDF
@@ -278,40 +276,58 @@ export default function SignContractPage() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                    <section className="rounded-3xl border border-white/10 bg-[#161826] p-6 shadow-2xl">
-                        <div className="mb-6 flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400">
-                                <FileText size={20} />
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Resumo</p>
-                                <h2 className="text-xl font-semibold text-white">{contract?.client?.name || "Cliente"}</h2>
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+                    <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(22,24,38,0.98),rgba(15,17,26,0.98))] shadow-2xl">
+                        <div className="border-b border-white/5 px-6 py-6 md:px-8">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-500/20 bg-blue-500/10 text-blue-400">
+                                    <FileText size={22} />
+                                </div>
+                                <div>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500">Contrato</p>
+                                    <h2 className="text-2xl font-semibold text-white">{contract?.client?.name || contract?.clientName || "Contratante"}</h2>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="space-y-3 text-sm text-slate-300">
-                            <p><span className="text-slate-500">Documento:</span> {contract?.client?.document || "-"}</p>
-                            <p><span className="text-slate-500">Valor mensal:</span> R$ {money(Number(contract?.monthlyValue || 0))}</p>
-                            <p><span className="text-slate-500">Vigencia:</span> {contract?.durationMonths || "-"} meses</p>
-                            <p><span className="text-slate-500">Pagamento:</span> todo dia {contract?.paymentDay || "-"}</p>
-                            <p className="leading-relaxed"><span className="text-slate-500">Escopo:</span> {contract?.scope || "-"}</p>
-                        </div>
+                        <div className="space-y-6 px-6 py-6 md:px-8">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Documento</p>
+                                    <p className="mt-2 text-sm text-slate-200">{contract?.client?.document || "-"}</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Vigencia</p>
+                                    <p className="mt-2 text-sm text-slate-200">{contract?.durationMonths || "-"} meses</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Valor mensal</p>
+                                    <p className="mt-2 text-sm text-slate-200">R$ {money(Number(contract?.monthlyValue || 0))}</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Pagamento</p>
+                                    <p className="mt-2 text-sm text-slate-200">Todo dia {contract?.paymentDay || "-"}</p>
+                                </div>
+                            </div>
 
-                        <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-400">
-                            Leia o contrato no PDF, confira os dados e conclua a assinatura abaixo.
+                            <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Escopo</p>
+                                <p className="mt-3 text-sm leading-7 text-slate-300">{contract?.scope || "-"}</p>
+                            </div>
                         </div>
                     </section>
 
-                    <aside className="rounded-3xl border border-white/10 bg-[#161826] p-6 shadow-2xl">
+                    <aside className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(22,24,38,0.98),rgba(15,17,26,0.98))] p-6 shadow-2xl md:p-7">
                         {signed ? (
-                            <div className="space-y-4 text-center">
-                                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
-                                    <CheckCircle2 size={28} />
+                            <div className="space-y-5 text-center">
+                                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+                                    <CheckCircle2 size={30} />
                                 </div>
                                 <div>
-                                    <p className="text-xl font-semibold text-white">Contrato assinado</p>
-                                    <p className="mt-2 text-sm text-slate-400">Sua assinatura desenhada foi registrada com sucesso.</p>
+                                    <p className="text-2xl font-semibold text-white">Contrato assinado</p>
+                                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                                        A assinatura foi registrada no sistema e o PDF final ja pode ser baixado.
+                                    </p>
                                 </div>
                                 {contract?.signedSignatureData && (
                                     <div className="rounded-2xl border border-white/10 bg-[#0f111a] p-4">
@@ -324,83 +340,94 @@ export default function SignContractPage() {
                                 )}
                                 <button
                                     onClick={handleDownload}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold uppercase tracking-[0.15em] text-white transition-colors hover:bg-blue-500"
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white transition-colors hover:bg-blue-500"
                                 >
                                     <Download size={16} />
                                     Baixar versao final
                                 </button>
                             </div>
                         ) : (
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400">
-                                        <PenLine size={20} />
+                            <div className="space-y-5">
+                                <div className="flex items-start gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-500/20 bg-blue-500/10 text-blue-400">
+                                        <PenLine size={22} />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Assinatura</p>
-                                        <h2 className="text-xl font-semibold text-white">Assine no quadro abaixo</h2>
+                                        <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500">Assinatura</p>
+                                        <h2 className="mt-1 text-2xl font-semibold text-white">Assine no quadro</h2>
+                                        <p className="mt-2 text-sm leading-6 text-slate-400">
+                                            O sistema vai registrar a assinatura usando os dados ja vinculados ao contrato.
+                                        </p>
                                     </div>
                                 </div>
 
-                                <label className="block space-y-2">
-                                    <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Nome do assinante</span>
-                                    <input
-                                        value={signerName}
-                                        onChange={(e) => setSignerName(e.target.value)}
-                                        className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35"
-                                        placeholder="Nome completo"
-                                    />
-                                </label>
+                                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                                    <div className="flex items-center gap-3">
+                                        <ShieldCheck size={18} className="text-blue-400" />
+                                        <div>
+                                            <p className="text-sm font-semibold text-white">{signerName || "Contratante"}</p>
+                                            <p className="text-xs text-slate-500">{signerDocument || "Documento vinculado ao contrato"}</p>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <label className="block space-y-2">
-                                    <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">CPF / CNPJ</span>
-                                    <input
-                                        value={signerDocument}
-                                        onChange={(e) => setSignerDocument(e.target.value)}
-                                        className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35"
-                                        placeholder="Documento do assinante"
-                                    />
-                                </label>
-
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Assinatura manual</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Assinatura manual</span>
                                         <button
                                             type="button"
                                             onClick={clearSignature}
-                                            className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-slate-200 transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/10"
+                                            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-slate-200 transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/10"
                                         >
                                             <Eraser size={14} />
                                             Limpar
                                         </button>
                                     </div>
-                                    <div className="rounded-2xl border border-white/10 bg-[#0f111a] p-3">
+
+                                    <div className="rounded-[24px] border border-white/10 bg-[#0b0d14] p-3 shadow-inner">
                                         <canvas
                                             ref={canvasRef}
-                                            className="h-44 w-full touch-none rounded-xl border border-dashed border-white/10 bg-[#0b0d14]"
+                                            onMouseDown={(event) => beginDrawing(event.clientX, event.clientY)}
+                                            onMouseMove={(event) => continueDrawing(event.clientX, event.clientY)}
+                                            onMouseUp={stopDrawing}
+                                            onMouseLeave={stopDrawing}
+                                            onTouchStart={(event) => {
+                                                const touch = event.touches[0];
+                                                if (!touch) return;
+                                                beginDrawing(touch.clientX, touch.clientY);
+                                            }}
+                                            onTouchMove={(event) => {
+                                                const touch = event.touches[0];
+                                                if (!touch) return;
+                                                continueDrawing(touch.clientX, touch.clientY);
+                                            }}
+                                            onTouchEnd={stopDrawing}
+                                            className="h-56 w-full touch-none rounded-[18px] border border-dashed border-blue-500/20 bg-[#070910] select-none"
+                                            style={{ cursor: "crosshair" }}
                                         />
                                     </div>
-                                    <p className="text-xs text-slate-500">Use o dedo no celular ou o mouse no computador para desenhar a assinatura.</p>
+
+                                    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300">
+                                        <input
+                                            type="checkbox"
+                                            checked={accepted}
+                                            onChange={(event) => setAccepted(event.target.checked)}
+                                            className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-950 text-blue-500 focus:ring-blue-500/20"
+                                        />
+                                        <span>
+                                            Li o contrato e autorizo a assinatura digital deste documento.
+                                        </span>
+                                    </div>
+
+                                    <button
+                                        onClick={handleSign}
+                                        disabled={signing || !canvasReady}
+                                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white transition-colors hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500"
+                                    >
+                                        {signing ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
+                                        {signing ? "Registrando assinatura..." : "Assinar contrato"}
+                                    </button>
                                 </div>
-
-                                <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300">
-                                    <input
-                                        type="checkbox"
-                                        checked={accepted}
-                                        onChange={(e) => setAccepted(e.target.checked)}
-                                        className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-950 text-blue-500 focus:ring-blue-500/20"
-                                    />
-                                    <span>Li o contrato e confirmo que estou autorizado a assina-lo digitalmente.</span>
-                                </label>
-
-                                <button
-                                    onClick={handleSign}
-                                    disabled={signing}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold uppercase tracking-[0.15em] text-white transition-colors hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500"
-                                >
-                                    {signing ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
-                                    {signing ? "Assinando..." : "Assinar contrato"}
-                                </button>
                             </div>
                         )}
                     </aside>

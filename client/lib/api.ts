@@ -294,9 +294,9 @@ export const downloadPublicContractPdf = async (token: string) => {
 };
 
 export const signPublicContract = async (token: string, data: {
-    signerName: string;
-    signerDocument: string;
     signedSignatureData: string;
+    signerName?: string;
+    signerDocument?: string;
 }) => {
     const response = await api.post(`public-contracts/${token}/sign`, data);
     return response.data;

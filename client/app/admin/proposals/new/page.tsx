@@ -9,27 +9,27 @@ import ProposalServices from "@/components/proposals/ProposalServices";
 import ProposalClosing from "@/components/proposals/ProposalClosing";
 
 // --- Dados Iniciais ---
-// --- DescriÃ§Ãµes Gerais por Categoria ---
+// --- DescriÃƒÂ§ÃƒÂµes Gerais por Categoria ---
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
-    "Social Media": "Postagens Facebook e Instagram, organizaÃ§Ã£o de feed, anÃ¡lise de mercado, estratÃ©gia, designer (cards), copyright, pesquisa do mÃªs atravÃ©s do forms, Trello para organizaÃ§Ã£o.",
-    "Social Media + Audiovisual": "Postagens Facebook e Instagram, organizaÃ§Ã£o de feed, anÃ¡lise de mercado, estratÃ©gia, designer (cards), copyright, pesquisa do mÃªs atravÃ©s do forms, Trello para organizaÃ§Ã£o, social media, + fotografias, vÃ­deos e drone (uma vez ao mÃªs) + cadastro Google meu negÃ³cio.",
-    "TrÃ¡fego Pago": "GestÃ£o estratÃ©gica de anÃºncios para maximizar alcance, leads e conversÃµes atravÃ©s de plataformas de alta performance.",
-    "Audiovisual / Fotos": "ProduÃ§Ã£o de conteÃºdo visual de alto impacto, incluindo fotografia profissional e vÃ­deos dinÃ¢micos para plataformas digitais.",
-    "Artes Adicionais": "CriaÃ§Ã£o de identidades visuais e artes grÃ¡ficas exclusivas para fortalecer a comunicaÃ§Ã£o da sua marca.",
-    "Fotografia": "Pacotes de cobertura fotogrÃ¡fica para casamento, com tratamento profissional, entrega digital em alta resoluÃ§Ã£o e opÃ§Ãµes de making of, recepÃ§Ã£o, balada e ensaio.",
-    "VÃ­deo": "Cobertura em vÃ­deo para cerimÃ´nia, recepÃ§Ã£o e momentos especiais, com opÃ§Ãµes de teaser, filme, drone e entrega prioritÃ¡ria.",
-    "Combos Foto + VÃ­deo": "Pacotes combinados de fotografia e vÃ­deo com economia progressiva, equipe completa e entregas integradas para o evento.",
-    "Storymaker": "Cobertura em tempo real para redes sociais, com profissionais especializados em conteÃºdo, stories criativos e entrega de todos os arquivos.",
-    "15 anos": "Pacotes de foto, vÃ­deo e combos para festas de 15 anos, com opÃ§Ãµes de ensaio externo, retrospectiva, drone, Ã¡lbum fÃ­sico e Same Day Edit.",
-    "Fotografia Aniversário": "Pacotes de fotografia para aniversários.",
-    "Vídeo Aniversário": "Pacotes de vídeo para aniversários.",
-    "Combos Foto + Vídeo Aniversário": "Combos completos para aniversários.",
-    "Fotografia — Chá Revelação & Chá de Fralda": "Pacotes de fotografia para chá revelação e chá de fralda.",
-    "Vídeo — Chá Revelação": "Pacotes de vídeo para chá revelação.",
-    "Vídeo — Chá de Fralda": "Pacotes de vídeo para chá de fralda.",
-    "Combo Foto + Vídeo — Chá Revelação": "Combos completos para chá revelação.",
-    "Combo Foto + Vídeo — Chá de Fralda": "Combos completos para chá de fralda.",
-    "Combo Especial — Chá Revelação + Chá de Fralda Juntos": "Pacotes conjuntos para os dois eventos."
+    "Social Media": "Postagens Facebook e Instagram, organizaÃƒÂ§ÃƒÂ£o de feed, anÃƒÂ¡lise de mercado, estratÃƒÂ©gia, designer (cards), copyright, pesquisa do mÃƒÂªs atravÃƒÂ©s do forms, Trello para organizaÃƒÂ§ÃƒÂ£o.",
+    "Social Media + Audiovisual": "Postagens Facebook e Instagram, organizaÃƒÂ§ÃƒÂ£o de feed, anÃƒÂ¡lise de mercado, estratÃƒÂ©gia, designer (cards), copyright, pesquisa do mÃƒÂªs atravÃƒÂ©s do forms, Trello para organizaÃƒÂ§ÃƒÂ£o, social media, + fotografias, vÃƒÂ­deos e drone (uma vez ao mÃƒÂªs) + cadastro Google meu negÃƒÂ³cio.",
+    "TrÃƒÂ¡fego Pago": "GestÃƒÂ£o estratÃƒÂ©gica de anÃƒÂºncios para maximizar alcance, leads e conversÃƒÂµes atravÃƒÂ©s de plataformas de alta performance.",
+    "Audiovisual / Fotos": "ProduÃƒÂ§ÃƒÂ£o de conteÃƒÂºdo visual de alto impacto, incluindo fotografia profissional e vÃƒÂ­deos dinÃƒÂ¢micos para plataformas digitais.",
+    "Artes Adicionais": "CriaÃƒÂ§ÃƒÂ£o de identidades visuais e artes grÃƒÂ¡ficas exclusivas para fortalecer a comunicaÃƒÂ§ÃƒÂ£o da sua marca.",
+    "Fotografia": "Pacotes de cobertura fotogrÃƒÂ¡fica para casamento, com tratamento profissional, entrega digital em alta resoluÃƒÂ§ÃƒÂ£o e opÃƒÂ§ÃƒÂµes de making of, recepÃƒÂ§ÃƒÂ£o, balada e ensaio.",
+    "VÃƒÂ­deo": "Cobertura em vÃƒÂ­deo para cerimÃƒÂ´nia, recepÃƒÂ§ÃƒÂ£o e momentos especiais, com opÃƒÂ§ÃƒÂµes de teaser, filme, drone e entrega prioritÃƒÂ¡ria.",
+    "Combos Foto + VÃƒÂ­deo": "Pacotes combinados de fotografia e vÃƒÂ­deo com economia progressiva, equipe completa e entregas integradas para o evento.",
+    "Storymaker": "Cobertura em tempo real para redes sociais, com profissionais especializados em conteÃƒÂºdo, stories criativos e entrega de todos os arquivos.",
+    "15 anos": "Pacotes de foto, vÃƒÂ­deo e combos para festas de 15 anos, com opÃƒÂ§ÃƒÂµes de ensaio externo, retrospectiva, drone, ÃƒÂ¡lbum fÃƒÂ­sico e Same Day Edit.",
+    "Fotografia AniversÃ¡rio": "Pacotes de fotografia para aniversÃ¡rios.",
+    "VÃ­deo AniversÃ¡rio": "Pacotes de vÃ­deo para aniversÃ¡rios.",
+    "Combos Foto + VÃ­deo AniversÃ¡rio": "Combos completos para aniversÃ¡rios.",
+    "Fotografia â€” ChÃ¡ RevelaÃ§Ã£o & ChÃ¡ de Fralda": "Pacotes de fotografia para chÃ¡ revelaÃ§Ã£o e chÃ¡ de fralda.",
+    "VÃ­deo â€” ChÃ¡ RevelaÃ§Ã£o": "Pacotes de vÃ­deo para chÃ¡ revelaÃ§Ã£o.",
+    "VÃ­deo â€” ChÃ¡ de Fralda": "Pacotes de vÃ­deo para chÃ¡ de fralda.",
+    "Combo Foto + VÃ­deo â€” ChÃ¡ RevelaÃ§Ã£o": "Combos completos para chÃ¡ revelaÃ§Ã£o.",
+    "Combo Foto + VÃ­deo â€” ChÃ¡ de Fralda": "Combos completos para chÃ¡ de fralda.",
+    "Combo Especial â€” ChÃ¡ RevelaÃ§Ã£o + ChÃ¡ de Fralda Juntos": "Pacotes conjuntos para os dois eventos."
 };
 
 const dataSocialMedia = [
@@ -51,154 +51,154 @@ const dataSocialMediaAudiovisual = [
 ];
 
 const dataTrafego = [
-    { id: "tr_1", name: "Google Ads (GestÃ£o + EstratÃ©gia)", defaultPrice: 1000, description: "GestÃ£o completa de campanhas no Google Ads, focado em resultados e ROI." },
-    { id: "tr_2", name: "Meta Ads (Instagram/Facebook)", defaultPrice: 1000, description: "GestÃ£o de anÃºncios no Instagram e Facebook para aumento de alcance e conversÃµes." },
-    { id: "tr_3", name: "Combo Google + Meta Ads", defaultPrice: 1500, description: "GestÃ£o unificada de anÃºncios nas principais plataformas (Google + Meta)." },
+    { id: "tr_1", name: "Google Ads (GestÃƒÂ£o + EstratÃƒÂ©gia)", defaultPrice: 1000, description: "GestÃƒÂ£o completa de campanhas no Google Ads, focado em resultados e ROI." },
+    { id: "tr_2", name: "Meta Ads (Instagram/Facebook)", defaultPrice: 1000, description: "GestÃƒÂ£o de anÃƒÂºncios no Instagram e Facebook para aumento de alcance e conversÃƒÂµes." },
+    { id: "tr_3", name: "Combo Google + Meta Ads", defaultPrice: 1500, description: "GestÃƒÂ£o unificada de anÃƒÂºncios nas principais plataformas (Google + Meta)." },
 ];
 
 const dataAudiovisual = [
-    { id: "av_1", name: "Reels sem Drone", defaultPrice: 500, description: "CaptaÃ§Ã£o e ediÃ§Ã£o de vÃ­deo formato Reels para redes sociais." },
-    { id: "av_2", name: "Reels com Drone", defaultPrice: 750, description: "CaptaÃ§Ã£o com Drone e ediÃ§Ã£o de vÃ­deo premium para redes sociais." },
-    { id: "av_3", name: "Subida de Drone", defaultPrice: 250, description: "Voo exclusivo com Drone para captaÃ§Ã£o de imagens aÃ©reas brutas." },
-    { id: "av_4", name: "Ensaio BÃ¡sico (80 fotos / 15 edit)", defaultPrice: 400, description: "SessÃ£o fotogrÃ¡fica profissional com entrega de 80 fotos brutas e 15 editadas." },
-    { id: "av_5", name: "Ensaio IntermediÃ¡rio (150 fotos / 30 edit)", defaultPrice: 600, description: "SessÃ£o fotogrÃ¡fica intermediÃ¡ria com 150 fotos brutas e 30 editadas." },
-    { id: "av_6", name: "Ensaio Premium (250 fotos / 50 edit)", defaultPrice: 800, description: "SessÃ£o completa premium com 250 fotos brutas e 50 editadas." },
-    { id: "av_7", name: "Cobertura 2H sem ediÃ§Ã£o (brutas)", defaultPrice: 500, description: "Acompanhamento fotogrÃ¡fico de evento por 2 horas, entrega de fotos brutas." },
-    { id: "av_8", name: "Hora Extra", defaultPrice: 200, description: "Hora adicional de cobertura fotogrÃ¡fica/audiovisual." },
+    { id: "av_1", name: "Reels sem Drone", defaultPrice: 500, description: "CaptaÃƒÂ§ÃƒÂ£o e ediÃƒÂ§ÃƒÂ£o de vÃƒÂ­deo formato Reels para redes sociais." },
+    { id: "av_2", name: "Reels com Drone", defaultPrice: 750, description: "CaptaÃƒÂ§ÃƒÂ£o com Drone e ediÃƒÂ§ÃƒÂ£o de vÃƒÂ­deo premium para redes sociais." },
+    { id: "av_3", name: "Subida de Drone", defaultPrice: 250, description: "Voo exclusivo com Drone para captaÃƒÂ§ÃƒÂ£o de imagens aÃƒÂ©reas brutas." },
+    { id: "av_4", name: "Ensaio BÃƒÂ¡sico (80 fotos / 15 edit)", defaultPrice: 400, description: "SessÃƒÂ£o fotogrÃƒÂ¡fica profissional com entrega de 80 fotos brutas e 15 editadas." },
+    { id: "av_5", name: "Ensaio IntermediÃƒÂ¡rio (150 fotos / 30 edit)", defaultPrice: 600, description: "SessÃƒÂ£o fotogrÃƒÂ¡fica intermediÃƒÂ¡ria com 150 fotos brutas e 30 editadas." },
+    { id: "av_6", name: "Ensaio Premium (250 fotos / 50 edit)", defaultPrice: 800, description: "SessÃƒÂ£o completa premium com 250 fotos brutas e 50 editadas." },
+    { id: "av_7", name: "Cobertura 2H sem ediÃƒÂ§ÃƒÂ£o (brutas)", defaultPrice: 500, description: "Acompanhamento fotogrÃƒÂ¡fico de evento por 2 horas, entrega de fotos brutas." },
+    { id: "av_8", name: "Hora Extra", defaultPrice: 200, description: "Hora adicional de cobertura fotogrÃƒÂ¡fica/audiovisual." },
 ];
 
 const dataArtes = [
     { id: "ar_1", name: "Artes para camisetas", defaultPrice: 100, description: "Design exclusivo para estampas de camisetas." },
-    { id: "ar_2", name: "Artes impressÃ£o 1 lado", defaultPrice: 80, description: "CriaÃ§Ã£o de arte para materiais impressos (frente)." },
-    { id: "ar_3", name: "Artes impressÃ£o 2 lados", defaultPrice: 120, description: "CriaÃ§Ã£o de arte para materiais impressos (frente e verso)." },
-    { id: "ar_4", name: "Artes plotagem de carro", defaultPrice: 150, description: "Design para adesivagem e comunicaÃ§Ã£o visual de veÃ­culos." },
-    { id: "ar_5", name: "Capas de destaque", defaultPrice: 80, description: "CriaÃ§Ã£o de Ã­cones personalizados para destaques do Instagram." },
-    { id: "ar_6", name: "CardÃ¡pio", defaultPrice: 250, description: "Design profissional para cardÃ¡pios e menus." },
-    { id: "ar_7", name: "CrachÃ¡", defaultPrice: 100, description: "Identidade visual para crachÃ¡s e identificaÃ§Ã£o." },
-    { id: "ar_8", name: "Design foto de perfil", defaultPrice: 80, description: "Ajuste e design estratÃ©gico para fotos de perfil corporativas." },
-    { id: "ar_9", name: "VetorizaÃ§Ã£o logo existente", defaultPrice: 150, description: "Redesenho de logo em alta resoluÃ§Ã£o (vetor)." },
-    { id: "ar_10", name: "MIV", defaultPrice: 350, description: "Manual de Identidade Visual bÃ¡sico." },
-    { id: "ar_11", name: "PDF ApresentaÃ§Ã£o", defaultPrice: 350, description: "Design de lÃ¢minas para apresentaÃ§Ãµes comerciais." },
-    { id: "ar_12", name: "PortfÃ³lio", defaultPrice: 350, description: "CriaÃ§Ã£o de portfÃ³lio digital profissional." },
+    { id: "ar_2", name: "Artes impressÃƒÂ£o 1 lado", defaultPrice: 80, description: "CriaÃƒÂ§ÃƒÂ£o de arte para materiais impressos (frente)." },
+    { id: "ar_3", name: "Artes impressÃƒÂ£o 2 lados", defaultPrice: 120, description: "CriaÃƒÂ§ÃƒÂ£o de arte para materiais impressos (frente e verso)." },
+    { id: "ar_4", name: "Artes plotagem de carro", defaultPrice: 150, description: "Design para adesivagem e comunicaÃƒÂ§ÃƒÂ£o visual de veÃƒÂ­culos." },
+    { id: "ar_5", name: "Capas de destaque", defaultPrice: 80, description: "CriaÃƒÂ§ÃƒÂ£o de ÃƒÂ­cones personalizados para destaques do Instagram." },
+    { id: "ar_6", name: "CardÃƒÂ¡pio", defaultPrice: 250, description: "Design profissional para cardÃƒÂ¡pios e menus." },
+    { id: "ar_7", name: "CrachÃƒÂ¡", defaultPrice: 100, description: "Identidade visual para crachÃƒÂ¡s e identificaÃƒÂ§ÃƒÂ£o." },
+    { id: "ar_8", name: "Design foto de perfil", defaultPrice: 80, description: "Ajuste e design estratÃƒÂ©gico para fotos de perfil corporativas." },
+    { id: "ar_9", name: "VetorizaÃƒÂ§ÃƒÂ£o logo existente", defaultPrice: 150, description: "Redesenho de logo em alta resoluÃƒÂ§ÃƒÂ£o (vetor)." },
+    { id: "ar_10", name: "MIV", defaultPrice: 350, description: "Manual de Identidade Visual bÃƒÂ¡sico." },
+    { id: "ar_11", name: "PDF ApresentaÃƒÂ§ÃƒÂ£o", defaultPrice: 350, description: "Design de lÃƒÂ¢minas para apresentaÃƒÂ§ÃƒÂµes comerciais." },
+    { id: "ar_12", name: "PortfÃƒÂ³lio", defaultPrice: 350, description: "CriaÃƒÂ§ÃƒÂ£o de portfÃƒÂ³lio digital profissional." },
     { id: "ar_13", name: "Proposta Comercial", defaultPrice: 200, description: "Design de documento para propostas de vendas." },
-    { id: "ar_14", name: "CriaÃ§Ã£o de Logo", defaultPrice: 250, description: "Processo criativo para nova logomarca." },
-    { id: "ar_15", name: "Banner Site", defaultPrice: 80, description: "CriaÃ§Ã£o de banners para web e E-commerce." },
-    { id: "ar_16", name: "Arte avulsa redes sociais", defaultPrice: 60, description: "Design unitÃ¡rio para postagens avulsas." },
+    { id: "ar_14", name: "CriaÃƒÂ§ÃƒÂ£o de Logo", defaultPrice: 250, description: "Processo criativo para nova logomarca." },
+    { id: "ar_15", name: "Banner Site", defaultPrice: 80, description: "CriaÃƒÂ§ÃƒÂ£o de banners para web e E-commerce." },
+    { id: "ar_16", name: "Arte avulsa redes sociais", defaultPrice: 60, description: "Design unitÃƒÂ¡rio para postagens avulsas." },
 ];
 
 const dataFotografia = [
-    { id: "foto_essencial", name: "Essencial", defaultPrice: 2000, description: "4h de cobertura | 1 fotÃ³grafo profissional | CerimÃ´nia + inÃ­cio da recepÃ§Ã£o | 250 fotos tratadas e editadas | Entrega digital em alta resoluÃ§Ã£o | Sem making of, balada completa ou ensaio" },
-    { id: "foto_premium", name: "Premium", defaultPrice: 3500, description: "8h de cobertura | 2 fotÃ³grafos profissionais | Making of da noiva | CerimÃ´nia completa + recepÃ§Ã£o + abertura da balada | 450 fotos tratadas e editadas | Galeria completa do evento | Sem ensaio prÃ©-casamento" },
-    { id: "foto_completa", name: "ExperiÃªncia Completa", defaultPrice: 4800, description: "10h de cobertura | 2 fotÃ³grafos profissionais | Making of do noivo e da noiva | CerimÃ´nia + recepÃ§Ã£o + balada completa | 650+ fotos tratadas e editadas | Galeria completa | Entrega prioritÃ¡ria + backup garantido" },
-    { id: "foto_ensaio_pre", name: "Adicional: Ensaio prÃ©-casamento", defaultPrice: 1200, description: "Ensaio fotogrÃ¡fico prÃ©-casamento." },
-    { id: "foto_hora_extra", name: "Adicional: Hora extra", defaultPrice: 400, description: "Hora adicional de cobertura fotogrÃ¡fica." },
-    { id: "foto_album", name: "Adicional: Ãlbum fÃ­sico", defaultPrice: 0, description: "Valor sob consulta." },
+    { id: "foto_essencial", name: "Essencial", defaultPrice: 2000, description: "4h de cobertura | 1 fotÃƒÂ³grafo profissional | CerimÃƒÂ´nia + inÃƒÂ­cio da recepÃƒÂ§ÃƒÂ£o | 250 fotos tratadas e editadas | Entrega digital em alta resoluÃƒÂ§ÃƒÂ£o | Sem making of, balada completa ou ensaio" },
+    { id: "foto_premium", name: "Premium", defaultPrice: 3500, description: "8h de cobertura | 2 fotÃƒÂ³grafos profissionais | Making of da noiva | CerimÃƒÂ´nia completa + recepÃƒÂ§ÃƒÂ£o + abertura da balada | 450 fotos tratadas e editadas | Galeria completa do evento | Sem ensaio prÃƒÂ©-casamento" },
+    { id: "foto_completa", name: "ExperiÃƒÂªncia Completa", defaultPrice: 4800, description: "10h de cobertura | 2 fotÃƒÂ³grafos profissionais | Making of do noivo e da noiva | CerimÃƒÂ´nia + recepÃƒÂ§ÃƒÂ£o + balada completa | 650+ fotos tratadas e editadas | Galeria completa | Entrega prioritÃƒÂ¡ria + backup garantido" },
+    { id: "foto_ensaio_pre", name: "Adicional: Ensaio prÃƒÂ©-casamento", defaultPrice: 1200, description: "Ensaio fotogrÃƒÂ¡fico prÃƒÂ©-casamento." },
+    { id: "foto_hora_extra", name: "Adicional: Hora extra", defaultPrice: 400, description: "Hora adicional de cobertura fotogrÃƒÂ¡fica." },
+    { id: "foto_album", name: "Adicional: ÃƒÂlbum fÃƒÂ­sico", defaultPrice: 0, description: "Valor sob consulta." },
 ];
 
 const dataVideo = [
-    { id: "video_essencial", name: "Essencial", defaultPrice: 2500, description: "4h de cobertura | 1 cÃ¢mera profissional | CerimÃ´nia + inÃ­cio da recepÃ§Ã£o | Teaser de atÃ© 1 minuto | Sem making of, balada, drone ou filme longo" },
-    { id: "video_premium", name: "Premium", defaultPrice: 3800, description: "8h de cobertura | 2 cÃ¢meras profissionais | Making of da noiva | CerimÃ´nia completa + recepÃ§Ã£o + abertura da balada | Teaser de 1 a 2 minutos | Filme de atÃ© 15 minutos | Sem drone, making do noivo ou prÃ©-wedding" },
-    { id: "video_completa", name: "ExperiÃªncia Completa", defaultPrice: 5000, description: "10h de cobertura | 2 cÃ¢meras profissionais | Making of do noivo e da noiva | CerimÃ´nia + recepÃ§Ã£o + balada completa | Drone incluso | Teaser + filme de atÃ© 15 minutos | Entrega prioritÃ¡ria" },
+    { id: "video_essencial", name: "Essencial", defaultPrice: 2500, description: "4h de cobertura | 1 cÃƒÂ¢mera profissional | CerimÃƒÂ´nia + inÃƒÂ­cio da recepÃƒÂ§ÃƒÂ£o | Teaser de atÃƒÂ© 1 minuto | Sem making of, balada, drone ou filme longo" },
+    { id: "video_premium", name: "Premium", defaultPrice: 3800, description: "8h de cobertura | 2 cÃƒÂ¢meras profissionais | Making of da noiva | CerimÃƒÂ´nia completa + recepÃƒÂ§ÃƒÂ£o + abertura da balada | Teaser de 1 a 2 minutos | Filme de atÃƒÂ© 15 minutos | Sem drone, making do noivo ou prÃƒÂ©-wedding" },
+    { id: "video_completa", name: "ExperiÃƒÂªncia Completa", defaultPrice: 5000, description: "10h de cobertura | 2 cÃƒÂ¢meras profissionais | Making of do noivo e da noiva | CerimÃƒÂ´nia + recepÃƒÂ§ÃƒÂ£o + balada completa | Drone incluso | Teaser + filme de atÃƒÂ© 15 minutos | Entrega prioritÃƒÂ¡ria" },
     { id: "video_making_noivo", name: "Adicional: Making do noivo", defaultPrice: 600, description: "Cobertura adicional do making of do noivo." },
-    { id: "video_drone", name: "Adicional: Drone", defaultPrice: 500, description: "CaptaÃ§Ã£o aÃ©rea com drone." },
-    { id: "video_pre_wedding", name: "Adicional: PrÃ©-wedding", defaultPrice: 1400, description: "VÃ­deo prÃ©-wedding." },
-    { id: "video_hora_extra", name: "Adicional: Hora extra", defaultPrice: 450, description: "Hora adicional de cobertura em vÃ­deo." },
+    { id: "video_drone", name: "Adicional: Drone", defaultPrice: 500, description: "CaptaÃƒÂ§ÃƒÂ£o aÃƒÂ©rea com drone." },
+    { id: "video_pre_wedding", name: "Adicional: PrÃƒÂ©-wedding", defaultPrice: 1400, description: "VÃƒÂ­deo prÃƒÂ©-wedding." },
+    { id: "video_hora_extra", name: "Adicional: Hora extra", defaultPrice: 450, description: "Hora adicional de cobertura em vÃƒÂ­deo." },
 ];
 
 const dataCombos = [
-    { id: "combo_essencial", name: "Combo Essencial", defaultPrice: 4200, description: "Economia de R$300 | 4h de cobertura | 1 fotÃ³grafo + 1 cinegrafista | CerimÃ´nia + inÃ­cio da recepÃ§Ã£o | 250 fotos tratadas + teaser atÃ© 1 min | Entrega digital em alta resoluÃ§Ã£o" },
-    { id: "combo_premium", name: "Combo Premium", defaultPrice: 6700, description: "Economia de R$600 | 8h de cobertura | 2 fotÃ³grafos + 2 cinegrafistas | Making of da noiva | CerimÃ´nia + recepÃ§Ã£o + abertura da balada | 450 fotos tratadas + teaser 1-2 min + filme atÃ© 15 min" },
-    { id: "combo_completa", name: "Combo ExperiÃªncia Completa", defaultPrice: 8800, description: "Economia de R$1.000 | 10h de cobertura | 2 fotÃ³grafos + 2 cinegrafistas | Making of do noivo e da noiva | CerimÃ´nia + recepÃ§Ã£o + balada completa | 650+ fotos + teaser + filme atÃ© 15 min + drone incluso | Entrega prioritÃ¡ria + backup garantido" },
-    { id: "combo_camera_adicional", name: "Adicional: CÃ¢mera adicional", defaultPrice: 500, description: "CÃ¢mera adicional para cobertura do evento." },
-    { id: "combo_hora_extra", name: "Adicional: Hora extra", defaultPrice: 500, description: "Hora adicional para combo foto + vÃ­deo." },
-    { id: "combo_same_day", name: "Adicional: Same Day Edit", defaultPrice: 1200, description: "EdiÃ§Ã£o para exibiÃ§Ã£o no mesmo dia." },
-    { id: "combo_storymaker_6h", name: "Adicional: Storymaker 6h", defaultPrice: 1200, description: "Cobertura storymaker por atÃ© 6 horas." },
-    { id: "combo_storymaker_10h", name: "Adicional: Storymaker 10h", defaultPrice: 1500, description: "Cobertura storymaker por atÃ© 10 horas." },
-    { id: "combo_pre_wedding_foto", name: "Adicional: PrÃ©-wedding foto", defaultPrice: 1200, description: "Ensaio fotogrÃ¡fico prÃ©-wedding." },
-    { id: "combo_pre_wedding_video", name: "Adicional: PrÃ©-wedding vÃ­deo", defaultPrice: 1400, description: "VÃ­deo prÃ©-wedding." },
-    { id: "combo_album", name: "Adicional: Ãlbum fÃ­sico", defaultPrice: 0, description: "Valor sob consulta." },
+    { id: "combo_essencial", name: "Combo Essencial", defaultPrice: 4200, description: "Economia de R$300 | 4h de cobertura | 1 fotÃƒÂ³grafo + 1 cinegrafista | CerimÃƒÂ´nia + inÃƒÂ­cio da recepÃƒÂ§ÃƒÂ£o | 250 fotos tratadas + teaser atÃƒÂ© 1 min | Entrega digital em alta resoluÃƒÂ§ÃƒÂ£o" },
+    { id: "combo_premium", name: "Combo Premium", defaultPrice: 6700, description: "Economia de R$600 | 8h de cobertura | 2 fotÃƒÂ³grafos + 2 cinegrafistas | Making of da noiva | CerimÃƒÂ´nia + recepÃƒÂ§ÃƒÂ£o + abertura da balada | 450 fotos tratadas + teaser 1-2 min + filme atÃƒÂ© 15 min" },
+    { id: "combo_completa", name: "Combo ExperiÃƒÂªncia Completa", defaultPrice: 8800, description: "Economia de R$1.000 | 10h de cobertura | 2 fotÃƒÂ³grafos + 2 cinegrafistas | Making of do noivo e da noiva | CerimÃƒÂ´nia + recepÃƒÂ§ÃƒÂ£o + balada completa | 650+ fotos + teaser + filme atÃƒÂ© 15 min + drone incluso | Entrega prioritÃƒÂ¡ria + backup garantido" },
+    { id: "combo_camera_adicional", name: "Adicional: CÃƒÂ¢mera adicional", defaultPrice: 500, description: "CÃƒÂ¢mera adicional para cobertura do evento." },
+    { id: "combo_hora_extra", name: "Adicional: Hora extra", defaultPrice: 500, description: "Hora adicional para combo foto + vÃƒÂ­deo." },
+    { id: "combo_same_day", name: "Adicional: Same Day Edit", defaultPrice: 1200, description: "EdiÃƒÂ§ÃƒÂ£o para exibiÃƒÂ§ÃƒÂ£o no mesmo dia." },
+    { id: "combo_storymaker_6h", name: "Adicional: Storymaker 6h", defaultPrice: 1200, description: "Cobertura storymaker por atÃƒÂ© 6 horas." },
+    { id: "combo_storymaker_10h", name: "Adicional: Storymaker 10h", defaultPrice: 1500, description: "Cobertura storymaker por atÃƒÂ© 10 horas." },
+    { id: "combo_pre_wedding_foto", name: "Adicional: PrÃƒÂ©-wedding foto", defaultPrice: 1200, description: "Ensaio fotogrÃƒÂ¡fico prÃƒÂ©-wedding." },
+    { id: "combo_pre_wedding_video", name: "Adicional: PrÃƒÂ©-wedding vÃƒÂ­deo", defaultPrice: 1400, description: "VÃƒÂ­deo prÃƒÂ©-wedding." },
+    { id: "combo_album", name: "Adicional: ÃƒÂlbum fÃƒÂ­sico", defaultPrice: 0, description: "Valor sob consulta." },
 ];
 
 const dataStorymaker = [
-    { id: "story_6h", name: "AtÃ© 6h", defaultPrice: 1200, description: "Cobertura em tempo real para redes sociais | 2 profissionais especializados em conteÃºdo | Stories criativos produzidos e postados em tempo real | Entrega de todos os arquivos" },
-    { id: "story_10h", name: "AtÃ© 10h", defaultPrice: 1500, description: "Cobertura em tempo real para redes sociais | 2 profissionais especializados em conteÃºdo | Stories criativos produzidos e postados em tempo real | Entrega de todos os arquivos" },
-    { id: "story_obs", name: "ObservaÃ§Ã£o de deslocamento", defaultPrice: 0, description: "Deslocamento nÃ£o incluso para eventos fora do estado. O local deve fornecer acesso Ã  internet estÃ¡vel." },
+    { id: "story_6h", name: "AtÃƒÂ© 6h", defaultPrice: 1200, description: "Cobertura em tempo real para redes sociais | 2 profissionais especializados em conteÃƒÂºdo | Stories criativos produzidos e postados em tempo real | Entrega de todos os arquivos" },
+    { id: "story_10h", name: "AtÃƒÂ© 10h", defaultPrice: 1500, description: "Cobertura em tempo real para redes sociais | 2 profissionais especializados em conteÃƒÂºdo | Stories criativos produzidos e postados em tempo real | Entrega de todos os arquivos" },
+    { id: "story_obs", name: "ObservaÃƒÂ§ÃƒÂ£o de deslocamento", defaultPrice: 0, description: "Deslocamento nÃƒÂ£o incluso para eventos fora do estado. O local deve fornecer acesso ÃƒÂ  internet estÃƒÂ¡vel." },
 ];
 
 const data15Anos = [
     { id: "15_ensaio_foto", name: "Ensaio externo foto", defaultPrice: 1100, description: "Ensaio externo para 15 anos." },
-    { id: "15_ensaio_video", name: "Ensaio externo vÃ­deo", defaultPrice: 1200, description: "Ensaio externo em vÃ­deo para 15 anos." },
-    { id: "15_ensaio_foto_video", name: "Ensaio externo foto + vÃ­deo juntos", defaultPrice: 2000, description: "Combo de ensaio externo com foto + vÃ­deo | Economia de R$300." },
-    { id: "15_foto_essencial", name: "Foto 15 anos â€” Essencial", defaultPrice: 1600, description: "Pacote essencial de fotografia para 15 anos." },
-    { id: "15_foto_premium", name: "Foto 15 anos â€” Premium", defaultPrice: 2400, description: "Pacote premium de fotografia para 15 anos." },
-    { id: "15_foto_completa", name: "Foto 15 anos â€” ExperiÃªncia Completa", defaultPrice: 3600, description: "Pacote experiÃªncia completa de fotografia para 15 anos." },
-    { id: "15_foto_ensaio_externo", name: "Foto 15 anos â€” Adicional: Ensaio externo", defaultPrice: 1100, description: "Ensaio externo fotogrÃ¡fico adicional." },
-    { id: "15_foto_album", name: "Foto 15 anos â€” Adicional: Ãlbum fÃ­sico", defaultPrice: 0, description: "Valor sob orÃ§amento." },
-    { id: "15_foto_hora_extra", name: "Foto 15 anos â€” Adicional: Hora extra", defaultPrice: 350, description: "Hora extra de cobertura fotogrÃ¡fica." },
-    { id: "15_video_essencial", name: "VÃ­deo 15 anos â€” Essencial", defaultPrice: 1900, description: "Pacote essencial de vÃ­deo para 15 anos." },
-    { id: "15_video_premium", name: "VÃ­deo 15 anos â€” Premium", defaultPrice: 2700, description: "Pacote premium de vÃ­deo para 15 anos." },
-    { id: "15_video_completa", name: "VÃ­deo 15 anos â€” ExperiÃªncia Completa", defaultPrice: 4000, description: "Pacote experiÃªncia completa de vÃ­deo para 15 anos." },
-    { id: "15_video_ensaio_externo", name: "VÃ­deo 15 anos â€” Adicional: Ensaio externo", defaultPrice: 1200, description: "Ensaio externo em vÃ­deo adicional." },
-    { id: "15_video_retrospectiva", name: "VÃ­deo 15 anos â€” Adicional: Retrospectiva personalizada", defaultPrice: 900, description: "Retrospectiva personalizada para 15 anos." },
-    { id: "15_video_drone", name: "VÃ­deo 15 anos â€” Adicional: Drone avulso", defaultPrice: 400, description: "CaptaÃ§Ã£o aÃ©rea com drone avulso." },
-    { id: "15_video_hora_extra", name: "VÃ­deo 15 anos â€” Adicional: Hora extra", defaultPrice: 400, description: "Hora extra de cobertura em vÃ­deo." },
-    { id: "15_combo_essencial", name: "Combo Foto + VÃ­deo 15 anos â€” Essencial", defaultPrice: 3200, description: "Combo essencial de foto + vÃ­deo | Economia de R$300." },
-    { id: "15_combo_premium", name: "Combo Foto + VÃ­deo 15 anos â€” Premium", defaultPrice: 4500, description: "Combo premium de foto + vÃ­deo | Economia de R$600." },
-    { id: "15_combo_completa", name: "Combo Foto + VÃ­deo 15 anos â€” ExperiÃªncia Completa", defaultPrice: 6600, description: "Combo experiÃªncia completa de foto + vÃ­deo | Economia de R$1.000." },
-    { id: "15_combo_ensaio_externo", name: "Combo 15 anos â€” Adicional: Ensaio externo foto + vÃ­deo", defaultPrice: 2000, description: "Ensaio externo com foto + vÃ­deo adicional." },
-    { id: "15_combo_retrospectiva_telao", name: "Combo 15 anos â€” Adicional: VÃ­deo retrospectiva telÃ£o", defaultPrice: 500, description: "VÃ­deo retrospectiva para exibiÃ§Ã£o no telÃ£o." },
-    { id: "15_combo_same_day", name: "Combo 15 anos â€” Adicional: Same Day Edit", defaultPrice: 1200, description: "EdiÃ§Ã£o para exibiÃ§Ã£o no mesmo dia." },
+    { id: "15_ensaio_video", name: "Ensaio externo video", defaultPrice: 1200, description: "Ensaio externo em video para 15 anos." },
+    { id: "15_ensaio_foto_video", name: "Ensaio externo foto + video juntos", defaultPrice: 2000, description: "Combo de ensaio externo com foto + video | Economia de R$300." },
+    { id: "15_foto_essencial", name: "Foto 15 anos - Essencial", defaultPrice: 1600, description: "Pacote essencial de fotografia para 15 anos." },
+    { id: "15_foto_premium", name: "Foto 15 anos - Premium", defaultPrice: 2400, description: "Pacote premium de fotografia para 15 anos." },
+    { id: "15_foto_completa", name: "Foto 15 anos - Experiencia Completa", defaultPrice: 3600, description: "Pacote experiencia completa de fotografia para 15 anos." },
+    { id: "15_foto_ensaio_externo", name: "Foto 15 anos - Adicional: Ensaio externo", defaultPrice: 1100, description: "Ensaio externo fotografico adicional." },
+    { id: "15_foto_album", name: "Foto 15 anos - Adicional: Album fisico", defaultPrice: 0, description: "Valor sob orcamento." },
+    { id: "15_foto_hora_extra", name: "Foto 15 anos - Adicional: Hora extra", defaultPrice: 350, description: "Hora extra de cobertura fotografica." },
+    { id: "15_video_essencial", name: "Video 15 anos - Essencial", defaultPrice: 1900, description: "Pacote essencial de video para 15 anos." },
+    { id: "15_video_premium", name: "Video 15 anos - Premium", defaultPrice: 2700, description: "Pacote premium de video para 15 anos." },
+    { id: "15_video_completa", name: "Video 15 anos - Experiencia Completa", defaultPrice: 4000, description: "Pacote experiencia completa de video para 15 anos." },
+    { id: "15_video_ensaio_externo", name: "Video 15 anos - Adicional: Ensaio externo", defaultPrice: 1200, description: "Ensaio externo em video adicional." },
+    { id: "15_video_retrospectiva", name: "Video 15 anos - Adicional: Retrospectiva personalizada", defaultPrice: 900, description: "Retrospectiva personalizada para 15 anos." },
+    { id: "15_video_drone", name: "Video 15 anos - Adicional: Drone avulso", defaultPrice: 400, description: "Captacao aerea com drone avulso." },
+    { id: "15_video_hora_extra", name: "Video 15 anos - Adicional: Hora extra", defaultPrice: 400, description: "Hora extra de cobertura em video." },
+    { id: "15_combo_essencial", name: "Combo Foto + Video 15 anos - Essencial", defaultPrice: 3200, description: "Combo essencial de foto + video | Economia de R$300." },
+    { id: "15_combo_premium", name: "Combo Foto + Video 15 anos - Premium", defaultPrice: 4500, description: "Combo premium de foto + video | Economia de R$600." },
+    { id: "15_combo_completa", name: "Combo Foto + Video 15 anos - Experiencia Completa", defaultPrice: 6600, description: "Combo experiencia completa de foto + video | Economia de R$1.000." },
+    { id: "15_combo_ensaio_externo", name: "Combo 15 anos - Adicional: Ensaio externo foto + video", defaultPrice: 2000, description: "Ensaio externo com foto + video adicional." },
+    { id: "15_combo_retrospectiva_telao", name: "Combo 15 anos - Adicional: Video retrospectiva telao", defaultPrice: 500, description: "Video retrospectiva para exibicao no telao." },
+    { id: "15_combo_same_day", name: "Combo 15 anos - Adicional: Same Day Edit", defaultPrice: 1200, description: "Edicao para exibicao no mesmo dia." },
 ];
 
 const dataAniversarioFoto = [
-    { id: "aniv_foto_2h", name: "2 Horas", defaultPrice: 700, description: "Fotos ilimitadas do evento | 30 fotos editadas | Entrega digital em alta resolução" },
-    { id: "aniv_foto_3h", name: "3 Horas", defaultPrice: 1000, description: "Fotos ilimitadas do evento | 50 fotos editadas | Entrega digital em alta resolução" },
-    { id: "aniv_foto_4h", name: "4 Horas", defaultPrice: 1500, description: "Fotos ilimitadas do evento | 100 fotos editadas | Entrega digital em alta resolução" },
-    { id: "aniv_foto_6h", name: "6 Horas", defaultPrice: 2200, description: "Fotos ilimitadas do evento | 200 fotos editadas | Drone incluso | Entrega digital em alta resolução" },
+    { id: "aniv_foto_2h", name: "2 Horas", defaultPrice: 700, description: "Fotos ilimitadas do evento | 30 fotos editadas | Entrega digital em alta resolucao" },
+    { id: "aniv_foto_3h", name: "3 Horas", defaultPrice: 1000, description: "Fotos ilimitadas do evento | 50 fotos editadas | Entrega digital em alta resolucao" },
+    { id: "aniv_foto_4h", name: "4 Horas", defaultPrice: 1500, description: "Fotos ilimitadas do evento | 100 fotos editadas | Entrega digital em alta resolucao" },
+    { id: "aniv_foto_6h", name: "6 Horas", defaultPrice: 2200, description: "Fotos ilimitadas do evento | 200 fotos editadas | Drone incluso | Entrega digital em alta resolucao" },
 ];
 
 const dataAniversarioVideo = [
-    { id: "aniv_video_2h", name: "2 Horas", defaultPrice: 700, description: "1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
-    { id: "aniv_video_3h", name: "3 Horas", defaultPrice: 1000, description: "1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
-    { id: "aniv_video_4h", name: "4 Horas", defaultPrice: 1500, description: "1 Reels completo (até 1min30s) | Drone incluso | Entrega digital em alta resolução" },
-    { id: "aniv_video_6h", name: "6 Horas", defaultPrice: 2200, description: "2 Reels completos (até 1min30s cada) | Drone incluso | Entrega digital em alta resolução" },
+    { id: "aniv_video_2h", name: "2 Horas", defaultPrice: 700, description: "1 Reels completo (ate 1min30s) | Entrega digital em alta resolucao" },
+    { id: "aniv_video_3h", name: "3 Horas", defaultPrice: 1000, description: "1 Reels completo (ate 1min30s) | Entrega digital em alta resolucao" },
+    { id: "aniv_video_4h", name: "4 Horas", defaultPrice: 1500, description: "1 Reels completo (ate 1min30s) | Drone incluso | Entrega digital em alta resolucao" },
+    { id: "aniv_video_6h", name: "6 Horas", defaultPrice: 2200, description: "2 Reels completos (ate 1min30s cada) | Drone incluso | Entrega digital em alta resolucao" },
 ];
 
 const dataAniversarioCombo = [
-    { id: "aniv_combo_2h", name: "Combo 2h", defaultPrice: 1200, description: "Fotos ilimitadas + 30 fotos editadas | 1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
-    { id: "aniv_combo_3h", name: "Combo 3h", defaultPrice: 1700, description: "Fotos ilimitadas + 50 fotos editadas | 1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
-    { id: "aniv_combo_4h", name: "Combo 4h", defaultPrice: 2500, description: "Fotos ilimitadas + 100 fotos editadas | 1 Reels completo (até 1min30s) | Drone incluso | Entrega digital em alta resolução" },
-    { id: "aniv_combo_6h", name: "Combo 6h", defaultPrice: 3800, description: "Fotos ilimitadas + 200 fotos editadas | 2 Reels completos (até 1min30s cada) | Drone incluso | Entrega digital em alta resolução" },
+    { id: "aniv_combo_2h", name: "Combo 2h", defaultPrice: 1200, description: "Fotos ilimitadas + 30 fotos editadas | 1 Reels completo (ate 1min30s) | Entrega digital em alta resolucao" },
+    { id: "aniv_combo_3h", name: "Combo 3h", defaultPrice: 1700, description: "Fotos ilimitadas + 50 fotos editadas | 1 Reels completo (ate 1min30s) | Entrega digital em alta resolucao" },
+    { id: "aniv_combo_4h", name: "Combo 4h", defaultPrice: 2500, description: "Fotos ilimitadas + 100 fotos editadas | 1 Reels completo (ate 1min30s) | Drone incluso | Entrega digital em alta resolucao" },
+    { id: "aniv_combo_6h", name: "Combo 6h", defaultPrice: 3800, description: "Fotos ilimitadas + 200 fotos editadas | 2 Reels completos (ate 1min30s cada) | Drone incluso | Entrega digital em alta resolucao" },
 ];
 
 const dataChaRevelacaoFoto = [
-    { id: "cha_rev_foto_2h", name: "2 Horas", defaultPrice: 700, description: "Fotos ilimitadas do evento | 30 fotos editadas | Entrega digital em alta resolução" },
-    { id: "cha_rev_foto_3h", name: "3 Horas", defaultPrice: 950, description: "Fotos ilimitadas do evento | 50 fotos editadas | Entrega digital em alta resolução" },
+    { id: "cha_rev_foto_2h", name: "2 Horas", defaultPrice: 700, description: "Fotos ilimitadas do evento | 30 fotos editadas | Entrega digital em alta resolucao" },
+    { id: "cha_rev_foto_3h", name: "3 Horas", defaultPrice: 950, description: "Fotos ilimitadas do evento | 50 fotos editadas | Entrega digital em alta resolucao" },
 ];
 
 const dataChaRevelacaoVideo = [
-    { id: "cha_rev_video_2h", name: "2 Horas", defaultPrice: 900, description: "1 Reels completo (até 1min30s) | Drone no momento da revelação | Entrega digital em alta resolução" },
-    { id: "cha_rev_video_3h", name: "3 Horas", defaultPrice: 1100, description: "1 Reels completo (até 1min30s) | Drone no momento da revelação | Entrega digital em alta resolução" },
+    { id: "cha_rev_video_2h", name: "2 Horas", defaultPrice: 900, description: "1 Reels completo (ate 1min30s) | Drone no momento da revelacao | Entrega digital em alta resolucao" },
+    { id: "cha_rev_video_3h", name: "3 Horas", defaultPrice: 1100, description: "1 Reels completo (ate 1min30s) | Drone no momento da revelacao | Entrega digital em alta resolucao" },
 ];
 
 const dataChaFraldaVideo = [
-    { id: "cha_fralda_video_2h", name: "2 Horas", defaultPrice: 800, description: "1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
-    { id: "cha_fralda_video_3h", name: "3 Horas", defaultPrice: 1000, description: "1 Reels completo (até 1min30s) | Entrega digital em alta resolução" },
+    { id: "cha_fralda_video_2h", name: "2 Horas", defaultPrice: 800, description: "1 Reels completo (ate 1min30s) | Entrega digital em alta resolucao" },
+    { id: "cha_fralda_video_3h", name: "3 Horas", defaultPrice: 1000, description: "1 Reels completo (ate 1min30s) | Entrega digital em alta resolucao" },
 ];
 
 const dataChaRevelacaoCombo = [
-    { id: "cha_rev_combo_2h", name: "2 Horas", defaultPrice: 1400, description: "Fotos ilimitadas + 30 fotos editadas | 1 Reels completo + drone na revelação | Drone incluso | Entrega digital em alta resolução" },
-    { id: "cha_rev_combo_3h", name: "3 Horas", defaultPrice: 1800, description: "Fotos ilimitadas + 50 fotos editadas | 1 Reels completo + drone na revelação | Drone incluso | Entrega digital em alta resolução" },
+    { id: "cha_rev_combo_2h", name: "2 Horas", defaultPrice: 1400, description: "Fotos ilimitadas + 30 fotos editadas | 1 Reels completo + drone na revelacao | Drone incluso | Entrega digital em alta resolucao" },
+    { id: "cha_rev_combo_3h", name: "3 Horas", defaultPrice: 1800, description: "Fotos ilimitadas + 50 fotos editadas | 1 Reels completo + drone na revelacao | Drone incluso | Entrega digital em alta resolucao" },
 ];
 
 const dataChaFraldaCombo = [
-    { id: "cha_fralda_combo_2h", name: "2 Horas", defaultPrice: 1300, description: "Fotos ilimitadas + 30 fotos editadas | 1 Reels completo | Entrega digital em alta resolução" },
-    { id: "cha_fralda_combo_3h", name: "3 Horas", defaultPrice: 1700, description: "Fotos ilimitadas + 50 fotos editadas | 1 Reels completo | Entrega digital em alta resolução" },
+    { id: "cha_fralda_combo_2h", name: "2 Horas", defaultPrice: 1300, description: "Fotos ilimitadas + 30 fotos editadas | 1 Reels completo | Entrega digital em alta resolucao" },
+    { id: "cha_fralda_combo_3h", name: "3 Horas", defaultPrice: 1700, description: "Fotos ilimitadas + 50 fotos editadas | 1 Reels completo | Entrega digital em alta resolucao" },
 ];
 
 const dataChaJuntosCombo = [
-    { id: "cha_juntos_3h", name: "3 Horas", defaultPrice: 2000, description: "Cobertura completa dos dois eventos | Fotos ilimitadas + Reels completo | Drone na revelação | Entrega digital em alta resolução" },
-    { id: "cha_juntos_5h", name: "5 Horas", defaultPrice: 2600, description: "Cobertura completa dos dois eventos | Fotos ilimitadas + 2 Reels completos | Drone na revelação | Entrega digital em alta resolução" },
+    { id: "cha_juntos_3h", name: "3 Horas", defaultPrice: 2000, description: "Cobertura completa dos dois eventos | Fotos ilimitadas + Reels completo | Drone na revelacao | Entrega digital em alta resolucao" },
+    { id: "cha_juntos_5h", name: "5 Horas", defaultPrice: 2600, description: "Cobertura completa dos dois eventos | Fotos ilimitadas + 2 Reels completos | Drone na revelacao | Entrega digital em alta resolucao" },
 ];
 
 interface SelectedService {
@@ -485,7 +485,7 @@ export default function NewProposalPage() {
 
     return (
         <div className="min-h-screen relative">
-            {/* O CONTEÃšDO VISÃVEL NO ADMIN (ESCONDIDO NA IMPRESSÃƒO) */}
+            {/* O CONTEÃƒÅ¡DO VISÃƒÂVEL NO ADMIN (ESCONDIDO NA IMPRESSÃƒÆ’O) */}
             <div className="max-w-6xl mx-auto space-y-10 pb-40 print:hidden relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
@@ -536,7 +536,7 @@ export default function NewProposalPage() {
                                 onChange={e => handleClientSelect(e.target.value)}
                                 className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
                             >
-                                <option value="">Sem vÃ­nculo / preencher manualmente</option>
+                                <option value="">Sem vÃƒÂ­nculo / preencher manualmente</option>
                                 {clients.map(client => (
                                     <option key={client.id} value={client.id}>
                                         {client.name} {client.email ? `- ${client.email}` : ""}
@@ -573,31 +573,31 @@ export default function NewProposalPage() {
                 <div className="space-y-10">
                     {renderCategory("Social Media", dataSocialMedia, "Social Media")}
                     {renderCategory("Social Media + Audiovisual", dataSocialMediaAudiovisual, "Social Media + Audiovisual")}
-                    {renderCategory("TrÃ¡fego Pago", dataTrafego, "TrÃ¡fego Pago")}
+                    {renderCategory("TrÃƒÂ¡fego Pago", dataTrafego, "TrÃƒÂ¡fego Pago")}
                     {renderCategory("Audiovisual / Fotos", dataAudiovisual, "Audiovisual / Fotos")}
                     {renderCategory("Artes Adicionais", dataArtes, "Artes Adicionais")}
                     {renderCategory("Fotografia", dataFotografia, "Fotografia")}
-                    {renderCategory("VÃ­deo", dataVideo, "VÃ­deo")}
-                    {renderCategory("Combos Foto + VÃ­deo", dataCombos, "Combos Foto + VÃ­deo")}
+                    {renderCategory("VÃƒÂ­deo", dataVideo, "VÃƒÂ­deo")}
+                    {renderCategory("Combos Foto + VÃƒÂ­deo", dataCombos, "Combos Foto + VÃƒÂ­deo")}
                     {renderCategory("Storymaker", dataStorymaker, "Storymaker")}
                     {renderCategory("15 anos", data15Anos, "15 anos")}
-                    {renderCategory("Fotografia Aniversário", dataAniversarioFoto, "Fotografia Aniversário")}
-                    {renderCategory("Vídeo Aniversário", dataAniversarioVideo, "Vídeo Aniversário")}
-                    {renderCategory("Combos Foto + Vídeo Aniversário", dataAniversarioCombo, "Combos Foto + Vídeo Aniversário")}
-                    {renderCategory("Fotografia — Chá Revelação & Chá de Fralda", dataChaRevelacaoFoto, "Fotografia — Chá Revelação & Chá de Fralda")}
-                    {renderCategory("Vídeo — Chá Revelação", dataChaRevelacaoVideo, "Vídeo — Chá Revelação")}
-                    {renderCategory("Vídeo — Chá de Fralda", dataChaFraldaVideo, "Vídeo — Chá de Fralda")}
-                    {renderCategory("Combo Foto + Vídeo — Chá Revelação", dataChaRevelacaoCombo, "Combo Foto + Vídeo — Chá Revelação")}
-                    {renderCategory("Combo Foto + Vídeo — Chá de Fralda", dataChaFraldaCombo, "Combo Foto + Vídeo — Chá de Fralda")}
-                    {renderCategory("Combo Especial — Chá Revelação + Chá de Fralda Juntos", dataChaJuntosCombo, "Combo Especial — Chá Revelação + Chá de Fralda Juntos")}
+                    {renderCategory("Fotografia AniversÃ¡rio", dataAniversarioFoto, "Fotografia AniversÃ¡rio")}
+                    {renderCategory("VÃ­deo AniversÃ¡rio", dataAniversarioVideo, "VÃ­deo AniversÃ¡rio")}
+                    {renderCategory("Combos Foto + VÃ­deo AniversÃ¡rio", dataAniversarioCombo, "Combos Foto + VÃ­deo AniversÃ¡rio")}
+                    {renderCategory("Fotografia â€” ChÃ¡ RevelaÃ§Ã£o & ChÃ¡ de Fralda", dataChaRevelacaoFoto, "Fotografia â€” ChÃ¡ RevelaÃ§Ã£o & ChÃ¡ de Fralda")}
+                    {renderCategory("VÃ­deo â€” ChÃ¡ RevelaÃ§Ã£o", dataChaRevelacaoVideo, "VÃ­deo â€” ChÃ¡ RevelaÃ§Ã£o")}
+                    {renderCategory("VÃ­deo â€” ChÃ¡ de Fralda", dataChaFraldaVideo, "VÃ­deo â€” ChÃ¡ de Fralda")}
+                    {renderCategory("Combo Foto + VÃ­deo â€” ChÃ¡ RevelaÃ§Ã£o", dataChaRevelacaoCombo, "Combo Foto + VÃ­deo â€” ChÃ¡ RevelaÃ§Ã£o")}
+                    {renderCategory("Combo Foto + VÃ­deo â€” ChÃ¡ de Fralda", dataChaFraldaCombo, "Combo Foto + VÃ­deo â€” ChÃ¡ de Fralda")}
+                    {renderCategory("Combo Especial â€” ChÃ¡ RevelaÃ§Ã£o + ChÃ¡ de Fralda Juntos", dataChaJuntosCombo, "Combo Especial â€” ChÃ¡ RevelaÃ§Ã£o + ChÃ¡ de Fralda Juntos")}
                 </div>
             </div>
 
-            {/* Header Fixo Inferior com Resumo e AÃ§Ã£o */}
+            {/* Header Fixo Inferior com Resumo e AÃƒÂ§ÃƒÂ£o */}
             <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-slate-800 py-3 px-6 z-40 print:hidden shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex flex-col text-center md:text-left gap-1">
-                        <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">{selectedServices.length} serviÃ§os selecionados</span>
+                        <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">{selectedServices.length} serviÃƒÂ§os selecionados</span>
                         <span className="text-white text-xl font-black tracking-tighter flex items-center gap-2 justify-center md:justify-start">
                             Total final: R$ {formatMoney(totalFinal)}
                             {isManualTotal && (
@@ -631,7 +631,7 @@ export default function NewProposalPage() {
                                 onClick={handleResetTotal}
                                 className="whitespace-nowrap px-4 py-3 rounded-xl border border-slate-700 text-slate-200 hover:border-blue-500 hover:text-white transition-colors text-sm font-bold uppercase tracking-[0.15em]"
                             >
-                                AutomÃ¡tico
+                                AutomÃƒÂ¡tico
                             </button>
                         </div>
                         <button
@@ -660,7 +660,7 @@ export default function NewProposalPage() {
                 </div>
             </div>
 
-            {/* LAYOUT DE IMPRESSÃƒO (PDF) */}
+            {/* LAYOUT DE IMPRESSÃƒÆ’O (PDF) */}
             <div className="relative hidden print:block w-full text-black bg-white" id="proposal-print-area">
                 <style dangerouslySetInnerHTML={{
                     __html: `
