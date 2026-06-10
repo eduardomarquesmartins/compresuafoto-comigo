@@ -107,7 +107,7 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
 /**
  * Envia proposta comercial estilizada com anexo PDF
  */
-exports.sendProposalEmail = async (email, clientName, selectedServices, total) => {
+exports.sendProposalEmail = async (email, clientName, selectedServices, total, proposalType = 'empresarial') => {
     try {
         // Agrupar serviços por categoria para o corpo do e-mail
         const groupedServices = selectedServices.reduce((acc, service) => {
@@ -130,7 +130,7 @@ exports.sendProposalEmail = async (email, clientName, selectedServices, total) =
         `).join('');
 
         // Gerar o PDF usando o serviço centralizado
-        const pdfBuffer = await pdfService.generatePDFBuffer(clientName, selectedServices, total);
+        const pdfBuffer = await pdfService.generatePDFBuffer(clientName, selectedServices, total, proposalType);
 
         const { data, error } = await sendEmailOrFail({
             from: 'contato@compresuafoto.econticomigo.com.br',

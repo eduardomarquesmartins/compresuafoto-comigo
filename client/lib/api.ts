@@ -186,24 +186,24 @@ export const uploadWithRetry = async (
     throw lastError;
 };
 
-export const sendProposalEmail = async (data: { email: string; clientName: string; selectedServices: any[]; total: number }) => {
+export const sendProposalEmail = async (data: { email: string; clientName: string; selectedServices: any[]; total: number; proposalType?: string }) => {
     const response = await api.post('proposals/send-email', data);
     return response.data;
 };
 
-export const downloadProposalPdf = async (data: { clientName: string; selectedServices: any[]; total: number }) => {
+export const downloadProposalPdf = async (data: { clientName: string; selectedServices: any[]; total: number; proposalType?: string }) => {
     const response = await api.post('proposals/download', data, {
         responseType: 'blob'
     });
     return response.data;
 };
 
-export const createProposal = async (data: { clientId?: number; clientName: string; clientEmail?: string; selectedServices: any[]; total: number }) => {
+export const createProposal = async (data: { clientId?: number; clientName: string; clientEmail?: string; selectedServices: any[]; total: number; proposalType?: string }) => {
     const response = await api.post('proposals', data);
     return response.data;
 };
 
-export const updateProposal = async (id: number | string, data: { clientId?: number; clientName: string; clientEmail?: string; selectedServices: any[]; total: number }) => {
+export const updateProposal = async (id: number | string, data: { clientId?: number; clientName: string; clientEmail?: string; selectedServices: any[]; total: number; proposalType?: string }) => {
     const response = await api.put(`proposals/${id}`, data);
     return response.data;
 };

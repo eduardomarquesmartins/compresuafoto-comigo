@@ -216,6 +216,21 @@ interface ProposalItem {
     description?: string;
 }
 
+interface SelectedService {
+    id: string;
+    category: string;
+    name: string;
+    price: number;
+    description?: string;
+}
+
+interface ProposalItem {
+    id: string;
+    name: string;
+    defaultPrice: number;
+    description?: string;
+}
+
 const formatMoney = (value: number) => value.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
@@ -235,6 +250,14 @@ const parseMoneyInput = (value: string) => {
     return Number.isFinite(parsed) ? parsed : null;
 };
 
+type ProposalType = 'empresarial' | 'casamento' | '15anos';
+
+const PROPOSAL_TYPE_OPTIONS: { value: ProposalType; label: string; description: string }[] = [
+    { value: 'empresarial', label: 'Empresarial', description: 'Social media, tráfego, audiovisual e artes.' },
+    { value: 'casamento', label: 'Casamento', description: 'Foto, vídeo, combos, storymaker, aniversários e chás.' },
+    { value: '15anos', label: '15 anos', description: 'Foto, vídeo, combos e storymaker para festa de 15 anos.' },
+];
+
 export default function NewProposalPage() {
     const router = useRouter();
     const [clients, setClients] = useState<any[]>([]);
@@ -242,6 +265,7 @@ export default function NewProposalPage() {
     const [selectedClientId, setSelectedClientId] = useState("");
     const [clientName, setClientName] = useState("");
     const [clientEmail, setClientEmail] = useState('');
+    const [proposalType, setProposalType] = useState<ProposalType>('empresarial');
     const [isDownloading, setIsDownloading] = useState(false);
     const [isLoadingProposal, setIsLoadingProposal] = useState(false);
     const [emailStatus, setEmailStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -285,6 +309,7 @@ export default function NewProposalPage() {
                 setSelectedClientId(proposal.clientId || proposal.client?.id ? String(proposal.clientId || proposal.client?.id) : "");
                 setClientName(proposal.client?.name || proposal.clientName || "");
                 setClientEmail(proposal.client?.email || proposal.clientEmail || "");
+                setProposalType((proposal.proposalType as ProposalType) || 'empresarial');
                 setSelectedServices(normalizedServices);
                 setPriceDrafts(normalizedServices.reduce((drafts: Record<string, string>, service: SelectedService) => {
                     drafts[service.id] = String(service.price);
@@ -381,7 +406,8 @@ export default function NewProposalPage() {
                     email: clientEmail,
                     clientName,
                     selectedServices,
-                    total: finalTotal
+                    total: finalTotal,
+                    proposalType
                 });
                 setEmailStatus('success');
                 setTimeout(() => setEmailStatus('idle'), 5000);
@@ -392,7 +418,8 @@ export default function NewProposalPage() {
                 clientName,
                 clientEmail,
                 selectedServices,
-                total: finalTotal
+                total: finalTotal,
+                proposalType
             };
 
             if (editingProposalId) {
@@ -404,7 +431,8 @@ export default function NewProposalPage() {
             const blob = await downloadProposalPdf({
                 clientName,
                 selectedServices,
-                total: finalTotal
+                total: finalTotal,
+                proposalType
             });
 
             const url = window.URL.createObjectURL(new Blob([blob]));
@@ -486,113 +514,6 @@ export default function NewProposalPage() {
     return (
         <div className="min-h-screen relative">
             {/* O CONTEÚDO VISÍVEL NO ADMIN (ESCONDIDO NA IMPRESSÃO) */}
-            <div className="max-w-6xl mx-auto space-y-10 pb-40 print:hidden relative z-10">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div>
-                        <Link href="/admin/proposals" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4 text-sm font-bold uppercase tracking-widest">
-                            <ArrowLeft className="w-4 h-4" />
-                            Voltar
-                        </Link>
-                        <h1 className="text-4xl font-bold uppercase tracking-tighter text-white flex items-center gap-3">
-                            <Plus className="w-8 h-8 text-blue-500" />
-                            {editingProposalId ? "Editar Proposta" : "Nova Proposta"}
-                        </h1>
-                    </div>
-                </div>
-
-                {/* Toast de Sucesso ao Enviar E-mail */}
-                {emailStatus === 'success' && (
-                    <div className="fixed top-24 right-10 bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 no-print">
-                        <div className="bg-white/20 p-2 rounded-full">
-                            <CheckCircle2 size={24} />
-                        </div>
-                        <div>
-                            <p className="font-bold leading-tight">Sucesso!</p>
-                            <p className="text-sm opacity-90">Proposta enviada para o e-mail do cliente.</p>
-                        </div>
-                    </div>
-                )}
-
-                {isLoadingProposal && (
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex items-center gap-3 text-slate-300">
-                        <Loader2 className="animate-spin text-blue-500" size={20} />
-                        <span className="text-sm font-bold uppercase tracking-widest">Carregando proposta...</span>
-                    </div>
-                )}
-
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-2xl">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <Plus className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <h3 className="text-xl font-bold uppercase tracking-widest text-slate-200">Dados do Cliente</h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-3 md:col-span-2">
-                            <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Cliente vinculado</label>
-                            <select
-                                value={selectedClientId}
-                                onChange={e => handleClientSelect(e.target.value)}
-                                className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
-                            >
-                                <option value="">Sem vínculo / preencher manualmente</option>
-                                {clients.map(client => (
-                                    <option key={client.id} value={client.id}>
-                                        {client.name} {client.email ? `- ${client.email}` : ""}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="space-y-3">
-                            <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Nome do Cliente / Empresa</label>
-                            <input
-                                type="text"
-                                value={clientName}
-                                onChange={e => setClientName(e.target.value)}
-                                placeholder="Ex: Empresa Conti Marketing"
-                                className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
-                            />
-                        </div>
-                        <div className="space-y-3">
-                            <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1 flex items-center gap-2">
-                                <Mail size={14} className="text-blue-500" />
-                                E-mail de Envio (opcional)
-                            </label>
-                            <input
-                                type="email"
-                                value={clientEmail}
-                                onChange={e => setClientEmail(e.target.value)}
-                                placeholder="contato@empresa.com"
-                                className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="space-y-10">
-                    {renderCategory("Social Media", dataSocialMedia, "Social Media")}
-                    {renderCategory("Social Media + Audiovisual", dataSocialMediaAudiovisual, "Social Media + Audiovisual")}
-                    {renderCategory("Tráfego Pago", dataTrafego, "Tráfego Pago")}
-                    {renderCategory("Audiovisual / Fotos", dataAudiovisual, "Audiovisual / Fotos")}
-                    {renderCategory("Artes Adicionais", dataArtes, "Artes Adicionais")}
-                    {renderCategory("Fotografia", dataFotografia, "Fotografia")}
-                    {renderCategory("Vídeo", dataVideo, "Vídeo")}
-                    {renderCategory("Combos Foto + Vídeo", dataCombos, "Combos Foto + Vídeo")}
-                    {renderCategory("Storymaker", dataStorymaker, "Storymaker")}
-                    {renderCategory("15 anos", data15Anos, "15 anos")}
-                    {renderCategory("Fotografia Aniversário", dataAniversarioFoto, "Fotografia Aniversário")}
-                    {renderCategory("Vídeo Aniversário", dataAniversarioVideo, "Vídeo Aniversário")}
-                    {renderCategory("Combos Foto + Vídeo Aniversário", dataAniversarioCombo, "Combos Foto + Vídeo Aniversário")}
-                    {renderCategory("Fotografia — Chá Revelação & Chá de Fralda", dataChaRevelacaoFoto, "Fotografia — Chá Revelação & Chá de Fralda")}
-                    {renderCategory("Vídeo — Chá Revelação", dataChaRevelacaoVideo, "Vídeo — Chá Revelação")}
-                    {renderCategory("Vídeo — Chá de Fralda", dataChaFraldaVideo, "Vídeo — Chá de Fralda")}
-                    {renderCategory("Combo Foto + Vídeo — Chá Revelação", dataChaRevelacaoCombo, "Combo Foto + Vídeo — Chá Revelação")}
-                    {renderCategory("Combo Foto + Vídeo — Chá de Fralda", dataChaFraldaCombo, "Combo Foto + Vídeo — Chá de Fralda")}
-                    {renderCategory("Combo Especial — Chá Revelação + Chá de Fralda Juntos", dataChaJuntosCombo, "Combo Especial — Chá Revelação + Chá de Fralda Juntos")}
-                </div>
-            </div>
-
             {/* Header Fixo Inferior com Resumo e Ação */}
             <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-slate-800 py-3 px-6 z-40 print:hidden shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">

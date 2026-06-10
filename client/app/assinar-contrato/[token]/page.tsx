@@ -5,7 +5,6 @@ import { CheckCircle2, Download, Eraser, FileText, Loader2, PenLine, ShieldCheck
 import { downloadPublicContractPdf, getPublicContract, signPublicContract } from "@/lib/api";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import logoAdmin from "../../admin/logo-admin.jpg";
 
 const money = (value: number) => value.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
@@ -36,6 +35,8 @@ export default function SignContractPage() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const drawingRef = useRef(false);
     const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+    const prevWidthRef = useRef(0);
+    const prevHeightRef = useRef(0);
 
     const signerName = useMemo(
         () => contract?.signedName || contract?.client?.signerName || contract?.client?.name || contract?.clientName || "",
@@ -73,6 +74,14 @@ export default function SignContractPage() {
         const ratio = window.devicePixelRatio || 1;
         const width = canvas.clientWidth || 520;
         const height = canvas.clientHeight || 220;
+
+        // Se as dimensões CSS não mudaram, não reconfigura o canvas físico para evitar limpar o desenho!
+        if (width === prevWidthRef.current && height === prevHeightRef.current) {
+            return;
+        }
+
+        prevWidthRef.current = width;
+        prevHeightRef.current = height;
 
         canvas.width = Math.floor(width * ratio);
         canvas.height = Math.floor(height * ratio);
@@ -272,8 +281,7 @@ export default function SignContractPage() {
             <header className="border-b border-white/[0.06] bg-black/20 backdrop-blur-md sticky top-0 z-50">
                 <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Image src={logoAdmin} alt="Conti Marketing Digital" className="h-9 w-9 rounded-md object-cover" />
-                        <span className="font-normal tracking-tight text-white text-sm">Conti Marketing Digital</span>
+                        <Image src="/logo.png" alt="Conti Marketing Digital" width={160} height={45} className="h-12 w-auto object-contain" priority />
                     </div>
                 </div>
             </header>
@@ -287,6 +295,16 @@ export default function SignContractPage() {
                         <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-400 md:text-base">
                             Revise os termos e assine digitalmente no painel interativo. A assinatura gerada será vinculada ao contrato e registrada com validade jurídica.
                         </p>
+                        <div className="mt-5 flex flex-wrap gap-3">
+                            <button
+                                type="button"
+                                onClick={handleDownload}
+                                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/[0.15] px-5 py-3 text-xs font-bold uppercase tracking-[0.15em] text-slate-200 transition-all active:scale-95 shadow-md"
+                            >
+                                <Download size={14} />
+                                Baixar Contrato Original (PDF)
+                            </button>
+                        </div>
                     </div>
                 </div>
 
