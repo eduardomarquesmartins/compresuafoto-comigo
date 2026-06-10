@@ -33,6 +33,7 @@ const getContractPdfPayload = (contract) => ({
     clientCityState: contract.client?.cityState || '',
     signerName: contract.signedName || contract.client?.signerName || '',
     signerDocument: contract.signedDocument || contract.client?.signerDocument || '',
+    signedSignatureData: contract.signedSignatureData || '',
     scope: contract.scope,
     monthlyValue: contract.monthlyValue,
     durationMonths: contract.durationMonths,
@@ -391,10 +392,14 @@ exports.getPublicContractPdfByToken = async (req, res) => {
 exports.signPublicContract = async (req, res) => {
     try {
         const { token } = req.params;
-        const { signerName, signerDocument } = req.body;
+        const { signerName, signerDocument, signedSignatureData } = req.body;
 
-        if (!signerName || !signerDocument) {
-            return res.status(400).json({ error: 'Nome e documento do assinante sao obrigatorios.' });
+        if (!signerName || !signerDocument || !signedSignatureData) {
+            return res.status(400).json({ error: 'Nome, documento e assinatura desenhada sao obrigatorios.' });
+        }
+
+        if (!String(signedSignatureData).startsWith('data:image/')) {
+            return res.status(400).json({ error: 'Formato de assinatura invalido.' });
         }
 
         const contract = await prisma.contract.findFirst({
@@ -419,7 +424,8 @@ exports.signPublicContract = async (req, res) => {
                 status: 'ACTIVE',
                 signedAt,
                 signedName: signerName,
-                signedDocument: signerDocument
+                signedDocument: signerDocument,
+                signedSignatureData
             },
             include: {
                 client: true
@@ -444,6 +450,7 @@ exports.signPublicContract = async (req, res) => {
             clientName: updatedContract.client?.name || updatedContract.clientName || 'CONTRATANTE',
             signerName,
             signerDocument,
+            signedSignatureData,
             signedAt
         });
 

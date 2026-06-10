@@ -254,6 +254,28 @@ const paragraph = (doc, text) => {
     doc.moveDown(0.7);
 };
 
+const drawSignatureImage = (doc, dataUrl, x, y, width = 130, height = 50) => {
+    if (!dataUrl || !String(dataUrl).startsWith('data:image/')) {
+        return;
+    }
+
+    const matches = String(dataUrl).match(/^data:image\/([a-zA-Z0-9+.-]+);base64,(.+)$/);
+    if (!matches) {
+        return;
+    }
+
+    try {
+        const imageBuffer = Buffer.from(matches[2], 'base64');
+        doc.image(imageBuffer, x, y, {
+            fit: [width, height],
+            align: 'center',
+            valign: 'center'
+        });
+    } catch (error) {
+        console.warn('[CONTRACT PDF] Nao consegui renderizar a assinatura desenhada:', error.message);
+    }
+};
+
 const calculatePartyBoxBodyHeight = (doc, lines, width = 220) => {
     let totalLinesHeight = 0;
     const activeLines = lines.filter(Boolean);
@@ -313,6 +335,7 @@ const drawSignatureBlock = (doc, data) => {
 
     doc.font('Helvetica-Bold').fontSize(9).text(sanitize(data.clientName, 'CONTRATANTE'), 340, y + 10, { width: 185, align: 'center' });
     doc.font('Helvetica').fontSize(8).text(`${getDocumentLabel(data.clientDocument)}: ${sanitize(data.clientDocument)}`, 340, y + 25, { width: 185, align: 'center' });
+    drawSignatureImage(doc, data.signedSignatureData, 367, y - 58, 130, 46);
     if (data.signerName) doc.text(`Representante: ${sanitize(data.signerName)}`, 340, y + 38, { width: 185, align: 'center' });
     if (data.signerDocument) doc.text(`CPF: ${sanitize(data.signerDocument)}`, 340, y + 51, { width: 185, align: 'center' });
     if (data.signedAt) {

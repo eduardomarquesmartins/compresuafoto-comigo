@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CheckCircle2, Download, FileText, Loader2, PenLine } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, Download, Eraser, FileText, Loader2, PenLine } from "lucide-react";
 import { downloadPublicContractPdf, getPublicContract, signPublicContract } from "@/lib/api";
 import { useParams } from "next/navigation";
 
 const money = (value: number) => value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const getCanvasPoint = (canvas: HTMLCanvasElement, event: PointerEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    };
+};
 
 export default function SignContractPage() {
     const params = useParams<{ token: string }>();
@@ -19,6 +27,11 @@ export default function SignContractPage() {
     const [signerName, setSignerName] = useState("");
     const [signerDocument, setSignerDocument] = useState("");
     const [accepted, setAccepted] = useState(false);
+    const [hasSignatureDrawing, setHasSignatureDrawing] = useState(false);
+
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const isDrawingRef = useRef(false);
+    const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
     useEffect(() => {
         if (!token) return;
@@ -32,9 +45,10 @@ export default function SignContractPage() {
                 setSignerName(data.signedName || data.client?.signerName || "");
                 setSignerDocument(data.signedDocument || data.client?.signerDocument || "");
                 setSigned(Boolean(data.signedAt));
+                setHasSignatureDrawing(Boolean(data.signedSignatureData));
             } catch (err) {
-                console.warn("Erro ao carregar contrato público:", err);
-                setError("Não consegui carregar esse contrato.");
+                console.warn("Erro ao carregar contrato publico:", err);
+                setError("Nao consegui carregar esse contrato.");
             } finally {
                 setLoading(false);
             }
@@ -43,26 +57,143 @@ export default function SignContractPage() {
         loadContract();
     }, [token]);
 
+    useEffect(() => {
+        if (signed) return;
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const context = canvas.getContext("2d");
+        if (!context) return;
+
+        const setupCanvas = () => {
+            const ratio = window.devicePixelRatio || 1;
+            const width = canvas.clientWidth || 520;
+            const height = canvas.clientHeight || 180;
+
+            canvas.width = Math.floor(width * ratio);
+            canvas.height = Math.floor(height * ratio);
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.scale(ratio, ratio);
+            context.lineCap = "round";
+            context.lineJoin = "round";
+            context.lineWidth = 2.2;
+            context.strokeStyle = "#f8fafc";
+            context.clearRect(0, 0, width, height);
+        };
+
+        setupCanvas();
+        window.addEventListener("resize", setupCanvas);
+
+        return () => window.removeEventListener("resize", setupCanvas);
+    }, [signed]);
+
+    useEffect(() => {
+        if (signed) return;
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const context = canvas.getContext("2d");
+        if (!context) return;
+
+        const handlePointerDown = (event: PointerEvent) => {
+            event.preventDefault();
+            const point = getCanvasPoint(canvas, event);
+            isDrawingRef.current = true;
+            lastPointRef.current = point;
+            canvas.setPointerCapture(event.pointerId);
+        };
+
+        const handlePointerMove = (event: PointerEvent) => {
+            if (!isDrawingRef.current || !lastPointRef.current) return;
+            event.preventDefault();
+
+            const point = getCanvasPoint(canvas, event);
+            context.beginPath();
+            context.moveTo(lastPointRef.current.x, lastPointRef.current.y);
+            context.lineTo(point.x, point.y);
+            context.stroke();
+
+            lastPointRef.current = point;
+            setHasSignatureDrawing(true);
+        };
+
+        const stopDrawing = (event?: PointerEvent) => {
+            if (event) {
+                event.preventDefault();
+            }
+            isDrawingRef.current = false;
+            lastPointRef.current = null;
+        };
+
+        canvas.addEventListener("pointerdown", handlePointerDown);
+        canvas.addEventListener("pointermove", handlePointerMove);
+        canvas.addEventListener("pointerup", stopDrawing);
+        canvas.addEventListener("pointerleave", stopDrawing);
+        canvas.addEventListener("pointercancel", stopDrawing);
+
+        return () => {
+            canvas.removeEventListener("pointerdown", handlePointerDown);
+            canvas.removeEventListener("pointermove", handlePointerMove);
+            canvas.removeEventListener("pointerup", stopDrawing);
+            canvas.removeEventListener("pointerleave", stopDrawing);
+            canvas.removeEventListener("pointercancel", stopDrawing);
+        };
+    }, [signed]);
+
+    const clearSignature = () => {
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext("2d");
+        if (!canvas || !context) return;
+
+        context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+        setHasSignatureDrawing(false);
+    };
+
+    const getSignatureDataUrl = () => {
+        const canvas = canvasRef.current;
+        if (!canvas || !hasSignatureDrawing) return "";
+        return canvas.toDataURL("image/png");
+    };
+
     const handleSign = async () => {
         if (!signerName.trim() || !signerDocument.trim()) {
             setError("Preencha o nome e o documento do assinante.");
             return;
         }
 
+        if (!hasSignatureDrawing) {
+            setError("Desenhe sua assinatura no quadro antes de concluir.");
+            return;
+        }
+
         if (!accepted) {
-            setError("Você precisa aceitar os termos antes de assinar.");
+            setError("Voce precisa aceitar os termos antes de assinar.");
             return;
         }
 
         try {
             setSigning(true);
             setError(null);
+
+            const signedSignatureData = getSignatureDataUrl();
             const result = await signPublicContract(token, {
                 signerName,
-                signerDocument
+                signerDocument,
+                signedSignatureData
             });
-            setContract((prev: any) => prev ? { ...prev, signedAt: result?.contract?.signedAt, signedName: signerName, signedDocument: signerDocument, status: "ACTIVE" } : prev);
+
+            setContract((prev: any) => prev ? {
+                ...prev,
+                signedAt: result?.contract?.signedAt,
+                signedName: signerName,
+                signedDocument: signerDocument,
+                signedSignatureData,
+                status: "ACTIVE"
+            } : prev);
             setSigned(true);
+            setHasSignatureDrawing(true);
         } catch (err) {
             console.warn("Erro ao assinar contrato:", err);
             setError("Houve um erro ao registrar sua assinatura.");
@@ -84,7 +215,7 @@ export default function SignContractPage() {
             window.URL.revokeObjectURL(url);
         } catch (err) {
             console.warn("Erro ao baixar PDF do contrato:", err);
-            setError("Não consegui baixar o PDF do contrato.");
+            setError("Nao consegui baixar o PDF do contrato.");
         }
     };
 
@@ -103,7 +234,7 @@ export default function SignContractPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#0b0d14] p-6 text-white">
                 <div className="max-w-xl rounded-3xl border border-white/10 bg-[#161826] p-8 text-center">
-                    <p className="text-xl font-bold">Contrato indisponível</p>
+                    <p className="text-xl font-bold">Contrato indisponivel</p>
                     <p className="mt-3 text-slate-400">{error}</p>
                 </div>
             </div>
@@ -148,7 +279,7 @@ export default function SignContractPage() {
                         <div className="space-y-3 text-sm text-slate-300">
                             <p><span className="text-slate-500">Documento:</span> {contract?.client?.document || "-"}</p>
                             <p><span className="text-slate-500">Valor mensal:</span> R$ {money(Number(contract?.monthlyValue || 0))}</p>
-                            <p><span className="text-slate-500">Vigência:</span> {contract?.durationMonths || "-"} meses</p>
+                            <p><span className="text-slate-500">Vigencia:</span> {contract?.durationMonths || "-"} meses</p>
                             <p><span className="text-slate-500">Pagamento:</span> todo dia {contract?.paymentDay || "-"}</p>
                             <p className="leading-relaxed"><span className="text-slate-500">Escopo:</span> {contract?.scope || "-"}</p>
                         </div>
@@ -166,14 +297,23 @@ export default function SignContractPage() {
                                 </div>
                                 <div>
                                     <p className="text-xl font-semibold text-white">Contrato assinado</p>
-                                    <p className="mt-2 text-sm text-slate-400">Sua assinatura foi registrada com sucesso.</p>
+                                    <p className="mt-2 text-sm text-slate-400">Sua assinatura desenhada foi registrada com sucesso.</p>
                                 </div>
+                                {contract?.signedSignatureData && (
+                                    <div className="rounded-2xl border border-white/10 bg-[#0f111a] p-4">
+                                        <img
+                                            src={contract.signedSignatureData}
+                                            alt="Assinatura"
+                                            className="mx-auto max-h-28 w-full object-contain"
+                                        />
+                                    </div>
+                                )}
                                 <button
                                     onClick={handleDownload}
                                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold uppercase tracking-[0.15em] text-white transition-colors hover:bg-blue-500"
                                 >
                                     <Download size={16} />
-                                    Baixar versão final
+                                    Baixar versao final
                                 </button>
                             </div>
                         ) : (
@@ -184,7 +324,7 @@ export default function SignContractPage() {
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Assinatura</p>
-                                        <h2 className="text-xl font-semibold text-white">Confirmar documento</h2>
+                                        <h2 className="text-xl font-semibold text-white">Assine no quadro abaixo</h2>
                                     </div>
                                 </div>
 
@@ -192,7 +332,7 @@ export default function SignContractPage() {
                                     <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Nome do assinante</span>
                                     <input
                                         value={signerName}
-                                        onChange={e => setSignerName(e.target.value)}
+                                        onChange={(e) => setSignerName(e.target.value)}
                                         className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35"
                                         placeholder="Nome completo"
                                     />
@@ -202,20 +342,41 @@ export default function SignContractPage() {
                                     <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">CPF / CNPJ</span>
                                     <input
                                         value={signerDocument}
-                                        onChange={e => setSignerDocument(e.target.value)}
+                                        onChange={(e) => setSignerDocument(e.target.value)}
                                         className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35"
                                         placeholder="Documento do assinante"
                                     />
                                 </label>
 
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Assinatura manual</span>
+                                        <button
+                                            type="button"
+                                            onClick={clearSignature}
+                                            className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-slate-200 transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/10"
+                                        >
+                                            <Eraser size={14} />
+                                            Limpar
+                                        </button>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/10 bg-[#0f111a] p-3">
+                                        <canvas
+                                            ref={canvasRef}
+                                            className="h-44 w-full touch-none rounded-xl border border-dashed border-white/10 bg-[#0b0d14]"
+                                        />
+                                    </div>
+                                    <p className="text-xs text-slate-500">Use o dedo no celular ou o mouse no computador para desenhar a assinatura.</p>
+                                </div>
+
                                 <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300">
                                     <input
                                         type="checkbox"
                                         checked={accepted}
-                                        onChange={e => setAccepted(e.target.checked)}
+                                        onChange={(e) => setAccepted(e.target.checked)}
                                         className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-950 text-blue-500 focus:ring-blue-500/20"
                                     />
-                                    <span>Li o contrato e confirmo que estou autorizado a assiná-lo digitalmente.</span>
+                                    <span>Li o contrato e confirmo que estou autorizado a assina-lo digitalmente.</span>
                                 </label>
 
                                 <button
