@@ -67,7 +67,7 @@ model Order {
 model Coupon {
   id            Int           @id @default(autoincrement())
   code          String        @unique
-  discountType  String        // "PERCENTAGE" or "FIXED"
+  discountType  String
   discountValue Float
   expiryDate    DateTime?
   maxUses       Int?
@@ -94,9 +94,9 @@ model Proposal {
   clientId         Int?
   clientName       String
   clientEmail      String?
-  selectedServices String   // Store as JSON string
+  selectedServices String
   total            Float
-  status           String   @default("PENDING") // PENDING, APPROVED, DELETED
+  status           String   @default("PENDING")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   client           Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
@@ -106,13 +106,13 @@ model Client {
   id             Int               @id @default(autoincrement())
   name           String
   email          String            @unique
-  document       String?           // CNPJ ou CPF
+  document       String?
   phone          String?
   address        String?
   cityState      String?
   signerName     String?
   signerDocument String?
-  status         String            @default("ACTIVE") // ACTIVE, INACTIVE
+  status         String            @default("ACTIVE")
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   contracts      Contract[]
@@ -129,8 +129,12 @@ model Contract {
   paymentDay     Int      @default(25)
   startDate      DateTime @default(now())
   endDate        DateTime?
-  status         String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
-  contractDate   String   // Data de vigência
+  status         String   @default("ACTIVE")
+  signatureToken String?  @unique
+  signedAt       DateTime?
+  signedName     String?
+  signedDocument String?
+  contractDate   String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
@@ -138,15 +142,15 @@ model Contract {
 
 model FinancialRecord {
   id          Int      @id @default(autoincrement())
-  type        String   // "INCOME" (Entrada) ou "EXPENSE" (Saída)
+  type        String
   description String
   amount      Float
   date        DateTime @default(now())
-  category    String   // Ex: Mensalidades, Serviços, Infraestrutura, Impostos, etc.
-  status      String   @default("PENDING") // PAID, PENDING
-  account     String?  // Conta de origem/destino (Ex: CORA & CONTI)
-  obs         String?  // Observações adicionais
-  clientId    Int?     // Opcional, para relacionar a um cliente
+  category    String
+  status      String   @default("PENDING")
+  account     String?
+  obs         String?
+  clientId    Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   client      Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
@@ -154,27 +158,27 @@ model FinancialRecord {
 
 model Debt {
   id             Int      @id @default(autoincrement())
-  priority       String?  // Ex: "🔴 1", "🟡 4"
+  priority       String?
   creditor       String
-  holder         String   // CPF Eduarda, CPF Fernando, CNPJ &Conti, etc.
+  holder         String
   originalAmount Float
   bestOffer      Float
-  type           String   // Protesto, Judicial, Fiscal, Serasa, etc.
-  status         String   // Urgente, Processo ativo, Negociar, Pago
+  type           String
+  status         String
   obs            String?
-  isCnpj         Boolean  @default(false) // true para dívidas de CNPJ, false para CPF
+  isCnpj         Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
 
 model MentoriaDemand {
   id          Int      @id @default(autoincrement())
-  area        String   // Precificação, Contas, Contratos, etc.
-  action      String   // Ação / Demanda
-  deadline    String?  // Prazo
-  responsible String   // Eduarda, Ambos, etc.
-  status      String   // Pendente, Monitorar, Realizada, Urgente
-  type        String?  // Estrutura, Operacional, Financeiro, etc.
+  area        String
+  action      String
+  deadline    String?
+  responsible String
+  status      String
+  type        String?
   obs         String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
