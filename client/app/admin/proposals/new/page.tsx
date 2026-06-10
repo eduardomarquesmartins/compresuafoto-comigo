@@ -235,12 +235,13 @@ const parseMoneyInput = (value: string) => {
     return Number.isFinite(parsed) ? parsed : null;
 };
 
-type ProposalType = 'empresarial' | 'casamento' | '15anos';
+type ProposalType = 'empresarial' | 'casamento' | '15anos' | 'aniversario';
 
 const PROPOSAL_TYPE_OPTIONS: { value: ProposalType; label: string; description: string }[] = [
     { value: 'empresarial', label: 'Empresarial', description: 'Social media, tráfego, audiovisual e artes.' },
-    { value: 'casamento', label: 'Casamento', description: 'Foto, vídeo, combos, storymaker, aniversários e chás.' },
+    { value: 'casamento', label: 'Casamento', description: 'Foto, vídeo, combos e storymaker para casamento.' },
     { value: '15anos', label: '15 anos', description: 'Foto, vídeo, combos e storymaker para festa de 15 anos.' },
+    { value: 'aniversario', label: 'Aniversários e Chás', description: 'Foto, vídeo, combos de aniversário, chá revelação e chá de fralda.' },
 ];
 
 export default function NewProposalPage() {
@@ -628,15 +629,6 @@ export default function NewProposalPage() {
                             {renderCategory("Vídeo", dataVideo, "Vídeo")}
                             {renderCategory("Combos Foto + Vídeo", dataCombos, "Combos Foto + Vídeo")}
                             {renderCategory("Storymaker", dataStorymaker, "Storymaker")}
-                            {renderCategory("Fotografia Aniversário", dataAniversarioFoto, "Fotografia Aniversário")}
-                            {renderCategory("Vídeo Aniversário", dataAniversarioVideo, "Vídeo Aniversário")}
-                            {renderCategory("Combos Foto + Vídeo Aniversário", dataAniversarioCombo, "Combos Foto + Vídeo Aniversário")}
-                            {renderCategory("Fotografia — Chá Revelação & Chá de Fralda", dataChaRevelacaoFoto, "Fotografia — Chá Revelação & Chá de Fralda")}
-                            {renderCategory("Vídeo — Chá Revelação", dataChaRevelacaoVideo, "Vídeo — Chá Revelação")}
-                            {renderCategory("Vídeo — Chá de Fralda", dataChaFraldaVideo, "Vídeo — Chá de Fralda")}
-                            {renderCategory("Combo Foto + Vídeo — Chá Revelação", dataChaRevelacaoCombo, "Combo Foto + Vídeo — Chá Revelação")}
-                            {renderCategory("Combo Foto + Vídeo — Chá de Fralda", dataChaFraldaCombo, "Combo Foto + Vídeo — Chá de Fralda")}
-                            {renderCategory("Combo Especial — Chá Revelação + Chá de Fralda Juntos", dataChaJuntosCombo, "Combo Especial — Chá Revelação + Chá de Fralda Juntos")}
                         </>
                     )}
                     {proposalType === '15anos' && (
@@ -646,6 +638,19 @@ export default function NewProposalPage() {
                             {renderCategory("Vídeo", dataVideo, "Vídeo")}
                             {renderCategory("Combos Foto + Vídeo", dataCombos, "Combos Foto + Vídeo")}
                             {renderCategory("Storymaker", dataStorymaker, "Storymaker")}
+                        </>
+                    )}
+                    {proposalType === 'aniversario' && (
+                        <>
+                            {renderCategory("Fotografia Aniversário", dataAniversarioFoto, "Fotografia Aniversário")}
+                            {renderCategory("Vídeo Aniversário", dataAniversarioVideo, "Vídeo Aniversário")}
+                            {renderCategory("Combos Foto + Vídeo Aniversário", dataAniversarioCombo, "Combos Foto + Vídeo Aniversário")}
+                            {renderCategory("Fotografia — Chá Revelação & Chá de Fralda", dataChaRevelacaoFoto, "Fotografia — Chá Revelação & Chá de Fralda")}
+                            {renderCategory("Vídeo — Chá Revelação", dataChaRevelacaoVideo, "Vídeo — Chá Revelação")}
+                            {renderCategory("Vídeo — Chá de Fralda", dataChaFraldaVideo, "Vídeo — Chá de Fralda")}
+                            {renderCategory("Combo Foto + Vídeo — Chá Revelação", dataChaRevelacaoCombo, "Combo Foto + Vídeo — Chá Revelação")}
+                            {renderCategory("Combo Foto + Vídeo — Chá de Fralda", dataChaFraldaCombo, "Combo Foto + Vídeo — Chá de Fralda")}
+                            {renderCategory("Combo Especial — Chá Revelação + Chá de Fralda Juntos", dataChaJuntosCombo, "Combo Especial — Chá Revelação + Chá de Fralda Juntos")}
                         </>
                     )}
                 </div>

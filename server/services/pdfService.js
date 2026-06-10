@@ -30,6 +30,14 @@ const PROPOSAL_TYPES = {
         closingBackground: path.join(__dirname, '../../client/public/proposals/quinze-anos-closing.jpg'),
         coverOverlay: { color: '#000000', opacity: 0.52 },
         closingOverlay: { color: '#ffffff', opacity: 0.70 }
+    },
+    aniversario: {
+        label: 'Aniversários e Chás',
+        title: 'PROPOSTA ANIVERSÁRIO',
+        coverBackground: BACKGROUND_PATH,
+        closingBackground: BACKGROUND_PATH,
+        coverOverlay: { color: '#000000', opacity: 0.68 },
+        closingOverlay: { color: '#ffffff', opacity: 0.82 }
     }
 };
 
