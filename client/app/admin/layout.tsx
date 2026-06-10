@@ -58,6 +58,7 @@ const navSections: NavSection[] = [
             { href: "/admin/coupons", label: "Cupons", icon: Tag },
             { href: "/admin/orders", label: "Pedidos", icon: ShoppingBag },
             { href: "/admin/proposals", label: "Propostas", icon: FileText },
+            { href: "/admin/contracts", label: "Contratos", icon: ScrollText },
             { href: "/admin/clients", label: "Clientes", icon: Users },
             { href: "/admin/emails", label: "E-mails", icon: Mail },
             { href: "/admin/presentation", label: "Apresentação", icon: MonitorPlay }
