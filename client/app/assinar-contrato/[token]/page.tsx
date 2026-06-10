@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Download, Eraser, FileText, Loader2, PenLine, ShieldCheck } from "lucide-react";
 import { downloadPublicContractPdf, getPublicContract, signPublicContract } from "@/lib/api";
 import { useParams } from "next/navigation";
+import Image from "next/image";
+import logoAdmin from "../../admin/logo-admin.jpg";
 
 const money = (value: number) => value.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
@@ -270,12 +272,10 @@ export default function SignContractPage() {
             <header className="border-b border-white/[0.06] bg-black/20 backdrop-blur-md sticky top-0 z-50">
                 <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                            <span className="text-white font-black text-lg">C</span>
-                        </div>
-                        <span className="font-bold tracking-tight text-white text-sm">CompreSuaFoto<span className="text-blue-500">.comigo</span></span>
+                        <Image src={logoAdmin} alt="Compre Sua Foto" className="h-9 w-9 rounded-md object-cover" />
+                        <span className="font-normal tracking-tight text-white text-sm">Compre Sua Foto</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest bg-white/[0.03] border border-white/[0.05] rounded-full px-3.5 py-1.5">
+                    <div className="flex items-center gap-2 text-xs font-normal text-slate-400 uppercase tracking-widest bg-white/[0.03] border border-white/[0.05] rounded-full px-3.5 py-1.5">
                         <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         Ambiente Seguro
                     </div>
@@ -285,9 +285,6 @@ export default function SignContractPage() {
             <div className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-12">
                 <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b border-white/[0.05] pb-8">
                     <div className="max-w-2xl">
-                        <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-blue-400 border border-blue-500/20">
-                            Processo Auditado
-                        </div>
                         <h1 className="mt-4 text-4xl font-black tracking-tight text-white md:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-slate-400">
                             Validação final do contrato
                         </h1>
@@ -385,9 +382,7 @@ export default function SignContractPage() {
                         ) : (
                             <div className="space-y-6">
                                 <div className="flex items-start gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-500/20 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 text-blue-400">
-                                        <PenLine size={22} />
-                                    </div>
+                                    <PenLine size={22} className="text-blue-400 shrink-0 mt-1" />
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">PAINEL DE ASSINATURA</p>
                                         <h2 className="mt-1 text-2xl font-bold text-white tracking-tight">Assine no quadro</h2>
