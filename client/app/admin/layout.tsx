@@ -260,15 +260,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 <main className="relative z-10 min-w-0 flex-1 px-4 py-5 md:px-7 md:py-6 xl:px-9">
                     <div className="mx-auto w-full max-w-[1500px]">
-                        <div className="admin-topbar mb-6 hidden items-center justify-between gap-4 md:flex">
-                            <div className="flex min-w-0 items-center gap-3">
-                                <RouteIcon size={18} className="shrink-0 text-[#9ecbff]" />
-                                <div className="min-w-0">
-                                    <h2 className="truncate text-lg font-semibold text-white">{routeMeta.label}</h2>
-                                </div>
-                            </div>
-                        </div>
-
                         {children}
                     </div>
                 </main>
