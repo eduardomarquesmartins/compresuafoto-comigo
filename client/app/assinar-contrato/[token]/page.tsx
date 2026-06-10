@@ -47,7 +47,7 @@ export default function SignContractPage() {
     const drawGuide = (context: CanvasRenderingContext2D, width: number, height: number) => {
         context.clearRect(0, 0, width, height);
 
-        context.strokeStyle = "rgba(96,165,250,0.15)";
+        context.strokeStyle = "rgba(15, 23, 42, 0.12)";
         context.lineWidth = 1;
         context.setLineDash([6, 6]);
         context.beginPath();
@@ -56,7 +56,7 @@ export default function SignContractPage() {
         context.stroke();
         context.setLineDash([]);
 
-        context.fillStyle = "rgba(148,163,184,0.45)";
+        context.fillStyle = "rgba(15, 23, 42, 0.38)";
         context.font = "500 16px Inter, Arial, sans-serif";
         context.fillText("Assine aqui com o dedo ou mouse", 24, 34);
     };
@@ -79,7 +79,7 @@ export default function SignContractPage() {
         context.lineCap = "round";
         context.lineJoin = "round";
         context.lineWidth = 3.5;
-        context.strokeStyle = "#60a5fa";
+        context.strokeStyle = "#000000";
         drawGuide(context, width, height);
         setCanvasReady(true);
     };
@@ -90,7 +90,7 @@ export default function SignContractPage() {
         if (!canvas || !context) return;
 
         context.beginPath();
-        context.fillStyle = "#60a5fa";
+        context.fillStyle = "#000000";
         context.arc(point.x, point.y, 2.2, 0, Math.PI * 2);
         context.fill();
     };
@@ -101,7 +101,7 @@ export default function SignContractPage() {
         if (!canvas || !context) return;
 
         context.beginPath();
-        context.strokeStyle = "#60a5fa"; // Garante a cor azul celeste
+        context.strokeStyle = "#000000"; // Garante a cor preta
         context.lineWidth = 3.5;          // Garante a espessura ideal
         context.lineCap = "round";
         context.lineJoin = "round";
@@ -113,6 +113,16 @@ export default function SignContractPage() {
     const beginDrawing = (clientX: number, clientY: number) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
+
+        const context = canvas.getContext("2d");
+        if (!context) return;
+
+        // Limpa o guia e placeholder no primeiro toque/desenho
+        if (!hasSignatureDrawing) {
+            const width = canvas.clientWidth || 520;
+            const height = canvas.clientHeight || 220;
+            context.clearRect(0, 0, width, height);
+        }
 
         const point = getPoint(canvas, clientX, clientY);
         drawingRef.current = true;
@@ -431,7 +441,7 @@ export default function SignContractPage() {
                                                 continueDrawing(touch.clientX, touch.clientY);
                                             }}
                                             onTouchEnd={stopDrawing}
-                                            className="h-56 w-full touch-none rounded-[24px] border border-dashed border-white/[0.08] bg-[#030409] select-none"
+                                            className="h-56 w-full touch-none rounded-[24px] border border-dashed border-slate-300 bg-white select-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
                                             style={{ cursor: "crosshair" }}
                                         />
                                     </div>
