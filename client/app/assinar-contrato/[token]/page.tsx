@@ -272,8 +272,8 @@ export default function SignContractPage() {
             <header className="border-b border-white/[0.06] bg-black/20 backdrop-blur-md sticky top-0 z-50">
                 <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Image src={logoAdmin} alt="Compre Sua Foto" className="h-9 w-9 rounded-md object-cover" />
-                        <span className="font-normal tracking-tight text-white text-sm">Compre Sua Foto</span>
+                        <Image src={logoAdmin} alt="Conti Marketing Digital" className="h-9 w-9 rounded-md object-cover" />
+                        <span className="font-normal tracking-tight text-white text-sm">Conti Marketing Digital</span>
                     </div>
                 </div>
             </header>
@@ -282,10 +282,10 @@ export default function SignContractPage() {
                 <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b border-white/[0.05] pb-8">
                     <div className="max-w-2xl">
                         <h1 className="mt-4 text-4xl font-black tracking-tight text-white md:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-slate-400">
-                            Assinatura do contrato
+                            Assinatura do Contrato
                         </h1>
                         <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-400 md:text-base">
-                            Revise os termos e assine digitalmente no painel interativo. A assinatura gerada será vinculada ao contrato e registrada no banco de dados com validade jurídica.
+                            Revise os termos e assine digitalmente no painel interativo. A assinatura gerada será vinculada ao contrato e registrada com validade jurídica.
                         </p>
                     </div>
                 </div>
@@ -297,7 +297,7 @@ export default function SignContractPage() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+                <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.15fr_0.85fr] items-start">
                     {/* Card de Detalhes do Contrato à Esquerda */}
                     <section className="overflow-hidden rounded-[32px] border border-white/[0.06] bg-[linear-gradient(180deg,rgba(15,18,36,0.7),rgba(9,11,20,0.7))] backdrop-blur-xl shadow-2xl p-6 md:p-8 space-y-6">
                         <div className="flex items-center gap-4 border-b border-white/[0.06] pb-5">
@@ -445,7 +445,7 @@ export default function SignContractPage() {
                                         {signing ? <Loader2 className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
                                         {signing ? "Registrando assinatura..." : "Assinar Contrato"}
                                     </button>
-                                    
+
                                     <p className="text-[10px] text-center text-slate-500 leading-relaxed pt-2 flex items-center justify-center gap-1.5">
                                         <ShieldCheck size={12} className="text-emerald-500" />
                                         Assinatura criptografada e em conformidade com a MP 2.200-2/2001.
