@@ -31,7 +31,7 @@ const upload = multer({
             return cb(null, true);
         }
 
-        cb(new Error('Tipo de arquivo nao permitido para anexo.'));
+        cb(new Error('Tipo de arquivo não permitido para anexo.'));
     }
 });
 

@@ -248,7 +248,7 @@ exports.sendSignatureLink = async (req, res) => {
             });
         } catch (error) {
             if (error instanceof Error && error.message === 'CLIENT_NOT_FOUND') {
-                return res.status(404).json({ error: 'Cliente nao encontrado.' });
+                return res.status(404).json({ error: 'Cliente não encontrado.' });
             }
 
             if (error instanceof Error && error.message === 'MANUAL_CLIENT_REQUIRES_NAME') {
@@ -306,7 +306,7 @@ exports.sendSignatureLink = async (req, res) => {
 
             if (!emailResult.success) {
                 return res.status(500).json({
-                    error: 'Contrato criado, mas nao consegui enviar o e-mail de assinatura.',
+                    error: 'Contrato criado, mas não consegui enviar o e-mail de assinatura.',
                     contract,
                     signLink
                 });
@@ -350,7 +350,7 @@ exports.getPublicContractByToken = async (req, res) => {
         });
 
         if (!contract) {
-            return res.status(404).json({ error: 'Contrato nao encontrado.' });
+            return res.status(404).json({ error: 'Contrato não encontrado.' });
         }
 
         res.json({
@@ -374,7 +374,7 @@ exports.getPublicContractPdfByToken = async (req, res) => {
         });
 
         if (!contract) {
-            return res.status(404).json({ error: 'Contrato nao encontrado.' });
+            return res.status(404).json({ error: 'Contrato não encontrado.' });
         }
 
         const pdfBuffer = await contractService.generateContractBuffer(getContractPdfPayload(contract));
@@ -395,7 +395,7 @@ exports.signPublicContract = async (req, res) => {
         const { signerName, signerDocument, signedSignatureData } = req.body;
 
         if (!String(signedSignatureData).startsWith('data:image/')) {
-            return res.status(400).json({ error: 'Formato de assinatura invalido.' });
+            return res.status(400).json({ error: 'Formato de assinatura inválido.' });
         }
 
         const contract = await prisma.contract.findFirst({
@@ -406,7 +406,7 @@ exports.signPublicContract = async (req, res) => {
         });
 
         if (!contract) {
-            return res.status(404).json({ error: 'Contrato nao encontrado.' });
+            return res.status(404).json({ error: 'Contrato não encontrado.' });
         }
 
         if (contract.signedAt) {
@@ -424,7 +424,7 @@ exports.signPublicContract = async (req, res) => {
             contract.client?.document;
 
         if (!resolvedSignerName || !resolvedSignerDocument || !signedSignatureData) {
-            return res.status(400).json({ error: 'Nao encontrei os dados do assinante vinculados ao contrato.' });
+            return res.status(400).json({ error: 'Não encontrei os dados do assinante vinculados ao contrato.' });
         }
 
         const signedAt = new Date();

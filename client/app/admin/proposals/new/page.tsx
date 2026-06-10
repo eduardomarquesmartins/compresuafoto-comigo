@@ -485,7 +485,7 @@ export default function NewProposalPage() {
 
     return (
         <div className="min-h-screen relative">
-            {/* O CONTEÚDO VISíVEL NO ADMIN (ESCONDIDO NA IMPRESSÃO) */}
+            {/* O CONTEÚDO VISÍVEL NO ADMIN (ESCONDIDO NA IMPRESSÃO) */}
             <div className="max-w-6xl mx-auto space-y-10 pb-40 print:hidden relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>

@@ -37,7 +37,7 @@ export default function UploadPhotosPage() {
 
             setProgress(100);
             setProcessing(true);
-            setStatus('Upload concluido! A indexacao facial continua em segundo plano...');
+            setStatus('Upload concluído! A indexação facial continua em segundo plano...');
             console.log('DEBUG: Todos os lotes enviados. Aguardando processamento final.');
             setTimeout(() => {
                 alert('Upload concluído com sucesso!');

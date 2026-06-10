@@ -92,7 +92,7 @@ exports.createFinancialFromNote = async (req, res) => {
 
         if (!finalAmount) {
             return res.status(422).json({
-                error: 'Nao consegui identificar o valor total da nota automaticamente.',
+                error: 'Não consegui identificar o valor total da nota automaticamente.',
                 extractedText: readResult.extractedText,
                 fileName: originalName
             });

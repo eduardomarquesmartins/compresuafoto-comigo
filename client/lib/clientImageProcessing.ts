@@ -40,7 +40,7 @@ const drawResized = (img: HTMLImageElement, maxWidth: number): HTMLCanvasElement
     canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas nao suportado neste navegador.');
+    if (!ctx) throw new Error('Canvas não suportado neste navegador.');
 
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     return canvas;
@@ -48,7 +48,7 @@ const drawResized = (img: HTMLImageElement, maxWidth: number): HTMLCanvasElement
 
 const drawWatermark = (canvas: HTMLCanvasElement, text = 'PREVIEW') => {
     const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas nao suportado neste navegador.');
+    if (!ctx) throw new Error('Canvas não suportado neste navegador.');
 
     const maxDim = Math.max(canvas.width, canvas.height);
     const fontSize = Math.max(12, Math.floor(maxDim / 25));

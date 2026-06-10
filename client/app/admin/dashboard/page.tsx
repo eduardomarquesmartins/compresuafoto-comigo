@@ -168,7 +168,7 @@ export default function AdminDashboard() {
                             <AlertTriangle size={18} />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-white">Dados em modo temporario</p>
+                            <p className="text-sm font-medium text-white">Dados em modo temporário</p>
                             <p className="mt-1 text-sm text-slate-400">{errorMessage}</p>
                         </div>
                     </div>

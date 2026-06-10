@@ -251,7 +251,7 @@ export default function AdminClientsPage() {
                         <div>
                             <p className="text-slate-200 font-bold tracking-widest uppercase text-xs">Nenhum cliente cadastrado</p>
                             <p className="text-slate-400 text-xs mt-2 max-w-xs mx-auto leading-relaxed">
-                                Adicione clientes ao seu portfolio comercial para vincular contratos e manter o historico organizado.
+                                Adicione clientes ao seu portfólio comercial para vincular contratos e manter o histórico organizado.
                             </p>
                         </div>
                     </div>

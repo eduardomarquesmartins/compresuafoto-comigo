@@ -13,7 +13,7 @@ const initialForm = {
     clientCityState: "",
     signerName: "",
     signerDocument: "",
-    scope: "gestáo de redes sociais, incluindo planejamento, criacao de conteudo, publicacoes, acompanhamento estrategico e serviços de marketing digital conforme proposta aprovada",
+    scope: "gestão de redes sociais, incluindo planejamento, criação de conteúdo, publicações, acompanhamento estratégico e serviços de marketing digital conforme proposta aprovada",
     monthlyValue: "1000",
     durationMonths: "6",
     paymentDay: "25",
@@ -122,7 +122,7 @@ export default function AdminContractsPage() {
                     .map((service: any) => `**- ${service.name} (${service.category}): R$ ${Number(service.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}**${service.description ? ` - ${service.description}` : ""}`)
                     .join("\n");
 
-                const scopeText = `prestácao de serviços de marketing digital e producao de conteudo, compreendendo os seguintes itens da proposta comercial aprovada:\n\n${servicesList}`;
+                const scopeText = `prestação de serviços de marketing digital e produção de conteúdo, compreendendo os seguintes itens da proposta comercial aprovada:\n\n${servicesList}`;
                 const formattedTotal = typeof proposal.total === "number"
                     ? proposal.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
                     : String(proposal.total || "");
@@ -380,7 +380,7 @@ export default function AdminContractsPage() {
                             </label>
                             <label className="space-y-2 md:col-span-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Endereço</span>
-                                <input value={form.clientAddress} onChange={(e) => updateField("clientAddress", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Rua, numero, sala, bairro" />
+                                <input value={form.clientAddress} onChange={(e) => updateField("clientAddress", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Rua, número, sala, bairro" />
                             </label>
                             <label className="space-y-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Cidade / UF</span>

@@ -23,7 +23,7 @@ exports.createDirectUploadUrls = async (req, res) => {
         const parsedEventId = parseInt(eventId);
 
         if (isNaN(parsedEventId)) {
-            return res.status(400).json({ error: 'Event ID invalido ou ausente' });
+            return res.status(400).json({ error: 'Event ID inválido ou ausente' });
         }
 
         if (!Array.isArray(files) || files.length === 0) {
@@ -78,7 +78,7 @@ exports.registerDirectUploads = async (req, res) => {
         const parsedEventId = parseInt(eventId);
 
         if (isNaN(parsedEventId)) {
-            return res.status(400).json({ error: 'Event ID invalido ou ausente' });
+            return res.status(400).json({ error: 'Event ID inválido ou ausente' });
         }
 
         if (!Array.isArray(uploads) || uploads.length === 0) {

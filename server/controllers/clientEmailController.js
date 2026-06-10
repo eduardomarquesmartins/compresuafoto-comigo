@@ -20,7 +20,7 @@ const normalizeAttachments = (files = []) => {
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
 
     if (totalSize > 20 * 1024 * 1024) {
-        const error = new Error('Os anexos devem somar no maximo 20 MB por envio.');
+        const error = new Error('Os anexos devem somar no máximo 20 MB por envio.');
         error.statusCode = 400;
         throw error;
     }

@@ -188,12 +188,12 @@ export default function AdminEmailsPage() {
         const totalSize = limitedFiles.reduce((sum, file) => sum + file.size, 0);
 
         if (nextFiles.length > MAX_ATTACHMENTS) {
-            setError(`Voce pode anexar no maximo ${MAX_ATTACHMENTS} arquivos.`);
+            setError(`Você pode anexar no máximo ${MAX_ATTACHMENTS} arquivos.`);
             return;
         }
 
         if (totalSize > MAX_ATTACHMENTS_SIZE) {
-            setError("Os anexos devem somar no maximo 20 MB.");
+            setError("Os anexos devem somar no máximo 20 MB.");
             return;
         }
 
@@ -247,10 +247,10 @@ export default function AdminEmailsPage() {
         <div className="mx-auto max-w-[1500px] space-y-8 pb-20">
             <header className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <span className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">Comunicacao</span>
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">Comunicação</span>
                     <h1 className="mt-2 text-4xl font-light tracking-tight text-white">E-mails para clientes</h1>
                     <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-                        Envie comunicados, propostas e avisos para clientes cadastrados com preview e relatorio de entrega.
+                        Envie comunicados, propostas e avisos para clientes cadastrados com preview e relatório de entrega.
                     </p>
                 </div>
                 <button
@@ -275,7 +275,7 @@ export default function AdminEmailsPage() {
                 <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-50">
                     <div className="flex items-center gap-2 font-semibold">
                         <Check size={16} />
-                        Envio concluido: {result.sent} enviados, {result.failed} falharam, {result.skippedWithoutEmail} sem e-mail.
+                        Envio concluído: {result.sent} enviados, {result.failed} falharam, {result.skippedWithoutEmail} sem e-mail.
                     </div>
                     {result.attachments?.length ? (
                         <div className="mt-2 text-emerald-100/80">
@@ -296,7 +296,7 @@ export default function AdminEmailsPage() {
                 <section className="flex flex-col gap-4 rounded-lg border border-white/10 bg-[#10121a] p-4 xl:h-fit">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Destinatarios</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Destinatários</p>
                             <h2 className="mt-1 text-lg font-semibold text-white">Clientes</h2>
                         </div>
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-500/25 bg-blue-500/10 text-blue-300">

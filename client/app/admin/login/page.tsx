@@ -39,9 +39,9 @@ export default function LoginPage() {
             const loginError = err as { response?: { data?: { error?: string } } };
 
             if (!loginError.response) {
-                setError("Erro de conexao com o servidor. Tente novamente.");
+                setError("Erro de conexão com o servidor. Tente novamente.");
             } else {
-                setError(loginError.response.data?.error || "Credenciais invalidas");
+                setError(loginError.response.data?.error || "Credenciais inválidas");
             }
         } finally {
             setLoading(false);

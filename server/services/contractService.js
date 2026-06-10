@@ -272,7 +272,7 @@ const drawSignatureImage = (doc, dataUrl, x, y, width = 130, height = 50) => {
             valign: 'center'
         });
     } catch (error) {
-        console.warn('[CONTRACT PDF] Nao consegui renderizar a assinatura desenhada:', error.message);
+        console.warn('[CONTRACT PDF] Não consegui renderizar a assinatura desenhada:', error.message);
     }
 };
 
