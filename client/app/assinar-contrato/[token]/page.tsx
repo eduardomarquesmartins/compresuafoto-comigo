@@ -275,10 +275,6 @@ export default function SignContractPage() {
                         <Image src={logoAdmin} alt="Compre Sua Foto" className="h-9 w-9 rounded-md object-cover" />
                         <span className="font-normal tracking-tight text-white text-sm">Compre Sua Foto</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-normal text-slate-400 uppercase tracking-widest bg-white/[0.03] border border-white/[0.05] rounded-full px-3.5 py-1.5">
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Ambiente Seguro
-                    </div>
                 </div>
             </header>
 
@@ -286,20 +282,12 @@ export default function SignContractPage() {
                 <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b border-white/[0.05] pb-8">
                     <div className="max-w-2xl">
                         <h1 className="mt-4 text-4xl font-black tracking-tight text-white md:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-slate-400">
-                            Validação final do contrato
+                            Assinatura do contrato
                         </h1>
                         <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-400 md:text-base">
-                            Revise os termos e assine digitalmente no painel interativo. A assinatura gerada será vinculada ao documento PDF e registrada no banco de dados com validade jurídica.
+                            Revise os termos e assine digitalmente no painel interativo. A assinatura gerada será vinculada ao contrato e registrada no banco de dados com validade jurídica.
                         </p>
                     </div>
-
-                    <button
-                        onClick={handleDownload}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-6 py-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-200 transition-all hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-white active:scale-95"
-                    >
-                        <Download size={14} className="text-blue-400" />
-                        Baixar PDF Original
-                    </button>
                 </div>
 
                 {error && (
@@ -313,9 +301,7 @@ export default function SignContractPage() {
                     {/* Card de Detalhes do Contrato à Esquerda */}
                     <section className="overflow-hidden rounded-[32px] border border-white/[0.06] bg-[linear-gradient(180deg,rgba(15,18,36,0.7),rgba(9,11,20,0.7))] backdrop-blur-xl shadow-2xl p-6 md:p-8 space-y-6">
                         <div className="flex items-center gap-4 border-b border-white/[0.06] pb-5">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-500/20 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 text-blue-400 shadow-inner">
-                                <FileText size={22} />
-                            </div>
+                            <FileText size={22} className="text-blue-400 shrink-0 mt-1" />
                             <div>
                                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">CONTRATANTE</p>
                                 <h2 className="text-2xl font-bold text-white tracking-tight">{contract?.client?.name || contract?.clientName || "Contratante"}</h2>
@@ -394,9 +380,6 @@ export default function SignContractPage() {
 
                                 <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4 transition-all hover:bg-white/[0.03]">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-                                            <ShieldCheck size={18} />
-                                        </div>
                                         <div>
                                             <p className="text-sm font-bold text-white leading-tight">{signerName || "Contratante"}</p>
                                             <p className="text-[10px] text-slate-500 mt-1">{signerDocument || "CPF/CNPJ vinculado"}</p>
