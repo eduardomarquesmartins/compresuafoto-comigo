@@ -4,7 +4,6 @@ const orderController = require('../controllers/orderController');
 const { authenticate, optionalAuth, isAdmin } = require('../middlewares/auth');
 
 // Customer routes
-router.get('/test', (req, res) => res.send('Router reachable'));
 router.post('/', optionalAuth, orderController.createOrder);
 router.get('/my-orders', authenticate, orderController.getMyOrders);
 

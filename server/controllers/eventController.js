@@ -4,7 +4,6 @@ const fs = require('fs');
 const cloudinaryService = require('../services/cloudinary');
 const watermarkService = require('../services/watermark');
 const sharp = require('sharp');
-const crypto = require('crypto');
 const rekognitionService = require('../services/rekognition');
 const googleDriveService = require('../services/googleDrive');
 const s3Service = require('../services/s3');
@@ -151,14 +150,29 @@ exports.getEvents = async (req, res) => {
 exports.getEventById = async (req, res) => {
     try {
         const { id } = req.params;
+        const parsedId = parseInt(id);
+
+        if (isNaN(parsedId)) {
+            return res.status(400).json({ error: 'Invalid event ID' });
+        }
+
         const event = await prisma.event.findUnique({
-            where: { id: parseInt(id) },
+            where: { id: parsedId },
             include: {
                 photos: true
             }
         });
 
         if (!event) return res.status(404).json({ error: 'Event not found' });
+
+        // Strip originalUrl for non-admin users to protect unwatermarked photos
+        const isAdmin = req.user && req.user.role === 'ADMIN';
+        if (!isAdmin) {
+            event.photos = event.photos.map(photo => ({
+                ...photo,
+                originalUrl: null
+            }));
+        }
 
         res.json(event);
     } catch (error) {
@@ -206,7 +220,11 @@ exports.deleteEvent = async (req, res) => {
         const { id } = req.params;
         const eventId = parseInt(id);
 
-        // 1. Fetch event and photos to get Cloudinary URLs
+        if (isNaN(eventId)) {
+            return res.status(400).json({ error: 'Invalid event ID' });
+        }
+
+        // 1. Fetch event and photos to get URLs
         const event = await prisma.event.findUnique({
             where: { id: eventId },
             include: { photos: true }
@@ -249,27 +267,31 @@ exports.deleteEvent = async (req, res) => {
             });
         }
 
-        // 2. Collect all Cloudinary URLs
-        const urlsToDelete = [];
-        if (event.coverImage) urlsToDelete.push(event.coverImage);
-
+        // 2. Delete photo assets from S3
+        const s3Deletions = [];
         event.photos.forEach(photo => {
-            if (photo.originalUrl) urlsToDelete.push(photo.originalUrl);
-            if (photo.watermarkedUrl) urlsToDelete.push(photo.watermarkedUrl);
+            if (photo.originalUrl) s3Deletions.push(s3Service.deleteFromS3(photo.originalUrl));
+            if (photo.watermarkedUrl) s3Deletions.push(s3Service.deleteFromS3(photo.watermarkedUrl));
         });
 
-        logToFile(`Found ${urlsToDelete.length} assets to delete from Cloudinary`);
+        if (s3Deletions.length > 0) {
+            logToFile(`Deleting ${s3Deletions.length} assets from S3`);
+            await Promise.allSettled(s3Deletions);
+        }
 
-        // 3. Delete from Cloudinary
-        for (const url of urlsToDelete) {
-            const publicId = cloudinaryService.extractPublicId(url);
+        // 3. Delete cover image from Cloudinary (covers are still uploaded to Cloudinary)
+        if (event.coverImage) {
+            const publicId = cloudinaryService.extractPublicId(event.coverImage);
             if (publicId) {
-                logToFile(`Deleting Cloudinary asset: ${publicId}`);
+                logToFile(`Deleting Cloudinary cover: ${publicId}`);
                 await cloudinaryService.deleteFile(publicId);
+            } else {
+                // Cover might be on S3 (e.g. from Drive import)
+                await s3Service.deleteFromS3(event.coverImage);
             }
         }
 
-        // 4. Delete from DB (associated photos first if no CASCADE in Schema)
+        // 4. Delete from DB (Cascade should handle photos, but explicit delete for safety)
         logToFile('Deleting records from DB');
         await prisma.photo.deleteMany({
             where: { eventId: eventId }

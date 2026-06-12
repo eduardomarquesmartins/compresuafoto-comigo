@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { Upload } = require('@aws-sdk/lib-storage');
 
@@ -87,5 +87,25 @@ exports.extractS3Key = (url) => {
         return parts.length > 1 ? parts[1] : null;
     } catch (e) {
         return null;
+    }
+};
+
+/**
+ * Deleta um objeto do AWS S3
+ * @param {string} urlOrKey - URL completa do S3 ou Key do objeto
+ */
+exports.deleteFromS3 = async (urlOrKey) => {
+    try {
+        const key = exports.extractS3Key(urlOrKey) || urlOrKey;
+        if (!key) return;
+
+        const command = new DeleteObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: key,
+        });
+
+        await s3Client.send(command);
+    } catch (error) {
+        console.error('S3 Delete Error:', error);
     }
 };

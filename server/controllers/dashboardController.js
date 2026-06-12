@@ -31,6 +31,8 @@ if (!prisma.proposal) {
     };
 }
 
+const paidStatuses = ['PAID', 'approved'];
+
 exports.getStats = async (req, res) => {
     try {
         const totalSales = await prisma.order.aggregate({
@@ -38,7 +40,7 @@ exports.getStats = async (req, res) => {
                 total: true
             },
             where: {
-                status: 'PAID'
+                status: { in: paidStatuses }
             }
         });
 
@@ -54,7 +56,7 @@ exports.getStats = async (req, res) => {
         const combinedRevenue = (totalSales._sum.total || 0) + (totalProposals._sum.total || 0);
 
         const totalOrders = await prisma.order.count();
-        const paidOrders = await prisma.order.count({ where: { status: 'PAID' } });
+        const paidOrders = await prisma.order.count({ where: { status: { in: paidStatuses } } });
         const approvedProposalsCount = await prisma.proposal.count({ where: { status: 'APPROVED' } });
         const totalEvents = await prisma.event.count();
         const totalPhotos = await prisma.photo.count();
@@ -83,7 +85,7 @@ exports.getChartData = async (req, res) => {
                 createdAt: {
                     gte: sevenDaysAgo
                 },
-                status: 'PAID'
+                status: { in: paidStatuses }
             },
             select: {
                 total: true,

@@ -214,7 +214,7 @@ exports.googleLogin = async (req, res) => {
                         fullName: name, // Fallback Google name to fullName
                         cpf: null, // CPF is not provided by Google, set to null
                         googleId,
-                        password: await bcrypt.hash(Math.random().toString(36), 10), // Random password
+                        password: await bcrypt.hash(require('crypto').randomBytes(32).toString('hex'), 10), // Secure random password
                         role: 'CUSTOMER'
                     }
                 });

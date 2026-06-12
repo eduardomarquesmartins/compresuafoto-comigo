@@ -479,48 +479,55 @@ exports.getAllOrders = async (req, res) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        // Enrich with photo count and event info
-        const enriched = await Promise.all(orders.map(async (order) => {
-            console.log(`Processing order ${order.id}`);
+        // Parse all items and collect first photo IDs for batch query
+        const parsedOrders = orders.map(order => {
             let photoIds = [];
             try {
                 if (order.items) {
                     photoIds = JSON.parse(order.items);
                 }
             } catch (e) {
-                console.error(`Error parsing items for order ${order.id}:`, e.message);
+                // ignore malformed JSON
             }
+            if (!Array.isArray(photoIds)) photoIds = [];
+            return { ...order, photoIds };
+        });
 
-            if (!Array.isArray(photoIds)) {
-                photoIds = [];
-            }
+        // Batch fetch: get all first photos in a single query to find their events
+        const firstPhotoIds = parsedOrders
+            .map(o => parseInt(o.photoIds[0]))
+            .filter(id => !isNaN(id));
 
-            let event = null;
-            if (photoIds.length > 0) {
-                try {
-                    const firstPhotoId = parseInt(photoIds[0]);
-                    if (!isNaN(firstPhotoId)) {
-                        const firstPhoto = await prisma.photo.findUnique({
-                            where: { id: firstPhotoId },
-                            include: { event: { select: { id: true, name: true, status: true } } }
-                        });
-                        if (firstPhoto && firstPhoto.event) {
-                            event = firstPhoto.event;
-                        }
-                    }
-                } catch (err) {
-                    console.error(`Error fetching event for order ${order.id}:`, err.message);
-                }
+        const uniqueFirstPhotoIds = [...new Set(firstPhotoIds)];
+
+        const firstPhotos = uniqueFirstPhotoIds.length > 0
+            ? await prisma.photo.findMany({
+                where: { id: { in: uniqueFirstPhotoIds } },
+                include: { event: { select: { id: true, name: true, status: true } } }
+            })
+            : [];
+
+        // Build a map of photoId -> event for O(1) lookup
+        const photoEventMap = new Map();
+        firstPhotos.forEach(photo => {
+            if (photo.event) {
+                photoEventMap.set(photo.id, photo.event);
             }
+        });
+
+        // Enrich orders with photo count and event info
+        const enriched = parsedOrders.map(order => {
+            const firstPhotoId = parseInt(order.photoIds[0]);
+            const event = !isNaN(firstPhotoId) ? (photoEventMap.get(firstPhotoId) || null) : null;
 
             return {
                 ...order,
-                photoCount: photoIds.length,
-                event: event
+                photoIds: undefined, // Remove internal field
+                photoCount: order.photoIds.length,
+                event
             };
-        }));
+        });
 
-        console.log(`Finished processing ${enriched.length} orders`);
         res.json(enriched);
     } catch (error) {
         console.error("Get All Orders Error:", error);

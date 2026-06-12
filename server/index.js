@@ -82,8 +82,8 @@ app.use((req, res, next) => {
     console.log(`REQ: ${req.method} ${req.url}`);
     next();
 });
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Ensure uploads directory exists
@@ -115,7 +115,7 @@ app.use('/api/photos/upload', (req, res, next) => {
 app.use('/api/photos', photoRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/coupons', require('./routes/couponRoutes'));
-app.use('/api/webhooks/mercadopago', require('./controllers/webhookController').handleMercadoPagoWebhook);
+app.post('/api/webhooks/mercadopago', require('./controllers/webhookController').handleMercadoPagoWebhook);
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/proposals', require('./routes/proposalRoutes'));
 app.use('/api/contracts', require('./routes/contractRoutes'));
@@ -142,10 +142,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Heartbeat to keep process alive if event loop becomes silent
-setInterval(() => {
-    // This empty function ensures the event loop always has a scheduled task
-}, 60000);
 
 const server = app.listen(PORT, async () => {
     console.log(`Server running on http://localhost:${PORT}`);
