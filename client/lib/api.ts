@@ -380,6 +380,13 @@ export const deleteContract = async (id: number) => {
     return response.data;
 };
 
+export const downloadContractPdfById = async (id: number) => {
+    const response = await api.get(`contracts/${id}/pdf`, {
+        responseType: 'blob'
+    });
+    return response.data;
+};
+
 // --- Financeiro (Financial Record API) ---
 export const getFinancials = async (params: { month?: string; year?: string; type?: string }) => {
     try {

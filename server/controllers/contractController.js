@@ -339,6 +339,32 @@ exports.deleteContract = async (req, res) => {
     }
 };
 
+exports.getContractPdfById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const contract = await prisma.contract.findUnique({
+            where: { id: parseInt(id, 10) },
+            include: {
+                client: true
+            }
+        });
+
+        if (!contract) {
+            return res.status(404).json({ error: 'Contrato não encontrado.' });
+        }
+
+        const pdfBuffer = await contractService.generateContractBuffer(getContractPdfPayload(contract));
+        const fileName = `contrato_${sanitizeFileName(contract.client?.name || contract.clientName || 'cliente')}.pdf`;
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
+        res.send(pdfBuffer);
+    } catch (err) {
+        console.error('[GET CONTRACT PDF ERROR]:', err);
+        res.status(500).json({ error: 'Erro ao gerar o PDF do contrato.' });
+    }
+};
+
 exports.getPublicContractByToken = async (req, res) => {
     try {
         const { token } = req.params;

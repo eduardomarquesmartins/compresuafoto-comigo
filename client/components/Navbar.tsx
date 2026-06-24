@@ -7,23 +7,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
-    const [user, setUser] = useState<{ name: string; role: string } | null>(() => {
-        if (typeof window !== 'undefined') {
-            const token = localStorage.getItem('token');
-            const userData = localStorage.getItem('user');
-            if (token && userData) {
-                try {
-                    return JSON.parse(userData);
-                } catch {
-                    return null;
-                }
-            }
-        }
-        return null;
-    });
+    const [user, setUser] = useState<{ name: string; role: string } | null>(null);
 
     useEffect(() => {
+        setIsMounted(true);
+        const token = localStorage.getItem('token');
+        const userData = localStorage.getItem('user');
+        if (token && userData) {
+            try {
+                setUser(JSON.parse(userData));
+            } catch {
+                setUser(null);
+            }
+        }
+
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
         };
@@ -65,7 +64,9 @@ export default function Navbar() {
 
                 {/* Desktop User/Login Section */}
                 <div className="hidden md:flex flex-1 justify-end items-center gap-6 font-normal">
-                    {user ? (
+                    {!isMounted ? (
+                        <div className="w-[105px] h-10"></div>
+                    ) : user ? (
                         <div className="relative group">
                             <button className="flex items-center gap-2 text-foreground font-normal hover:text-brand transition-colors focus:outline-none">
                                 <span>Olá, {user.name.split(' ')[0]}</span>
@@ -119,7 +120,7 @@ export default function Navbar() {
                             <Link href="/events" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand">Eventos</Link>
                             <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand">Como Funciona</Link>
 
-                            {user ? (
+                            {!isMounted ? null : user ? (
                                 <>
                                     <div className="h-px w-10 bg-gray-200"></div>
                                     <span className="text-lg font-normal text-brand uppercase tracking-tight">Olá, {user.name}</span>

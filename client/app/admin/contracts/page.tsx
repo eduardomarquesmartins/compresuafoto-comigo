@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Copy, Download, FileText, Loader2, Mail, Signature, Trash2 } from "lucide-react";
-import { createContract, deleteContract, downloadContractPdf, downloadPublicContractPdf, getClients, getContracts, getProposal, sendContractSignatureLink } from "@/lib/api";
+import { createContract, deleteContract, downloadContractPdf, downloadPublicContractPdf, getClients, getContracts, getProposal, sendContractSignatureLink, downloadContractPdfById } from "@/lib/api";
 
 const initialForm = {
     clientId: "",
@@ -325,6 +325,23 @@ export default function AdminContractsPage() {
         }
     };
 
+    const handleDownloadPdfById = async (id: number) => {
+        try {
+            const blob = await downloadContractPdfById(id);
+            const url = window.URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `contrato.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.warn("Erro ao baixar contrato:", error);
+            setErrorMessage("Não consegui baixar o contrato.");
+        }
+    };
+
     const handleDeleteContract = async (id: number) => {
         if (!window.confirm("Tem certeza que deseja apagar este contrato?")) return;
         try {
@@ -511,6 +528,16 @@ export default function AdminContractsPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleDownloadPdf(contract.signatureToken, false)}
+                                                    className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-slate-200 hover:border-blue-500/40 hover:bg-blue-500/10"
+                                                >
+                                                    <Download size={14} />
+                                                    Baixar
+                                                </button>
+                                            )}
+                                            {!contract.signatureToken && !contract.signedAt && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDownloadPdfById(contract.id)}
                                                     className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-slate-200 hover:border-blue-500/40 hover:bg-blue-500/10"
                                                 >
                                                     <Download size={14} />

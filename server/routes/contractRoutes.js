@@ -10,5 +10,6 @@ router.post('/', contractController.createContract);
 router.post('/send-sign-link', contractController.sendSignatureLink);
 router.delete('/:id', contractController.deleteContract);
 router.post('/generate', contractController.generateContract);
+router.get('/:id/pdf', contractController.getContractPdfById);
 
 module.exports = router;
