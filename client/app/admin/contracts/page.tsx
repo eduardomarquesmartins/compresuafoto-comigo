@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Download, Eye, FileText, Loader2, Mail, Signature } from "lucide-react";
-import { createContract, downloadContractPdf, downloadPublicContractPdf, getClients, getContracts, getProposal, sendContractSignatureLink } from "@/lib/api";
+import { Copy, Download, FileText, Loader2, Mail, Signature, Trash2 } from "lucide-react";
+import { createContract, deleteContract, downloadContractPdf, downloadPublicContractPdf, getClients, getContracts, getProposal, sendContractSignatureLink } from "@/lib/api";
 
 const initialForm = {
     clientId: "",
@@ -308,24 +308,31 @@ export default function AdminContractsPage() {
         }
     };
 
-    const handleOpenPublicContract = (token: string) => {
-        window.open(`/assinar-contrato/${token}`, "_blank", "noopener,noreferrer");
-    };
-
-    const handleDownloadSignedPdf = async (token: string) => {
+    const handleDownloadPdf = async (token: string, signed: boolean) => {
         try {
             const blob = await downloadPublicContractPdf(token);
             const url = window.URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
             const link = document.createElement("a");
             link.href = url;
-            link.download = `contrato_assinado.pdf`;
+            link.download = signed ? `contrato_assinado.pdf` : `contrato.pdf`;
             document.body.appendChild(link);
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
         } catch (error) {
-            console.warn("Erro ao baixar contrato assinado:", error);
-            setErrorMessage("Não consegui baixar o contrato assinado.");
+            console.warn("Erro ao baixar contrato:", error);
+            setErrorMessage("Não consegui baixar o contrato.");
+        }
+    };
+
+    const handleDeleteContract = async (id: number) => {
+        if (!window.confirm("Tem certeza que deseja apagar este contrato?")) return;
+        try {
+            await deleteContract(id);
+            setContracts((prev) => prev.filter((c) => c.id !== id));
+        } catch (error) {
+            console.warn("Erro ao apagar contrato:", error);
+            setErrorMessage("Não consegui apagar o contrato.");
         }
     };
 
@@ -500,26 +507,34 @@ export default function AdminContractsPage() {
                                     </td>
                                     <td className="px-4 py-4">
                                         <div className="flex flex-wrap gap-2">
-                                            {contract.signatureToken && (
+                                            {contract.signatureToken && !contract.signedAt && (
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleOpenPublicContract(contract.signatureToken)}
+                                                    onClick={() => handleDownloadPdf(contract.signatureToken, false)}
                                                     className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-slate-200 hover:border-blue-500/40 hover:bg-blue-500/10"
                                                 >
-                                                    <Eye size={14} />
-                                                    Ver
+                                                    <Download size={14} />
+                                                    Baixar
                                                 </button>
                                             )}
                                             {contract.signedAt && contract.signatureToken && (
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDownloadSignedPdf(contract.signatureToken)}
+                                                    onClick={() => handleDownloadPdf(contract.signatureToken, true)}
                                                     className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-emerald-200 hover:border-emerald-400/40 hover:bg-emerald-500/15"
                                                 >
                                                     <Download size={14} />
                                                     PDF assinado
                                                 </button>
                                             )}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteContract(contract.id)}
+                                                className="inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-red-400 hover:border-red-400/40 hover:bg-red-500/15"
+                                            >
+                                                <Trash2 size={14} />
+                                                Apagar
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
