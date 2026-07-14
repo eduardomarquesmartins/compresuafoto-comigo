@@ -1,6 +1,7 @@
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const rekognitionService = require('../services/rekognition');
 const watermarkService = require('../services/watermark');
