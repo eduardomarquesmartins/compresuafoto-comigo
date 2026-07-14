@@ -222,55 +222,55 @@ export default function CouponsPage() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#0b0b0d]/80 backdrop-blur-2xl border border-white/10 rounded-[40px] w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in zoom-in-95 duration-200 scrollbar-hide text-white">
-                        <div className="p-10">
-                            <div className="flex justify-between items-center mb-10">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-[32px] w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200 scrollbar-hide text-white">
+                        <div className="p-8 md:p-10">
+                            <div className="flex justify-between items-center mb-8">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-[#0a72ef]/10 rounded-2xl border border-[#0a72ef]/20">
-                                        <Tag className="w-6 h-6 text-[#0a72ef]" />
+                                    <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                                        <Tag className="w-6 h-6 text-blue-400" />
                                     </div>
-                                    <h2 className="text-3xl font-black uppercase tracking-tighter text-white">
+                                    <h2 className="text-2xl font-black uppercase tracking-tight text-white">
                                         {editingCoupon ? "Editar Cupom" : "Novo Cupom"}
                                     </h2>
                                 </div>
-                                <button onClick={() => setShowModal(false)} className="p-3 hover:bg-white/5 rounded-2xl transition-all text-zinc-400 hover:text-white">
+                                <button onClick={() => setShowModal(false)} className="p-3 hover:bg-zinc-800 rounded-2xl transition-all text-zinc-400 hover:text-white">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
 
                             <form onSubmit={handleSave} className="space-y-6">
-                                <div className="space-y-3">
-                                    <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500 ml-1">Código do Cupom</label>
+                                <div className="space-y-2">
+                                    <label className="block font-mono text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ml-1">Código do Cupom</label>
                                     <input
                                         type="text"
                                         required
                                         placeholder="EX: VERÃO25"
                                         value={formData.code}
                                         onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                                        className="w-full rounded-[20px] border border-white/10 bg-black/45 px-5 py-5 font-bold text-white outline-none transition placeholder:text-zinc-700 focus:border-[#0a72ef]/70 focus:ring-4 focus:ring-[#0a72ef]/15 uppercase"
+                                        className="w-full rounded-[16px] border border-zinc-800 bg-zinc-950 px-5 py-4 font-bold text-white outline-none transition placeholder:text-zinc-600 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 uppercase"
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-3">
-                                        <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500 ml-1">Tipo de Desconto</label>
+                                <div className="grid grid-cols-2 gap-5">
+                                    <div className="space-y-2">
+                                        <label className="block font-mono text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ml-1">Tipo de Desconto</label>
                                         <select
                                             value={formData.discountType}
                                             onChange={(e) => setFormData({ ...formData, discountType: e.target.value })}
-                                            className="w-full rounded-[20px] border border-white/10 bg-black/45 px-5 py-5 font-bold text-white outline-none transition focus:border-[#0a72ef]/70 focus:ring-4 focus:ring-[#0a72ef]/15 appearance-none"
+                                            className="w-full rounded-[16px] border border-zinc-800 bg-zinc-950 px-5 py-4 font-bold text-white outline-none transition focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 appearance-none"
                                         >
                                             <option value="PERCENTAGE">Porcentagem (%)</option>
                                             <option value="FIXED">Valor Fixo (R$)</option>
                                         </select>
                                     </div>
-                                    <div className="space-y-3">
-                                        <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500 ml-1">Valor do Desconto</label>
+                                    <div className="space-y-2">
+                                        <label className="block font-mono text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ml-1">Valor do Desconto</label>
                                         <div className="relative">
                                             {formData.discountType === 'PERCENTAGE' ? (
-                                                <Percent className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0a72ef]" />
+                                                <Percent className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
                                             ) : (
-                                                <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#0a72ef]" />
+                                                <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
                                             )}
                                             <input
                                                 type="number"
@@ -278,81 +278,81 @@ export default function CouponsPage() {
                                                 step="0.01"
                                                 value={formData.discountValue}
                                                 onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
-                                                className="w-full rounded-[20px] border border-white/10 bg-black/45 px-5 py-5 pl-14 font-bold text-white outline-none transition focus:border-[#0a72ef]/70 focus:ring-4 focus:ring-[#0a72ef]/15"
+                                                className="w-full rounded-[16px] border border-zinc-800 bg-zinc-950 px-5 py-4 pl-12 font-bold text-white outline-none transition focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500 ml-1">Fotos Gratuitas ✨</label>
+                                <div className="space-y-2">
+                                    <label className="block font-mono text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ml-1">Fotos Gratuitas ✨</label>
                                     <div className="relative">
-                                        <Ticket className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                                        <Ticket className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
                                         <input
                                             type="number"
                                             placeholder="Ex: 2"
                                             value={formData.freePhotos}
                                             onChange={(e) => setFormData({ ...formData, freePhotos: e.target.value })}
-                                            className="w-full rounded-[20px] border border-white/10 bg-black/45 px-5 py-5 pl-14 font-bold text-white outline-none transition placeholder:text-zinc-700 focus:border-emerald-500/70 focus:ring-4 focus:ring-emerald-500/15"
+                                            className="w-full rounded-[16px] border border-zinc-800 bg-zinc-950 px-5 py-4 pl-12 font-bold text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10"
                                         />
                                     </div>
-                                    <p className="mb-2 block font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-600 ml-1">O cliente ganhará X fotos totalmente grátis</p>
+                                    <p className="block font-mono text-[9px] font-semibold uppercase tracking-widest text-zinc-500 ml-1 mt-2">O cliente ganhará X fotos totalmente grátis</p>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-3">
-                                        <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500 ml-1">Expiração</label>
+                                <div className="grid grid-cols-2 gap-5">
+                                    <div className="space-y-2">
+                                        <label className="block font-mono text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ml-1">Expiração</label>
                                         <input
                                             type="date"
                                             value={formData.expiryDate}
                                             onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                                            className="w-full rounded-[20px] border border-white/10 bg-black/45 px-5 py-5 font-bold text-white outline-none transition focus:border-[#0a72ef]/70 focus:ring-4 focus:ring-[#0a72ef]/15"
+                                            className="w-full rounded-[16px] border border-zinc-800 bg-zinc-950 px-5 py-4 font-bold text-white outline-none transition focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 [color-scheme:dark]"
                                         />
                                     </div>
-                                    <div className="space-y-3">
-                                        <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500 ml-1">Limite de Uso</label>
+                                    <div className="space-y-2">
+                                        <label className="block font-mono text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ml-1">Limite de Uso</label>
                                         <input
                                             type="number"
                                             placeholder="Ex: 50"
                                             value={formData.maxUses}
                                             onChange={(e) => setFormData({ ...formData, maxUses: e.target.value })}
-                                            className="w-full rounded-[20px] border border-white/10 bg-black/45 px-5 py-5 font-bold text-white outline-none transition placeholder:text-zinc-700 focus:border-[#0a72ef]/70 focus:ring-4 focus:ring-[#0a72ef]/15"
+                                            className="w-full rounded-[16px] border border-zinc-800 bg-zinc-950 px-5 py-4 font-bold text-white outline-none transition placeholder:text-zinc-600 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-black/45 p-6 rounded-[24px] border border-white/10">
+                                <div className="flex items-center justify-between bg-zinc-800/50 p-5 rounded-[20px] border border-zinc-700/50">
                                     <div className="flex flex-col">
                                         <span className="text-xs font-black uppercase tracking-widest text-white">Status</span>
-                                        <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">Cupom Ativo</span>
+                                        <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest mt-1">Cupom Ativo</span>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                                        className={`w-16 h-9 rounded-full transition-all relative ${formData.isActive ? 'bg-[#0a72ef]' : 'bg-zinc-800'}`}
+                                        className={`w-14 h-8 rounded-full transition-all relative ${formData.isActive ? 'bg-blue-500' : 'bg-zinc-700'}`}
                                     >
-                                        <div className={`absolute top-1.5 w-6 h-6 bg-white rounded-full shadow-lg transition-all ${formData.isActive ? 'left-8' : 'left-2'}`} />
+                                        <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all ${formData.isActive ? 'left-7' : 'left-1'}`} />
                                     </button>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-amber-500/10 p-6 rounded-[24px] border border-amber-500/20">
+                                <div className="flex items-center justify-between bg-amber-500/10 p-5 rounded-[20px] border border-amber-500/20">
                                     <div className="flex flex-col">
                                         <span className="text-xs font-black uppercase tracking-widest text-amber-500">🔒 Uso único por CPF</span>
-                                        <span className="text-[10px] font-medium text-amber-500/70 uppercase tracking-widest">Cada CPF usa apenas 1 vez</span>
+                                        <span className="text-[10px] font-medium text-amber-500/70 uppercase tracking-widest mt-1">Cada CPF usa apenas 1 vez</span>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, oncePerCpf: !formData.oncePerCpf })}
-                                        className={`w-16 h-9 rounded-full transition-all relative ${formData.oncePerCpf ? 'bg-amber-500' : 'bg-zinc-800'}`}
+                                        className={`w-14 h-8 rounded-full transition-all relative ${formData.oncePerCpf ? 'bg-amber-500' : 'bg-zinc-700'}`}
                                     >
-                                        <div className={`absolute top-1.5 w-6 h-6 bg-white rounded-full shadow-lg transition-all ${formData.oncePerCpf ? 'left-8' : 'left-2'}`} />
+                                        <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all ${formData.oncePerCpf ? 'left-7' : 'left-1'}`} />
                                     </button>
                                 </div>
 
                                 <button
                                     type="submit"
                                     disabled={isSaving}
-                                    className="w-full bg-[#0a72ef] text-white py-6 rounded-[24px] font-black uppercase tracking-[0.3em] text-xs flex items-center justify-center gap-3 hover:bg-[#0a72ef]/90 transition-all shadow-[0_0_40px_rgba(10,114,239,0.3)] active:scale-[0.98] disabled:opacity-50 mt-4"
+                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-[20px] font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 mt-4"
                                 >
                                     {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                                     {editingCoupon ? "Atualizar Cupom" : "Criar Novo Cupom"}

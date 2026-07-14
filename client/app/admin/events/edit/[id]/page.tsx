@@ -87,33 +87,33 @@ export default function EditEventPage() {
                 </span>
             </header>
 
-            <form onSubmit={handleSubmit} className="bg-[#0b0b0d]/80 backdrop-blur-2xl p-8 rounded-2xl border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)] space-y-6">
+            <form onSubmit={handleSubmit} className="bg-zinc-900 p-8 rounded-[32px] border border-zinc-800 shadow-2xl space-y-6">
                 <div>
-                    <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Nome do Evento</label>
+                    <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ml-1">Nome do Evento</label>
                     <input
                         type="text"
                         required
                         value={formData.name}
                         onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full rounded-lg border border-white/10 bg-black/45 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-700 focus:border-[#0a72ef]/70 focus:ring-4 focus:ring-[#0a72ef]/15"
+                        className="w-full rounded-[16px] border border-zinc-800 bg-zinc-950 px-5 py-4 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10"
                     />
                 </div>
 
                 <div>
-                    <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Descrição</label>
+                    <label className="mb-2 block font-mono text-[10px] font-semibold uppercase tracking-widest text-zinc-400 ml-1">Descrição</label>
                     <textarea
                         rows={4}
                         value={formData.description}
                         onChange={e => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full rounded-lg border border-white/10 bg-black/45 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-700 focus:border-[#0a72ef]/70 focus:ring-4 focus:ring-[#0a72ef]/15 resize-none"
+                        className="w-full rounded-[16px] border border-zinc-800 bg-zinc-950 px-5 py-4 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 resize-none"
                     />
                 </div>
 
-                <div className="flex gap-4 pt-6 border-t border-white/10 mt-8 items-center">
+                <div className="flex gap-4 pt-6 border-t border-zinc-800 mt-8 items-center">
                     <button
                         type="button"
                         onClick={toggleArchive}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold transition-colors ${formData.status === 'ACTIVE' ? 'text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20' : 'text-emerald-400 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20'}`}
+                        className={`flex items-center gap-2 px-6 py-4 rounded-[16px] text-sm font-semibold transition-colors ${formData.status === 'ACTIVE' ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300' : 'text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300'}`}
                     >
                         {formData.status === 'ACTIVE' ? <Archive size={16} /> : <RefreshCw size={16} />}
                         {formData.status === 'ACTIVE' ? 'Arquivar Evento' : 'Reativar Evento'}
@@ -122,7 +122,7 @@ export default function EditEventPage() {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="ml-auto flex items-center gap-2 bg-[#0a72ef] hover:bg-[#0a72ef]/90 text-white px-8 py-3 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+                        className="ml-auto flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-[16px] text-sm font-semibold transition-all disabled:opacity-50 active:scale-[0.98]"
                     >
                         <Save size={16} />
                         {saving ? 'Salvando...' : 'Salvar Alterações'}
