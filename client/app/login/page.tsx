@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { GoogleLogin } from '@react-oauth/google';
-
+import { ArrowLeft } from 'lucide-react';
 function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -146,8 +146,14 @@ function LoginContent() {
                         </div>
                     )}
 
-                    <div className="mt-10 text-center text-sm text-slate-500">
-                        Não tem uma conta? <Link href={`/register${redirectTo ? `?redirectTo=${redirectTo}` : ''}`} className="text-brand font-bold hover:underline">Cadastre-se</Link>
+                    <div className="mt-10 text-center text-sm text-slate-500 flex flex-col gap-4">
+                        <p>
+                            Não tem uma conta? <Link href={`/register${redirectTo ? `?redirectTo=${redirectTo}` : ''}`} className="text-brand font-bold hover:underline">Cadastre-se</Link>
+                        </p>
+                        <Link href="/" className="inline-flex items-center justify-center gap-2 text-slate-400 hover:text-slate-700 transition-colors mt-2">
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>Voltar ao site</span>
+                        </Link>
                     </div>
                 </form>
             </div>
