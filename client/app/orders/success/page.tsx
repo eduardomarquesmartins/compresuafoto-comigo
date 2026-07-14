@@ -144,7 +144,7 @@ function OrderSuccessContent() {
 
                         <div className="mb-8">
                             <a
-                                href={`${process.env.NEXT_PUBLIC_API_URL || 'https://compresuafoto-comigo.onrender.com'}/api/orders/${order.publicId || order.id}/zip`}
+                                href={`${api.defaults.baseURL}/orders/${order.publicId || order.id}/zip`}
                                 target="_blank"
                                 className="bg-brand hover:bg-brand/80 text-white px-8 py-4 rounded-full font-bold text-lg flex items-center gap-3 transition-all transform hover:scale-105 shadow-xl shadow-brand/20"
                             >
