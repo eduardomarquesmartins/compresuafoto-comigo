@@ -148,12 +148,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const handleLogout = () => {
         clearAdminSession();
-        router.push("/admin/login");
+        router.push("/login");
     };
-
-    if (pathname === "/admin/login") {
-        return <>{children}</>;
-    }
 
     if (!isAuthorized) {
         return (

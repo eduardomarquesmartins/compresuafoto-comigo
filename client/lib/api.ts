@@ -70,8 +70,7 @@ api.interceptors.response.use(
 
                 // Only redirect if not already on the login page to avoid loops
                 if (!window.location.pathname.includes('/login')) {
-                    const loginPath = window.location.pathname.startsWith('/admin') ? '/admin/login' : '/login';
-                    window.location.href = `${loginPath}?expired=true`;
+                    window.location.href = `/login?expired=true`;
                 }
             }
         }
