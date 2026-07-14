@@ -8,19 +8,7 @@ const nextConfig = {
             },
             {
                 protocol: 'https',
-                hostname: 'compresuafoto-comigo-fotos.s3.us-east-1.amazonaws.com',
-            },
-            {
-                protocol: 'https',
-                hostname: 'compresuafoto-comigo-fotos.s3.amazonaws.com',
-            },
-            {
-                protocol: 'https',
-                hostname: 'compresuafoto-comigo.s3.sa-east-1.amazonaws.com',
-            },
-            {
-                protocol: 'https',
-                hostname: 'compresuafoto-comigo.s3.amazonaws.com',
+                hostname: '*.amazonaws.com',
             },
             {
                 protocol: 'https',

@@ -43,9 +43,9 @@ export default function CreateEventPage() {
         formData.delete('photos');
 
         try {
-            // 1. Create the event first
             const eventResponse = await api.post('/events', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' },
+                timeout: 120000 // Increased timeout for large cover image uploads
             });
             const eventId = eventResponse.data.id;
 
