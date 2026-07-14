@@ -1,8 +1,8 @@
 const { MercadoPagoConfig, Payment } = require('mercadopago');
 const prisma = require('../lib/prisma');
 const { logToFile } = require('../utils/logger');
-const emailService = require('../services/email');
 const crypto = require('crypto');
+const { finalizeApprovedOrder } = require('./orderController');
 
 // Initialize Mercado Pago with the same token
 const client = new MercadoPagoConfig({
@@ -72,27 +72,13 @@ exports.handleMercadoPagoWebhook = async (req, res) => {
                     where = { id: parseInt(externalReference) };
                 }
 
-                const updatedOrder = await prisma.order.update({
-                    where: where,
-                    data: { status: 'approved' },
-                    include: { user: true }
-                });
-
-                // Send email to client
-                if (updatedOrder.user && updatedOrder.user.email) {
-                    let photoCount = 0;
-                    try { photoCount = JSON.parse(updatedOrder.items).length; } catch (e) { }
-                    console.log(`[DEBUG] Disparando e-mail via Webhook para: ${updatedOrder.user.email}`);
-                    const emailResult = await emailService.sendOrderEmail(updatedOrder.user.email, updatedOrder.publicId || updatedOrder.id, photoCount);
-                    
-                    if (emailResult.success) {
-                        console.log(`[EMAIL] Email sent successfully to ${updatedOrder.user.email}`);
-                        logToFile(`Email sent to ${updatedOrder.user.email} for order ${externalReference}`);
-                    } else {
-                        console.error(`[EMAIL ERROR] Failed to send email to ${updatedOrder.user.email}:`, emailResult.error);
-                        logToFile(`FAILED to send email to ${updatedOrder.user.email}: ${emailResult.error}`);
-                    }
+                const existingOrder = await prisma.order.findUnique({ where, select: { id: true, status: true } });
+                if (!existingOrder) {
+                    logToFile(`Order not found for external reference ${externalReference}`);
+                    return res.status(200).send('OK');
                 }
+
+                await finalizeApprovedOrder(existingOrder.id);
 
                 console.log(`[WEBHOOK] Order ${externalReference} successfully updated to 'approved' and email sent`);
                 logToFile(`Order ${externalReference} confirmed by webhook and email sent`);

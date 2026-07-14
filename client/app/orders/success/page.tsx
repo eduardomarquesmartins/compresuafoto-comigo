@@ -1,9 +1,10 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import api from "@/lib/api";
 import { CheckCircle, Download, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { getPublicAppUrl } from "@/lib/publicAppUrl";
 
 interface Order {
     id: number;
@@ -19,14 +20,12 @@ interface Order {
 
 function OrderSuccessContent() {
     const searchParams = useSearchParams();
-    const router = useRouter();
     const orderId = searchParams.get("external_reference") || searchParams.get("id"); // From Mercado Pago OR Email Link
     const paymentStatus = searchParams.get("status"); // 'approved', 'pending'
     const paymentId = searchParams.get("payment_id"); // Added paymentId from Mercado Pago URL query
 
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
-    const [simulating, setSimulating] = useState(false);
 
     useEffect(() => {
         if (orderId) {
@@ -71,7 +70,7 @@ function OrderSuccessContent() {
     const getImageUrl = (path?: string) => {
         if (!path) return "";
         if (path.startsWith("http")) return path;
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://compresuafoto-comigo.onrender.com';
+        const baseUrl = getPublicAppUrl();
         return `${baseUrl}${path}`;
     };
 
@@ -172,6 +171,7 @@ function OrderSuccessContent() {
                             <div className="relative aspect-[2/3]">
                                 <img
                                     src={getImageUrl(photo.originalUrl || photo.watermarkedUrl)} // Fallback just in case
+                                    alt={`Foto ${photo.id}`}
                                     className="w-full h-full object-cover"
                                 />
                                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

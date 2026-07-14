@@ -5,6 +5,7 @@ import { X, ShoppingCart, Trash2, ArrowRight, Loader2 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import api from "@/lib/api";
 import { useRouter, usePathname } from "next/navigation";
+import { getPublicAppUrl } from "@/lib/publicAppUrl";
 
 export default function CartDrawer() {
     const {
@@ -39,7 +40,7 @@ export default function CartDrawer() {
         if (!path) return "/placeholder.jpg";
         if (path.startsWith("http")) return path;
         const cleanPath = path.startsWith('/') ? path : `/${path}`;
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+        const baseUrl = getPublicAppUrl();
         return `${baseUrl}${cleanPath}`;
     };
 

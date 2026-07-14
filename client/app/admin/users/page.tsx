@@ -22,7 +22,7 @@ type NewUser = {
     role: "ADMIN" | "PHOTOGRAPHER";
 };
 
-const emptyNewUser: NewUser = { name: "", email: "", password: "", role: "ADMIN" };
+const emptyNewUser: NewUser = { name: "", email: "", password: "", role: "PHOTOGRAPHER" };
 
 const getUsersErrorMessage = (error: unknown) => {
     if (typeof error === "object" && error !== null && "code" in error) {

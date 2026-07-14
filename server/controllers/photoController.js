@@ -9,6 +9,8 @@ const s3Service = require('../services/s3');
 const { logToFile } = require('../utils/logger');
 const axios = require('axios');
 
+const isRawImage = (fileName = '') => fileName.toLowerCase().endsWith('.arw');
+
 const sanitizeFileName = (fileName = 'photo.jpg') => {
     return fileName
         .replace(/[^\w.-]+/g, '_')
@@ -156,6 +158,11 @@ exports.uploadPhotos = async (req, res) => {
             return res.status(400).json({ error: 'Nenhum arquivo enviado' });
         }
 
+        const rawFile = files.find(file => isRawImage(file.originalname));
+        if (rawFile) {
+            return res.status(400).json({ error: 'Arquivos .ARW nao sao suportados neste servidor. Exporte as fotos em JPG antes do upload.' });
+        }
+
         const event = await prisma.event.findUnique({
             where: { id: parsedEventId }
         });
@@ -176,7 +183,6 @@ exports.uploadPhotos = async (req, res) => {
             const faceFile = faceFiles[index];
             console.log(`[LOG] Starting process for: ${originalFilename}`);
             logToFile(`Processing: ${originalFilename}`);
-
             try {
                 // 1. Upload Original to S3
                 const originalBuffer = fs.readFileSync(file.path);

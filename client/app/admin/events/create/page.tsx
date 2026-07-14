@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Image as ImageIcon, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import axios from 'axios';
 import api from '@/lib/api';
 import { uploadPhotosDirectToS3 } from '@/lib/directPhotoUpload';
 
@@ -38,21 +39,17 @@ export default function CreateEventPage() {
         setUploadProgress(0);
 
         const formData = new FormData(e.currentTarget);
-        // Add current date automatically since input was removed from UI
         formData.set('date', new Date().toISOString().split('T')[0]);
         formData.delete('photos');
 
         try {
             const eventResponse = await api.post('/events', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                timeout: 120000 // Increased timeout for large cover image uploads
+                timeout: 120000
             });
             const eventId = eventResponse.data.id;
 
-            // 2. Upload photos in chunks
-            console.log(`DEBUG: Evento criado ID ${eventId}. Fotos selecionadas: ${selectedPhotos.length}`);
             if (selectedPhotos.length > 0) {
-                console.log('DEBUG: Iniciando processamento de fotos em lotes...');
                 await uploadPhotosDirectToS3({
                     eventId,
                     files: selectedPhotos,
@@ -65,9 +62,12 @@ export default function CreateEventPage() {
 
             setUploadProgress(100);
             setSuccess(true);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Create Event Error:', error);
-            setError(error.response?.data?.error || 'Erro ao comunicar com o servidor. Verifique sua conexão.');
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.error || error.message
+                : 'Erro ao comunicar com o servidor. Verifique sua conexao.';
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -85,7 +85,7 @@ export default function CreateEventPage() {
                 </motion.div>
                 <h2 className="text-2xl font-bold text-white mb-4">Evento Criado!</h2>
                 <p className="text-slate-400 mb-8 font-light">
-                    O evento e as fotos foram enviados com sucesso. A marca d'agua foi gerada localmente e a IA continuara em segundo plano.
+                    O evento e as fotos foram enviados com sucesso. A marca d&apos;agua foi gerada localmente e a IA continuara em segundo plano.
                 </p>
                 <button
                     onClick={() => router.push('/admin/dashboard')}
@@ -103,7 +103,6 @@ export default function CreateEventPage() {
 
             <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Left Column: Form Fields */}
                     <div className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium mb-2 text-slate-300">Nome do Evento</label>
@@ -111,10 +110,9 @@ export default function CreateEventPage() {
                                 name="name"
                                 required
                                 className="w-full bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-600"
-                                placeholder="Ex: Casamento João e Maria"
+                                placeholder="Ex: Casamento Joao e Maria"
                             />
                         </div>
-
 
                         <div>
                             <label className="block text-sm font-medium mb-2 text-slate-300">Capa do Evento</label>
@@ -143,7 +141,6 @@ export default function CreateEventPage() {
                         </div>
                     </div>
 
-                    {/* Right Column: Photo Upload Section */}
                     <div className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium mb-2 text-slate-300 flex justify-between">
@@ -169,14 +166,14 @@ export default function CreateEventPage() {
                                         </div>
                                         <div className="space-y-1">
                                             <p className="text-white font-bold text-lg">{selectedPhotoCount} fotos</p>
-                                            <p className="text-slate-400 text-xs text-center">Clique para trocar a seleção</p>
+                                            <p className="text-slate-400 text-xs text-center">Clique para trocar a selecao</p>
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="space-y-3 text-slate-500 group-hover:text-brand transition-colors p-4">
                                         <Upload className="w-10 h-10 mx-auto mb-2" />
                                         <p className="font-medium text-sm">Clique para selecionar as fotos</p>
-                                        <p className="text-[10px] text-slate-600 font-light">Suporta centenas de fotos simultâneas</p>
+                                        <p className="text-[10px] text-slate-600 font-light">Suporta centenas de fotos simultaneas em JPG, JPEG e PNG</p>
                                     </div>
                                 )}
                             </div>
@@ -184,7 +181,6 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* Status/Error Messages */}
                 <AnimatePresence>
                     {error && (
                         <motion.div
@@ -199,7 +195,6 @@ export default function CreateEventPage() {
                     )}
                 </AnimatePresence>
 
-                {/* Submit Button & Progress */}
                 <div className="space-y-4 pt-4">
                     {loading && (
                         <div className="space-y-2">
@@ -220,32 +215,23 @@ export default function CreateEventPage() {
                         </div>
                     )}
 
-                    <motion.button
+                    <button
                         type="submit"
                         disabled={loading}
-                        whileHover={{ scale: loading ? 1 : 1.02 }}
-                        whileTap={{ scale: loading ? 1 : 0.98 }}
-                        className={`w-full h-16 rounded-2xl font-black text-lg tracking-widest transition-all shadow-xl flex items-center justify-center gap-3
-                            ${loading
-                                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                                : 'bg-brand hover:bg-blue-600 text-white shadow-brand/20 hover:shadow-brand/40'
-                            }`}
+                        className="w-full bg-brand hover:bg-blue-600 disabled:bg-slate-700 text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3"
                     >
                         {loading ? (
                             <>
-                                <Loader2 className="w-6 h-6 animate-spin" />
-                                ENVIANDO...
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                PROCESSANDO...
                             </>
                         ) : (
-                            'CRIAR EVENTO'
+                            <>
+                                <Upload className="w-5 h-5" />
+                                CRIAR EVENTO
+                            </>
                         )}
-                    </motion.button>
-
-                    {!loading && selectedPhotoCount > 100 && (
-                        <p className="text-[10px] text-slate-500 text-center font-light italic">
-                            O upload de {selectedPhotoCount} fotos pode levar alguns minutos dependendo da sua internet.
-                        </p>
-                    )}
+                    </button>
                 </div>
             </form>
         </div>

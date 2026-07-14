@@ -1,6 +1,14 @@
 import api from './api';
 import { processPhotoLocally } from './clientImageProcessing';
 
+type PresignedUpload = {
+    uploadUrls: {
+        original: string;
+        watermarked: string;
+        face: string;
+    };
+};
+
 type DirectUploadOptions = {
     eventId: string | number;
     files: File[];
@@ -24,6 +32,8 @@ const putToS3 = async (url: string, file: File) => {
     }
 };
 
+const isRawFile = (file: File) => file.name.toLowerCase().endsWith('.arw');
+
 export const uploadPhotosDirectToS3 = async ({
     eventId,
     files,
@@ -32,12 +42,17 @@ export const uploadPhotosDirectToS3 = async ({
     onStatus,
     onProgress,
 }: DirectUploadOptions) => {
+    const rawFiles = files.filter(isRawFile);
+    if (rawFiles.length > 0) {
+        throw new Error('Arquivos .ARW nao sao suportados neste servidor. Exporte as fotos em JPG antes do upload.');
+    }
+
     const total = files.length;
     let completed = 0;
 
-    for (let i = 0; i < total; i += batchSize) {
+    for (let i = 0; i < files.length; i += batchSize) {
         const batchNumber = Math.floor(i / batchSize) + 1;
-        const totalBatches = Math.ceil(total / batchSize);
+        const totalBatches = Math.ceil(files.length / batchSize);
         const chunk = files.slice(i, i + batchSize);
 
         onStatus?.(`Gerando marca d'agua localmente ${batchNumber} de ${totalBatches}...`);
@@ -55,7 +70,7 @@ export const uploadPhotosDirectToS3 = async ({
         const uploads = presignResponse.data.uploads;
 
         onStatus?.(`Enviando lote ${batchNumber} de ${totalBatches} direto para S3...`);
-        await Promise.all(uploads.map((upload: any, index: number) => {
+        await Promise.all(uploads.map((upload: PresignedUpload, index: number) => {
             const item = processed[index];
             return Promise.all([
                 putToS3(upload.uploadUrls.original, item.original),

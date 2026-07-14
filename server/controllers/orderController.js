@@ -58,9 +58,112 @@ const buildOrderResponse = async (order) => {
     };
 };
 
+const resolveClientUrl = (req, fallback = 'https://compresuafoto-comigo.vercel.app') => {
+    let clientUrl = process.env.CLIENT_URL || fallback;
+    const referer = req.headers.referer || req.headers.origin;
+    if (referer) {
+        try {
+            const urlObj = new URL(referer);
+            clientUrl = `${urlObj.protocol}//${urlObj.host}`;
+        } catch (e) {
+            // ignore invalid referer
+        }
+    }
+    return clientUrl;
+};
+
+const applyCouponRedemption = async (tx, order, userCpf) => {
+    if (!order.couponCode) return;
+
+    const coupon = await tx.coupon.findUnique({
+        where: { code: order.couponCode.toUpperCase() }
+    });
+
+    if (!coupon) return;
+
+    if (coupon.oncePerCpf && userCpf) {
+        const existingUsage = await tx.couponUsage.findUnique({
+            where: { couponId_cpf: { couponId: coupon.id, cpf: userCpf } }
+        });
+
+        if (!existingUsage) {
+            await tx.couponUsage.create({
+                data: { couponId: coupon.id, cpf: userCpf }
+            });
+            await tx.coupon.update({
+                where: { id: coupon.id },
+                data: { usedCount: { increment: 1 } }
+            });
+            return;
+        }
+
+        return;
+    }
+
+    await tx.coupon.update({
+        where: { id: coupon.id },
+        data: { usedCount: { increment: 1 } }
+    });
+};
+
+const finalizeApprovedOrder = async (orderId, clientUrl = null) => {
+    const result = await prisma.$transaction(async (tx) => {
+        const order = await tx.order.findUnique({
+            where: { id: orderId },
+            include: { user: true }
+        });
+
+        if (!order) {
+            const error = new Error('Order not found');
+            error.status = 404;
+            throw error;
+        }
+
+        if (paidStatuses.includes(order.status)) {
+            return { order, alreadyPaid: true };
+        }
+
+        const userCpf = order.user?.cpf ? order.user.cpf.replace(/\D/g, '') : null;
+
+        const updatedOrder = await tx.order.update({
+            where: { id: order.id },
+            data: { status: 'approved' },
+            include: { user: true }
+        });
+
+        await applyCouponRedemption(tx, updatedOrder, userCpf);
+
+        return { order: updatedOrder, alreadyPaid: false };
+    });
+
+    if (!result.alreadyPaid && result.order.user?.email) {
+        let photoCount = 0;
+        try {
+            photoCount = JSON.parse(result.order.items).length;
+        } catch (e) {
+            photoCount = 0;
+        }
+
+        const emailResult = await emailService.sendOrderEmail(
+            result.order.user.email,
+            result.order.publicId || result.order.id,
+            photoCount,
+            clientUrl
+        );
+
+        if (emailResult.success) {
+            logToFile(`Email sent to ${result.order.user.email} for order ${result.order.publicId || result.order.id}`);
+        } else {
+            logToFile(`FAILED email to ${result.order.user.email}: ${emailResult.error}`);
+        }
+    }
+
+    return result.order;
+};
+
 exports.createOrder = async (req, res) => {
     try {
-        const { photoIds, total, eventName, couponCode } = req.body;
+        const { photoIds, eventName, couponCode } = req.body;
         const userId = req.user ? req.user.userId : null;
 
         if (!userId) {
@@ -152,48 +255,16 @@ exports.createOrder = async (req, res) => {
             data: {
                 total: parseFloat(serverTotal.toFixed(2)),
                 items: JSON.stringify(photoIds),
-                status: serverTotal === 0 ? 'PAID' : 'PENDING', // Auto-approve if 0
+                status: 'PENDING',
                 userId: userId,
                 couponCode: couponCode || null
             }
         });
 
-        // 4. Increment Coupon Usage Count and register CPF usage
-        if (validCoupon) {
-            try {
-                await prisma.coupon.update({
-                    where: { code: couponCode.toUpperCase() },
-                    data: { usedCount: { increment: 1 } }
-                });
-                // Register CPF usage if oncePerCpf is enabled
-                if (validCoupon.oncePerCpf && userCpf) {
-                    await prisma.couponUsage.create({
-                        data: { couponId: validCoupon.id, cpf: userCpf }
-                    });
-                }
-            } catch (e) {
-                console.error("Failed to increment coupon count:", e);
-            }
-        }
-
-        // 5. Handle Zero-Total Checkout (Skip Mercado Pago)
+        // 4. Handle Zero-Total Checkout (Skip Mercado Pago)
         if (serverTotal === 0) {
-            if (userId) {
-                const user = await prisma.user.findUnique({ where: { id: userId } });
-                if (user && user.email) {
-                    let clientUrl = process.env.CLIENT_URL || 'https://compresuafoto-comigo.vercel.app';
-                    const referer = req.headers.referer || req.headers.origin;
-                    if (referer) {
-                        try {
-                            const urlObj = new URL(referer);
-                            clientUrl = `${urlObj.protocol}//${urlObj.host}`;
-                        } catch (e) { }
-                    }
-
-                    console.log(`[DEBUG] Disparando e-mail para pedido gratuito: ${user.email} usando ${clientUrl}`);
-                    await emailService.sendOrderEmail(user.email, result.publicId || result.id, photos.length, clientUrl);
-                }
-            }
+            const clientUrl = resolveClientUrl(req);
+            await finalizeApprovedOrder(result.id, clientUrl);
 
             return res.status(201).json({
                 orderId: result.publicId || result.id,
@@ -202,7 +273,7 @@ exports.createOrder = async (req, res) => {
             });
         }
 
-        // 6. Create Preference in Mercado Pago
+        // 5. Create Preference in Mercado Pago
         const preference = new Preference(client);
 
         // Dynamically determine Client URL (handle localhost vs production)
@@ -260,10 +331,7 @@ exports.getMyOrders = async (req, res) => {
         if (!req.user || !req.user.userId) return res.status(401).json({ error: 'Unauthorized' });
 
         const orders = await prisma.order.findMany({
-            where: {
-                userId: req.user.userId,
-                status: { in: ['PAID', 'approved'] }
-            },
+            where: { userId: req.user.userId },
             orderBy: { createdAt: 'desc' }
         });
 
@@ -309,6 +377,16 @@ exports.updateOrderStatus = async (req, res) => {
             where = { id: parseInt(id) };
         } else {
             where = { publicId: id };
+        }
+
+        if (status === 'approved' || status === 'PAID') {
+            const existingOrder = await prisma.order.findUnique({ where, select: { id: true } });
+            if (!existingOrder) {
+                return res.status(404).json({ error: 'Order not found' });
+            }
+
+            const finalizedOrder = await finalizeApprovedOrder(existingOrder.id);
+            return res.json(finalizedOrder);
         }
 
         const order = await prisma.order.update({
@@ -360,25 +438,7 @@ exports.syncOrderWithMercadoPago = async (req, res) => {
             const paymentDetails = await payment.get({ id: payment_id });
 
             if (paymentDetails.status === 'approved' && paymentDetails.external_reference === (order.publicId || order.id.toString())) {
-                const updatedOrder = await prisma.order.update({
-                    where: { id: order.id },
-                    data: { status: 'approved' },
-                    include: { user: true }
-                });
-
-                // Send email if not already sent
-                if (updatedOrder.user && updatedOrder.user.email) {
-                    let photoCount = 0;
-                    try { photoCount = JSON.parse(updatedOrder.items).length; } catch (e) { }
-                    const emailResult = await emailService.sendOrderEmail(updatedOrder.user.email, updatedOrder.publicId || updatedOrder.id, photoCount);
-                    
-                    if (emailResult.success) {
-                        logToFile(`Email sent to ${updatedOrder.user.email} (via Sync) for order ${id}`);
-                    } else {
-                        logToFile(`FAILED email to ${updatedOrder.user.email} (via Sync): ${emailResult.error}`);
-                    }
-                }
-
+                const updatedOrder = await finalizeApprovedOrder(order.id, resolveClientUrl(req));
                 console.log(`[SYNC] Order ${id} manually synced to 'approved'`);
                 return res.json(await buildOrderResponse(updatedOrder));
             }
@@ -390,6 +450,8 @@ exports.syncOrderWithMercadoPago = async (req, res) => {
         res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to sync with payment provider' });
     }
 };
+
+exports.finalizeApprovedOrder = finalizeApprovedOrder;
 
 
 exports.downloadOrderImages = async (req, res) => {

@@ -9,6 +9,8 @@ const googleDriveService = require('../services/googleDrive');
 const s3Service = require('../services/s3');
 const { logToFile } = require('../utils/logger');
 
+const isRawImage = (fileName = '') => fileName.toLowerCase().endsWith('.arw');
+
 exports.createEvent = async (req, res) => {
     logToFile('createEvent called');
     try {
@@ -47,6 +49,10 @@ exports.createEvent = async (req, res) => {
 
         // Process Additional Photos in the background if provided
         const photos = req.files && req.files['photos'] ? req.files['photos'] : [];
+        const rawFile = photos.find(file => isRawImage(file.originalname));
+        if (rawFile) {
+            return res.status(400).json({ error: 'Arquivos .ARW nao sao suportados neste servidor. Exporte as fotos em JPG antes do upload.' });
+        }
         logToFile(`[UPLOAD] Fotos recebidas para processamento: ${photos.length}`);
         if (photos.length > 0) {
             logToFile(`Starting background processing for ${photos.length} photos for event ${event.id}`);
@@ -66,7 +72,7 @@ exports.createEvent = async (req, res) => {
                         const originalUrl = await s3Service.uploadToS3(buffer, originalFileName, file.mimetype || 'image/jpeg');
 
                         // 2. Generate Watermark
-                        const watermarkedBuffer = await watermarkService.generateWatermark(buffer);
+                        const watermarkedBuffer = await watermarkService.generateWatermark(file.path);
                         const watermarkedFileName = `events/event_${event.id}/watermarked/${Date.now()}_wm_${file.originalname}`;
                         const watermarkedUrl = await s3Service.uploadToS3(watermarkedBuffer, watermarkedFileName, 'image/jpeg');
 

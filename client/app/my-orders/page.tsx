@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import { Download, Package, Calendar, Clock, CheckCircle, XCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { getPublicAppUrl } from '@/lib/publicAppUrl';
 
 interface Order {
     id: number;
@@ -20,7 +21,6 @@ export default function MyOrdersPage() {
     const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
         // useLayoutEffect usually better for auth redirect to avoid flash but useEffect is standard in next
@@ -31,8 +31,6 @@ export default function MyOrdersPage() {
             router.push('/login');
             return;
         }
-        setUser(JSON.parse(userData));
-
         fetchOrders();
     }, []);
 
@@ -151,7 +149,7 @@ export default function MyOrdersPage() {
                                     <div className="pt-4 mt-auto">
                                         {(order.status === 'PAID' || order.status === 'approved') ? (
                                             <a
-                                                href={`${process.env.NEXT_PUBLIC_API_URL || 'https://compresuafoto-comigo.onrender.com'}/api/orders/${order.publicId || order.id}/zip`}
+                                                href={`${getPublicAppUrl()}/api/orders/${order.publicId || order.id}/zip`}
                                                 target="_blank"
                                                 className="w-full bg-brand text-white hover:bg-brand-dark py-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-1 active:translate-y-0"
                                             >

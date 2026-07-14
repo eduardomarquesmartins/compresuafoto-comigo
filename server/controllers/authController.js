@@ -5,56 +5,93 @@ const { OAuth2Client } = require('google-auth-library');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const emailService = require('../services/email');
 
+const cleanOptionalUniqueValue = (value) => {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed || null;
+};
+
+const cleanCpf = (value) => {
+    const normalized = cleanOptionalUniqueValue(value);
+    return normalized ? normalized.replace(/\D/g, '') : null;
+};
+
+const cleanPhone = (value) => {
+    const normalized = cleanOptionalUniqueValue(value);
+    return normalized ? normalized.replace(/\D/g, '') : null;
+};
+
+const buildLoginWhere = (rawValue) => {
+    const loginIdentifier = String(rawValue || '').trim();
+    const normalizedPhone = cleanPhone(loginIdentifier);
+
+    return {
+        OR: [
+            { email: loginIdentifier.toLowerCase() },
+            ...(normalizedPhone ? [{ phone: normalizedPhone }] : [])
+        ]
+    };
+};
+
 exports.register = async (req, res) => {
     const { name, fullName, cpf, email, password, phone, securityQuestion, securityAnswer } = req.body;
     try {
-        // Check if user exists (email or phone)
+        const normalizedEmail = String(email || '').trim().toLowerCase();
+        const normalizedCpf = cleanCpf(cpf);
+        const normalizedPhone = cleanPhone(phone);
+
         const existingUser = await prisma.user.findFirst({
             where: {
                 OR: [
-                    { email },
-                    { phone: phone || undefined } // Only check phone if provided
+                    { email: normalizedEmail },
+                    ...(normalizedPhone ? [{ phone: normalizedPhone }] : []),
+                    ...(normalizedCpf ? [{ cpf: normalizedCpf }] : [])
                 ]
             }
         });
 
         if (existingUser) {
-            return res.status(400).json({ error: 'Email ou Telefone já cadastrado' });
+            return res.status(400).json({ error: 'Email, CPF ou telefone ja cadastrado' });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Hash security answer if provided
         let hashedSecurityAnswer = null;
         if (securityAnswer) {
             hashedSecurityAnswer = await bcrypt.hash(securityAnswer.toLowerCase(), 10);
         }
 
-        // Create user (CUSTOMER role by default)
         const user = await prisma.user.create({
             data: {
                 name,
                 fullName,
-                cpf,
-                email,
+                cpf: normalizedCpf,
+                email: normalizedEmail,
                 password: hashedPassword,
-                phone,
+                phone: normalizedPhone,
                 securityQuestion,
                 securityAnswer: hashedSecurityAnswer,
                 role: 'CUSTOMER'
             }
         });
 
-        // Generate Token
         const token = jwt.sign(
             { userId: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
 
-        res.status(201).json({ token, user: { name: user.name, fullName: user.fullName, cpf: user.cpf, email: user.email, role: user.role } });
-
+        res.status(201).json({
+            token,
+            user: {
+                name: user.name,
+                fullName: user.fullName,
+                cpf: user.cpf,
+                email: user.email,
+                role: user.role,
+                phone: user.phone
+            }
+        });
     } catch (error) {
         console.error('Register Error:', error);
         res.status(500).json({ error: 'Erro ao criar conta' });
@@ -63,103 +100,89 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     const { login, email, password } = req.body;
-    const loginIdentifier = login || email; // support both property names
+    const loginIdentifier = login || email;
 
     try {
-        // Find user by email OR phone
         const user = await prisma.user.findFirst({
-            where: {
-                OR: [
-                    { email: loginIdentifier },
-                    { phone: loginIdentifier }
-                ]
-            }
+            where: buildLoginWhere(loginIdentifier)
         });
 
         if (!user) {
-            return res.status(401).json({ error: 'Credenciais inválidas' });
+            return res.status(401).json({ error: 'Credenciais invalidas' });
         }
 
-        // Check password
         const isValid = await bcrypt.compare(password, user.password);
 
         if (!isValid) {
-            return res.status(401).json({ error: 'Credenciais inválidas' });
+            return res.status(401).json({ error: 'Credenciais invalidas' });
         }
 
-        // Generate Token
         const token = jwt.sign(
             { userId: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
 
-        res.json({ token, user: { name: user.name, fullName: user.fullName, cpf: user.cpf, email: user.email, role: user.role, phone: user.phone } });
-
+        res.json({
+            token,
+            user: {
+                name: user.name,
+                fullName: user.fullName,
+                cpf: user.cpf,
+                email: user.email,
+                role: user.role,
+                phone: user.phone
+            }
+        });
     } catch (error) {
         console.error('Login Error:', error);
         res.status(500).json({ error: 'Login failed' });
     }
 };
 
-// Get security question for a user
 exports.getSecurityQuestion = async (req, res) => {
-    const { login, email } = req.query; // email or phone
+    const { login, email } = req.query;
     const loginIdentifier = login || email;
 
     try {
         const user = await prisma.user.findFirst({
-            where: {
-                OR: [
-                    { email: loginIdentifier },
-                    { phone: loginIdentifier }
-                ]
-            }
+            where: buildLoginWhere(loginIdentifier)
         });
 
         if (!user) {
-            return res.status(404).json({ error: 'Usuário não encontrado' });
+            return res.status(404).json({ error: 'Usuario nao encontrado' });
         }
 
         if (!user.securityQuestion) {
-            return res.status(400).json({ error: 'Usuário não possui pergunta de segurança cadastrada' });
+            return res.status(400).json({ error: 'Usuario nao possui pergunta de seguranca cadastrada' });
         }
 
         res.json({ question: user.securityQuestion });
-
     } catch (error) {
         console.error('Get Question Error:', error);
         res.status(500).json({ error: 'Erro ao buscar pergunta' });
     }
 };
 
-// Reset password using security answer
 exports.resetPassword = async (req, res) => {
     const { login, email, answer, newPassword } = req.body;
     const loginIdentifier = login || email;
 
     try {
         const user = await prisma.user.findFirst({
-            where: {
-                OR: [
-                    { email: loginIdentifier },
-                    { phone: loginIdentifier }
-                ]
-            }
+            where: buildLoginWhere(loginIdentifier)
         });
 
         if (!user || !user.securityAnswer) {
-            return res.status(400).json({ error: 'Dados inválidos' });
+            return res.status(400).json({ error: 'Dados invalidos' });
         }
 
-        // Verify answer
-        const isAnswerValid = await bcrypt.compare(answer.toLowerCase(), user.securityAnswer);
+        const isAnswerValid = await bcrypt.compare(String(answer || '').toLowerCase(), user.securityAnswer);
 
         if (!isAnswerValid) {
             return res.status(401).json({ error: 'Resposta incorreta' });
         }
 
-        // Update password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         await prisma.user.update({
@@ -168,14 +191,12 @@ exports.resetPassword = async (req, res) => {
         });
 
         res.json({ message: 'Senha redefinida com sucesso' });
-
     } catch (error) {
         console.error('Reset Password Error:', error);
         res.status(500).json({ error: 'Erro ao redefinir senha' });
     }
 };
 
-// Google Login
 exports.googleLogin = async (req, res) => {
     const { credential } = req.body;
 
@@ -187,41 +208,38 @@ exports.googleLogin = async (req, res) => {
 
         const payload = ticket.getPayload();
         const { sub: googleId, email, name, picture } = payload;
+        const normalizedEmail = String(email || '').trim().toLowerCase();
 
-        // Find or create user
         let user = await prisma.user.findUnique({
             where: { googleId }
         });
 
         if (!user) {
-            // Check if user exists with same email
             user = await prisma.user.findUnique({
-                where: { email }
+                where: { email: normalizedEmail }
             });
 
             if (user) {
-                // Link account
                 user = await prisma.user.update({
                     where: { id: user.id },
                     data: { googleId }
                 });
             } else {
-                // Create new user
                 user = await prisma.user.create({
                     data: {
-                        email,
+                        email: normalizedEmail,
                         name,
-                        fullName: name, // Fallback Google name to fullName
-                        cpf: null, // CPF is not provided by Google, set to null
+                        fullName: name,
+                        cpf: null,
+                        phone: null,
                         googleId,
-                        password: await bcrypt.hash(require('crypto').randomBytes(32).toString('hex'), 10), // Secure random password
+                        password: await bcrypt.hash(require('crypto').randomBytes(32).toString('hex'), 10),
                         role: 'CUSTOMER'
                     }
                 });
             }
         }
 
-        // Generate Token
         const token = jwt.sign(
             { userId: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
@@ -233,6 +251,9 @@ exports.googleLogin = async (req, res) => {
             user: {
                 id: user.id,
                 name: user.name,
+                fullName: user.fullName,
+                cpf: user.cpf,
+                phone: user.phone,
                 email: user.email,
                 role: user.role,
                 picture,
@@ -240,32 +261,23 @@ exports.googleLogin = async (req, res) => {
             },
             incompleteProfile: !user.cpf || !user.phone
         });
-
     } catch (error) {
         console.error('Google Login Error:', error);
         res.status(500).json({ error: 'Erro no login com Google' });
     }
 };
 
-// Request Password Reset Link via Email
 exports.forgotPassword = async (req, res) => {
     const { login } = req.body;
     try {
         const user = await prisma.user.findFirst({
-            where: {
-                OR: [
-                    { email: login },
-                    { phone: login }
-                ]
-            }
+            where: buildLoginWhere(login)
         });
 
         if (!user || !user.email) {
-            // Shadow success to prevent email enumeration, but log internally
-            return res.json({ message: 'Se o usuário existir, um e-mail de recuperação será enviado.' });
+            return res.json({ message: 'Se o usuario existir, um e-mail de recuperacao sera enviado.' });
         }
 
-        // Generate a reset token (JWT) valid for 1 hour
         const resetToken = jwt.sign(
             { userId: user.id },
             process.env.JWT_SECRET,
@@ -273,8 +285,6 @@ exports.forgotPassword = async (req, res) => {
         );
 
         let clientUrl = process.env.CLIENT_URL || 'https://compresuafoto-comigo.vercel.app';
-
-        // Dynamically detect client URL
         const referer = req.headers.referer || req.headers.origin;
         if (referer) {
             try {
@@ -291,22 +301,18 @@ exports.forgotPassword = async (req, res) => {
 
         await emailService.sendPasswordResetEmail(user.email, resetToken, clientUrl);
 
-        res.json({ message: 'E-mail de recuperação enviado com sucesso.' });
+        res.json({ message: 'E-mail de recuperacao enviado com sucesso.' });
     } catch (error) {
         console.error('Forgot Password Error:', error);
-        res.status(500).json({ error: 'Erro ao processar solicitação' });
+        res.status(500).json({ error: 'Erro ao processar solicitacao' });
     }
 };
 
-// Reset Password using Token
 exports.resetPasswordWithToken = async (req, res) => {
     const { token, newPassword } = req.body;
     try {
-        // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const userId = decoded.userId;
-
-        // Hash new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         await prisma.user.update({
@@ -318,8 +324,8 @@ exports.resetPasswordWithToken = async (req, res) => {
     } catch (error) {
         console.error('Reset with Token Error:', error);
         if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ error: 'O link de recuperação expirou. Solicite um novo.' });
+            return res.status(401).json({ error: 'O link de recuperacao expirou. Solicite um novo.' });
         }
-        res.status(401).json({ error: 'Link de recuperação inválido.' });
+        res.status(401).json({ error: 'Link de recuperacao invalido.' });
     }
 };

@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import { useCartStore } from "@/store/useCartStore";
 import PhotoSkeleton from "@/components/PhotoSkeleton";
 import PhotoGridItem from "@/components/PhotoGridItem";
+import { getPublicAppUrl } from "@/lib/publicAppUrl";
 
 interface Photo {
     id: number;
@@ -149,7 +150,7 @@ export default function EventDetailsPage() {
         if (path.startsWith("http")) return path;
         // Ensure we don't double slash if path already has it, or miss it if not
         const cleanPath = path.startsWith('/') ? path : `/${path}`;
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+        const baseUrl = getPublicAppUrl();
         return `${baseUrl}${cleanPath}`;
     };
 
@@ -181,7 +182,22 @@ export default function EventDetailsPage() {
         if (!couponCode || isValidatingCoupon) return;
         setIsValidatingCoupon(true);
         try {
-            const res = await api.get(`/coupons/validate/${couponCode}`);
+            let cpfParam = '';
+            if (typeof window !== 'undefined') {
+                try {
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        const userData = JSON.parse(userStr);
+                        if (userData?.cpf) cpfParam = userData.cpf;
+                    }
+                } catch (_) { }
+            }
+
+            const url = cpfParam
+                ? `/coupons/validate/${couponCode}?cpf=${encodeURIComponent(cpfParam)}`
+                : `/coupons/validate/${couponCode}`;
+
+            const res = await api.get(url);
             setAppliedCoupon(res.data);
             alert("Cupom aplicado com sucesso!");
             setCouponCode("");

@@ -5,6 +5,7 @@ import Link from "next/link";
 import api from "@/lib/api";
 import DiscountCard from "@/components/DiscountCard";
 import Navbar from "@/components/Navbar";
+import { getPublicAppUrl } from "@/lib/publicAppUrl";
 
 // Define Event Interface based on Backend Data
 interface Event {
@@ -37,7 +38,7 @@ export default function AllEventsPage() {
     const getImageUrl = (path?: string) => {
         if (!path) return "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070&auto=format&fit=crop";
         if (path.startsWith('http')) return path;
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+        const baseUrl = getPublicAppUrl();
         return `${baseUrl}${path}`;
     };
 

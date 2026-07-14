@@ -104,6 +104,55 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
     }
 };
 
+exports.sendPasswordResetEmail = async (email, resetToken, clientUrl) => {
+    try {
+        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://compresuafoto.econticomigo.com.br';
+        if (!finalClientUrl.startsWith('http')) {
+            finalClientUrl = `https://${finalClientUrl}`;
+        }
+
+        const resetLink = `${finalClientUrl}/forgot-password?token=${encodeURIComponent(resetToken)}`;
+        const currentYear = new Date().getFullYear();
+
+        const { data, error } = await sendEmailOrFail({
+            from: 'contato@compresuafoto.econticomigo.com.br',
+            to: [email],
+            subject: 'Recuperacao de senha - Compre Sua Foto',
+            html: `
+                <div style="margin:0;padding:0;background-color:#f0f4f8;font-family:Arial,Helvetica,sans-serif;">
+                    <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                        <div style="background:#0a0a0a;padding:36px 40px;text-align:center;">
+                            <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Compre Sua Foto</h1>
+                        </div>
+                        <div style="padding:32px 40px;">
+                            <h2 style="color:#0f172a;font-size:24px;margin:0 0 12px;">Redefina sua senha</h2>
+                            <p style="color:#64748b;font-size:15px;line-height:1.7;margin:0 0 24px;">
+                                Recebemos um pedido para redefinir sua senha. Se foi voce, use o botao abaixo. Este link expira em 1 hora.
+                            </p>
+                            <div style="text-align:center;margin:30px 0;">
+                                <a href="${resetLink}" style="display:inline-block;background:#0f172a;color:#ffffff;padding:15px 28px;border-radius:12px;text-decoration:none;font-weight:700;">
+                                    Criar nova senha
+                                </a>
+                            </div>
+                            <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:0;">
+                                Se voce nao solicitou a alteracao, ignore este e-mail. Link direto:<br>
+                                <a href="${resetLink}" style="color:#2563eb;word-break:break-all;">${resetLink}</a>
+                            </p>
+                        </div>
+                        <div style="background:#f8fafc;padding:20px 40px;border-top:1px solid #e2e8f0;text-align:center;">
+                            <p style="color:#94a3b8;font-size:11px;margin:0;">&copy; ${currentYear} Compre Sua Foto</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+
+        return { success: !error, data, error };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+};
+
 /**
  * Envia proposta comercial estilizada com anexo PDF
  */
