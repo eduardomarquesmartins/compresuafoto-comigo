@@ -54,6 +54,8 @@ export default function EventDetailsPage() {
     const [couponCode, setCouponCode] = useState("");
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
     const [visibleCount, setVisibleCount] = useState(12);
+    const resultsKey = `searchResults_${id}`;
+    const restoreKey = `restoreSearchResults_${id}`;
 
     const displayPhotos = matchedPhotos || event?.photos || [];
     const visiblePhotos = displayPhotos.slice(0, visibleCount);
@@ -93,7 +95,10 @@ export default function EventDetailsPage() {
     useEffect(() => {
         if (!id || typeof window === 'undefined') return;
 
-        const savedMatched = sessionStorage.getItem(`searchResults_${id}`);
+        const shouldRestore = sessionStorage.getItem(restoreKey) === "true";
+        if (!shouldRestore) return;
+
+        const savedMatched = sessionStorage.getItem(resultsKey);
         const savedSelected = sessionStorage.getItem(`selectedPhotos_${id}`);
 
         if (savedMatched) {
@@ -105,7 +110,8 @@ export default function EventDetailsPage() {
                 console.error("Error parsing saved search results", e);
             }
         }
-    }, [id]);
+        sessionStorage.removeItem(restoreKey);
+    }, [id, resultsKey, restoreKey]);
 
     const fetchEventDetails = async () => {
         try {
@@ -135,7 +141,7 @@ export default function EventDetailsPage() {
 
             // Save search results to persist across login redirect
             if (typeof window !== 'undefined') {
-                sessionStorage.setItem(`searchResults_${id}`, JSON.stringify(res.data));
+                sessionStorage.setItem(resultsKey, JSON.stringify(res.data));
             }
         } catch (error) {
             console.error("Erro no reconhecimento:", error);
@@ -174,9 +180,15 @@ export default function EventDetailsPage() {
     useEffect(() => {
         if (!id || typeof window === 'undefined') return;
         if (matchedPhotos) {
-            sessionStorage.setItem(`searchResults_${id}`, JSON.stringify(matchedPhotos));
+            sessionStorage.setItem(resultsKey, JSON.stringify(matchedPhotos));
         }
-    }, [id, matchedPhotos]);
+    }, [id, matchedPhotos, resultsKey]);
+
+    const persistSearchForRedirect = () => {
+        if (typeof window === 'undefined' || !matchedPhotos) return;
+        sessionStorage.setItem(resultsKey, JSON.stringify(matchedPhotos));
+        sessionStorage.setItem(restoreKey, "true");
+    };
 
     const handleValidateCoupon = async () => {
         if (!couponCode || isValidatingCoupon) return;
@@ -231,6 +243,7 @@ export default function EventDetailsPage() {
 
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         if (!token) {
+            persistSearchForRedirect();
             router.push(`/login?redirectTo=${encodeURIComponent(pathname)}`);
             return;
         }
@@ -240,6 +253,7 @@ export default function EventDetailsPage() {
         if (userData) {
             const user = JSON.parse(userData);
             if (!user.cpf || !user.cpf.trim()) {
+                persistSearchForRedirect();
                 alert('Para finalizar sua compra, complete seu cadastro com o CPF.');
                 router.push(`/profile?incomplete=true&redirectTo=${encodeURIComponent(pathname)}`);
                 return;

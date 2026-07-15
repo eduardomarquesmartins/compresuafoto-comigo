@@ -142,16 +142,16 @@ export default function CartDrawer() {
                         animate={{ x: 0 }}
                         exit={{ x: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-[101] shadow-2xl flex flex-col"
+                        className="fixed right-0 top-0 h-full w-[88vw] max-w-[340px] sm:w-full sm:max-w-md bg-white z-[101] shadow-2xl flex flex-col"
                     >
                         {/* Header */}
-                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                        <div className="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-black rounded-lg">
                                     <ShoppingCart className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black uppercase tracking-tighter text-slate-900">Meu Carrinho</h2>
+                                    <h2 className="text-lg sm:text-xl font-black uppercase tracking-tighter text-slate-900">Meu Carrinho</h2>
                                     <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{items.length} itens</p>
                                 </div>
                             </div>
@@ -164,7 +164,7 @@ export default function CartDrawer() {
                         </div>
 
                         {/* Items List */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
                             {items.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
                                     <ShoppingCart className="w-16 h-16 text-slate-300" />
@@ -172,8 +172,8 @@ export default function CartDrawer() {
                                 </div>
                             ) : (
                                 items.map((item) => (
-                                    <div key={item.id} className="flex gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100 group">
-                                        <div className="w-20 h-20 rounded-xl overflow-hidden bg-slate-200 flex-shrink-0">
+                                    <div key={item.id} className="flex gap-3 p-2.5 sm:p-3 bg-slate-50 rounded-2xl border border-slate-100 group">
+                                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-slate-200 flex-shrink-0">
                                             <img
                                                 src={getImageUrl(item.url)}
                                                 alt="Foto"
@@ -183,9 +183,9 @@ export default function CartDrawer() {
                                         <div className="flex-1 flex flex-col justify-between py-1">
                                             <div>
                                                 <p className="text-[10px] text-brand font-black uppercase tracking-widest mb-0.5">{item.eventName}</p>
-                                                <p className="text-sm font-bold text-slate-900">Foto #{item.id}</p>
+                                                <p className="text-xs sm:text-sm font-bold text-slate-900">Foto #{item.id}</p>
                                             </div>
-                                            <p className="text-sm font-black text-slate-700">R$ 20,00</p>
+                                            <p className="text-xs sm:text-sm font-black text-slate-700">R$ 20,00</p>
                                         </div>
                                         <button
                                             onClick={() => removeItem(item.id)}
@@ -200,7 +200,7 @@ export default function CartDrawer() {
 
                         {/* Footer */}
                         {items.length > 0 && (
-                            <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+                            <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-200 space-y-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-slate-500 font-bold">Subtotal</span>
@@ -251,26 +251,26 @@ export default function CartDrawer() {
                                     )}
 
                                     <div className="flex justify-between items-end pt-4 border-t border-slate-100 mt-2">
-                                        <span className="text-lg font-black uppercase tracking-tighter text-slate-900">Total a pagar</span>
-                                        <span className="text-3xl font-black text-slate-900 tabular-nums tracking-tighter">R$ {finalTotal.toFixed(2)}</span>
+                                        <span className="text-base sm:text-lg font-black uppercase tracking-tighter text-slate-900">Total a pagar</span>
+                                        <span className="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums tracking-tighter">R$ {finalTotal.toFixed(2)}</span>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 mt-4">
+                                <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mt-4">
                                     <button
                                         onClick={() => {
                                             if (confirm("Tem certeza que deseja esvaziar seu carrinho?")) {
                                                 clearCart();
                                             }
                                         }}
-                                        className="py-4 rounded-xl border-2 border-slate-200 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:bg-slate-100 hover:text-slate-600 transition-all"
+                                        className="py-3.5 sm:py-4 rounded-xl border-2 border-slate-200 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:bg-slate-100 hover:text-slate-600 transition-all"
                                     >
                                         Limpar Tudo
                                     </button>
                                     <button
                                         onClick={handleCheckout}
                                         disabled={isCheckingOut}
-                                        className="py-4 rounded-xl bg-black text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-black/10 hover:bg-brand transition-all flex items-center justify-center gap-2"
+                                        className="py-3.5 sm:py-4 rounded-xl bg-black text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-black/10 hover:bg-brand transition-all flex items-center justify-center gap-2"
                                     >
                                         {isCheckingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
                                         Finalizar Compra
