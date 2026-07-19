@@ -140,7 +140,7 @@ export default function AdminDashboard() {
             icon: Calendar
         },
         {
-            label: "Fotos no acervo",
+            label: "Fotos no sistema",
             value: String(stats.totalPhotos),
             meta: "Ativos disponíveis para venda",
             tone: "red",
