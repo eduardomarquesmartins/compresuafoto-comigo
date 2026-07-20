@@ -11,7 +11,7 @@ export default function BackgroundWrapper({ children }: { children: React.ReactN
     }
 
     return (
-        <div className="relative min-h-screen overflow-hidden">
+        <div className="relative min-h-screen overflow-x-clip">
             {/* Animated Gradient Background */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[#F5F5F3]" />

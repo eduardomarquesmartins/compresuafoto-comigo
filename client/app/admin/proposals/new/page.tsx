@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Plus, Mail, Send, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Mail, Send, CheckCircle2, Loader2, Trash2 } from 'lucide-react';
 import { sendProposalEmail, downloadProposalPdf, createProposal, getClients, getProposal, updateProposal } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -216,6 +216,13 @@ interface ProposalItem {
     description?: string;
 }
 
+interface CustomServiceForm {
+    category: string;
+    name: string;
+    description: string;
+    price: string;
+}
+
 const formatMoney = (value: number) => value.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
@@ -259,6 +266,12 @@ export default function NewProposalPage() {
     const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
     const [totalFinalDraft, setTotalFinalDraft] = useState('');
     const [isManualTotal, setIsManualTotal] = useState(false);
+    const [customService, setCustomService] = useState<CustomServiceForm>({
+        category: 'Serviço Personalizado',
+        name: '',
+        description: '',
+        price: ''
+    });
 
     useEffect(() => {
         const loadClients = async () => {
@@ -325,21 +338,21 @@ export default function NewProposalPage() {
     };
 
     const handleServiceToggle = (item: ProposalItem, category: string) => {
-        const isSelected = selectedServices.some(s => s.id === item.id);
-        if (isSelected) {
-            setSelectedServices(selectedServices.filter(s => s.id !== item.id));
+        const alreadySelected = selectedServices.some(s => s.id === item.id);
+        if (alreadySelected) {
+            setSelectedServices(prev => prev.filter(s => s.id !== item.id));
             setPriceDrafts(prev => {
                 const next = { ...prev };
                 delete next[item.id];
                 return next;
             });
         } else {
-            setSelectedServices([...selectedServices, {
+            setSelectedServices(prev => [...prev, {
                 id: item.id,
                 name: item.name,
                 category,
                 price: item.defaultPrice,
-                description: item.description // Ensure description is passed
+                description: item.description
             }]);
             setPriceDrafts(prev => ({ ...prev, [item.id]: String(item.defaultPrice) }));
         }
@@ -348,11 +361,57 @@ export default function NewProposalPage() {
     const handlePriceChange = (id: string, newPrice: string) => {
         setPriceDrafts(prev => ({ ...prev, [id]: newPrice }));
 
-        const normalizedPrice = newPrice.replace(',', '.');
-        const price = normalizedPrice.trim() === '' ? 0 : Number(normalizedPrice);
-        if (Number.isNaN(price)) return;
+        const parsedPrice = parseMoneyInput(newPrice);
+        if (parsedPrice === null && newPrice.trim() !== '') return;
 
-        setSelectedServices(selectedServices.map(s => s.id === id ? { ...s, price } : s));
+        setSelectedServices(prev => prev.map(service => (
+            service.id === id
+                ? { ...service, price: parsedPrice ?? 0 }
+                : service
+        )));
+    };
+
+    const handleRemoveService = (id: string) => {
+        setSelectedServices(prev => prev.filter(service => service.id !== id));
+        setPriceDrafts(prev => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+        });
+    };
+
+    const handleCustomServiceChange = (field: keyof CustomServiceForm, value: string) => {
+        setCustomService(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleAddCustomService = () => {
+        const name = customService.name.trim();
+        const description = customService.description.trim();
+        const category = customService.category.trim() || 'Serviço Personalizado';
+        const price = parseMoneyInput(customService.price) ?? 0;
+
+        if (!name) {
+            alert('Informe o nome do serviço personalizado.');
+            return;
+        }
+
+        const customId = `custom_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const newService: SelectedService = {
+            id: customId,
+            category,
+            name,
+            description,
+            price
+        };
+
+        setSelectedServices(prev => [...prev, newService]);
+        setPriceDrafts(prev => ({ ...prev, [customId]: String(price) }));
+        setCustomService({
+            category: 'Serviço Personalizado',
+            name: '',
+            description: '',
+            price: ''
+        });
     };
 
     const isSelected = (id: string) => selectedServices.some(s => s.id === id);
@@ -500,7 +559,7 @@ export default function NewProposalPage() {
     return (
         <div className="min-h-screen relative">
             {/* O CONTEÚDO VISÍVEL NO ADMIN (ESCONDIDO NA IMPRESSÃO) */}
-            <div className="max-w-6xl mx-auto space-y-10 pb-40 print:hidden relative z-10">
+            <div className="max-w-6xl mx-auto space-y-10 pb-72 md:pb-80 xl:pb-44 print:hidden relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
                         <Link href="/admin/proposals" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4 text-sm font-bold uppercase tracking-widest">
@@ -516,7 +575,7 @@ export default function NewProposalPage() {
 
                 {/* Toast de Sucesso ao Enviar E-mail */}
                 {emailStatus === 'success' && (
-                    <div className="fixed top-24 right-10 bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 no-print">
+                    <div className="fixed top-24 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 no-print">
                         <div className="bg-white/20 p-2 rounded-full">
                             <CheckCircle2 size={24} />
                         </div>
@@ -550,6 +609,14 @@ export default function NewProposalPage() {
                                     setProposalType(option.value);
                                     setSelectedServices([]);
                                     setPriceDrafts({});
+                                    setIsManualTotal(false);
+                                    setTotalFinalDraft('');
+                                    setCustomService({
+                                        category: 'Serviço Personalizado',
+                                        name: '',
+                                        description: '',
+                                        price: ''
+                                    });
                                 }}
                                 className={`text-left p-5 rounded-2xl border-2 transition-all ${proposalType === option.value
                                     ? 'border-blue-500 bg-blue-500/10 text-white shadow-lg shadow-blue-500/15'
@@ -614,6 +681,112 @@ export default function NewProposalPage() {
                 </div>
 
                 <div className="space-y-10">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <Plus className="w-5 h-5 text-blue-500" />
+                            </div>
+                            <h3 className="text-xl font-bold uppercase tracking-widest text-slate-200">Serviço Personalizado</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Categoria</label>
+                                <input
+                                    type="text"
+                                    value={customService.category}
+                                    onChange={e => handleCustomServiceChange('category', e.target.value)}
+                                    placeholder="Ex: Consultoria, Extra, Bônus"
+                                    className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Valor</label>
+                                <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={customService.price}
+                                    onChange={e => handleCustomServiceChange('price', e.target.value)}
+                                    className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
+                                />
+                            </div>
+                            <div className="space-y-3 md:col-span-2">
+                                <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Nome do Serviço</label>
+                                <input
+                                    type="text"
+                                    value={customService.name}
+                                    onChange={e => handleCustomServiceChange('name', e.target.value)}
+                                    className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
+                                />
+                            </div>
+                            <div className="space-y-3 md:col-span-2">
+                                <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Descrição</label>
+                                <textarea
+                                    rows={4}
+                                    value={customService.description}
+                                    onChange={e => handleCustomServiceChange('description', e.target.value)}
+                                    className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none resize-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                type="button"
+                                onClick={handleAddCustomService}
+                                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-[0.15em] transition-colors"
+                            >
+                                <Plus size={16} />
+                                Adicionar Serviço
+                            </button>
+                        </div>
+                    </div>
+
+                    {selectedServices.length > 0 && (
+                        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-5 shadow-2xl">
+                            <h3 className="text-xl font-bold uppercase tracking-widest text-slate-200">Serviços Selecionados</h3>
+                            <div className="space-y-3">
+                                {selectedServices.map(service => (
+                                    <div key={service.id} className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 flex flex-col lg:flex-row lg:items-start gap-4">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                <span className="text-white font-bold">{service.name}</span>
+                                                <span className="text-[10px] px-2 py-1 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-300 uppercase tracking-[0.2em]">
+                                                    {service.category}
+                                                </span>
+                                            </div>
+                                            {service.description && (
+                                                <p className="text-sm text-slate-400 leading-relaxed">{service.description}</p>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-3 lg:w-[260px]">
+                                            <div className="flex items-center gap-2 flex-1">
+                                                <span className="text-slate-400 text-sm">R$</span>
+                                                <input
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    value={priceDrafts[service.id] ?? String(service.price)}
+                                                    onChange={e => handlePriceChange(service.id, e.target.value)}
+                                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono text-sm focus:border-blue-500 focus:outline-none"
+                                                    aria-label={`Valor do serviço ${service.name}`}
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveService(service.id)}
+                                                className="p-2 rounded-lg border border-slate-700 text-slate-400 hover:text-red-400 hover:border-red-500/30 transition-colors"
+                                                aria-label={`Remover serviço ${service.name}`}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {proposalType === 'empresarial' && (
                         <>
                             {renderCategory("Social Media", dataSocialMedia, "Social Media")}
@@ -657,11 +830,11 @@ export default function NewProposalPage() {
             </div>
 
             {/* Header Fixo Inferior com Resumo e Ação */}
-            <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-slate-800 py-3 px-6 z-40 print:hidden shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
-                <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex flex-col text-center md:text-left gap-1">
+            <div className="fixed bottom-0 left-0 right-0 xl:left-[292px] bg-slate-900/90 backdrop-blur-xl border-t border-slate-800 py-3 px-4 md:px-6 z-40 print:hidden shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+                <div className="max-w-6xl mx-auto flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-4">
+                    <div className="flex flex-col text-center xl:text-left gap-1">
                         <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">{selectedServices.length} serviços selecionados</span>
-                        <span className="text-white text-xl font-black tracking-tighter flex items-center gap-2 justify-center md:justify-start">
+                        <span className="text-white text-xl font-black tracking-tighter flex flex-wrap items-center gap-2 justify-center xl:justify-start">
                             Total final: R$ {formatMoney(totalFinal)}
                             {isManualTotal && (
                                 <span className="text-[10px] px-2 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30 uppercase tracking-[0.2em]">
@@ -671,8 +844,8 @@ export default function NewProposalPage() {
                         </span>
                     </div>
 
-                    <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                        <div className="flex items-center gap-3 w-full md:w-[320px]">
+                    <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-3 w-full xl:w-auto">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-[360px]">
                             <input
                                 type="text"
                                 inputMode="decimal"
@@ -700,7 +873,7 @@ export default function NewProposalPage() {
                         <button
                             onClick={handleSaveProposal}
                             disabled={isDownloading || isLoadingProposal || selectedServices.length === 0}
-                            className={`group relative overflow-hidden flex items-center justify-center gap-4 px-10 py-4 rounded-xl font-bold uppercase tracking-[0.15em] transition-all shadow-xl ${isDownloading
+                            className={`group relative overflow-hidden flex w-full xl:w-auto items-center justify-center gap-4 px-6 sm:px-10 py-4 rounded-xl font-bold uppercase tracking-[0.15em] transition-all shadow-xl ${isDownloading
                                 ? 'bg-slate-800 text-slate-500 cursor-wait'
                                 : 'bg-blue-600 hover:bg-blue-500 text-white hover:scale-[1.02] active:scale-[0.98] shadow-blue-600/30'
                                 }`}

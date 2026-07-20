@@ -57,13 +57,13 @@ export default function Navbar() {
                 </div>
 
                 {/* Desktop Menu - Centered */}
-                <div className="hidden md:flex items-center gap-10 font-normal text-slate-600 absolute left-1/2 -translate-x-1/2">
+                <div className="hidden lg:flex items-center gap-8 font-normal text-slate-600 absolute left-1/2 -translate-x-1/2">
                     <Link href="/events" className="hover:text-brand transition-colors whitespace-nowrap">Eventos</Link>
                     <Link href="/" className="hover:text-brand transition-colors whitespace-nowrap">Como Funciona</Link>
                 </div>
 
                 {/* Desktop User/Login Section */}
-                <div className="hidden md:flex flex-1 justify-end items-center gap-6 font-normal">
+                <div className="hidden lg:flex flex-1 justify-end items-center gap-4 xl:gap-6 font-normal">
                     {!isMounted ? (
                         <div className="w-[105px] h-10"></div>
                     ) : user ? (
@@ -102,7 +102,7 @@ export default function Navbar() {
 
                 {/* Mobile Menu Toggle */}
                 <button
-                    className="md:hidden text-foreground p-2 rounded-full hover:bg-white/50 transition-colors"
+                    className="lg:hidden text-foreground p-2 rounded-full hover:bg-white/50 transition-colors"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 >
                     {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -115,7 +115,7 @@ export default function Navbar() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="fixed top-24 left-4 right-4 bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl z-[150] flex flex-col items-center py-10 gap-6 md:hidden border border-white/50"
+                            className="fixed top-24 left-4 right-4 bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl z-[150] flex flex-col items-center py-10 gap-6 lg:hidden border border-white/50"
                         >
                             <Link href="/events" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand">Eventos</Link>
                             <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand">Como Funciona</Link>

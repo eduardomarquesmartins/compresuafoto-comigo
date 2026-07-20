@@ -42,7 +42,23 @@
   }
 }
 
+html {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
+  width: 100%;
+  max-width: 100%;
+  min-width: 320px;
   color: var(--foreground);
   background:
     radial-gradient(circle at 8% 10%, rgba(0, 68, 255, 0.16), transparent 28rem),
@@ -51,6 +67,26 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
   overflow-x: hidden;
   antialiased: subpixel-antialiased;
+}
+
+#__next {
+  width: 100%;
+  max-width: 100%;
+}
+
+:where(main, section, article, aside, header, footer, form, nav) {
+  min-width: 0;
+}
+
+:where(.flex, .grid) > * {
+  min-width: 0;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
 }
 
 /* Custom Utilities */

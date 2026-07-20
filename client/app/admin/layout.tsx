@@ -163,7 +163,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="admin-shell min-h-dvh text-zinc-100 selection:bg-[#0a72ef]/30">
             <div className="admin-grid-background fixed inset-0 -z-10 pointer-events-none" />
 
-            <header className="md:hidden sticky top-0 z-40 border-b border-white/10 bg-[#050505]/92 px-4 py-3 backdrop-blur-xl">
+            <header className="xl:hidden sticky top-0 z-40 border-b border-white/10 bg-[#050505]/92 px-4 py-3 backdrop-blur-xl">
                 <div className="flex items-center justify-between">
                     <Link href="/admin/dashboard" className="flex items-center gap-3">
                         <Image src={logoAdmin} alt="Compre Sua Foto admin" className="h-9 w-9 rounded-md object-cover" />
@@ -189,7 +189,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {sidebarOpen && (
                     <button
                         type="button"
-                        className="fixed inset-0 z-40 bg-black/78 backdrop-blur-sm md:hidden"
+                        className="fixed inset-0 z-40 bg-black/78 backdrop-blur-sm xl:hidden"
                         aria-label="Fechar menu"
                         onClick={() => setSidebarOpen(false)}
                     />
@@ -197,10 +197,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 <aside
                     className={`
-                        fixed md:sticky inset-y-0 left-0 z-50 flex h-dvh w-[292px] flex-col
+                        fixed xl:sticky inset-y-0 left-0 z-50 flex h-dvh w-[292px] max-w-[86vw] flex-col
                         border-r border-white/10 bg-[#050505]/94 backdrop-blur-2xl
                         transition-transform duration-300 ease-out
-                        ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+                        ${sidebarOpen ? "translate-x-0" : "-translate-x-full xl:translate-x-0"}
                     `}
                 >
                     <div className="border-b border-white/10 p-4">
@@ -255,7 +255,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         </Link>                    </div>
                 </aside>
 
-                <main className="relative z-10 min-w-0 flex-1 px-4 py-5 md:px-7 md:py-6 xl:px-9">
+                <main className="relative z-10 min-w-0 flex-1 px-4 py-5 md:px-6 md:py-6 xl:px-9">
                     <div className="mx-auto w-full max-w-[1500px]">
                         {children}
                     </div>
@@ -301,6 +301,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         linear-gradient(180deg, #050505 0%, #09090b 52%, #050505 100%);
                     font-family: var(--font-geist), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
                     font-feature-settings: "liga", "tnum", "cv01";
+                    overflow-x: clip;
+                }
+
+                .admin-shell,
+                .admin-shell main,
+                .admin-shell main > div {
+                    width: 100%;
+                    max-width: 100%;
+                    min-width: 0;
                 }
 
                 .admin-grid-background {
@@ -715,7 +724,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         line-height: 1.05 !important;
                     }
 
-                    .admin-shell main [class*="grid-cols-4"],
+                .admin-shell main [class*="grid-cols-4"],
+                .admin-shell main [class*="lg:grid-cols-4"] {
+                    grid-template-columns: minmax(0, 1fr) !important;
+                }
+                }
+
+                @media (max-width: 1279px) {
+                    .admin-shell main h1 {
+                        font-size: clamp(2rem, 4vw, 2.75rem) !important;
+                        line-height: 1.02 !important;
+                    }
+
+                    .admin-shell main [class*="xl:grid-cols-"],
+                    .admin-shell main [class*="lg:grid-cols-3"],
                     .admin-shell main [class*="lg:grid-cols-4"] {
                         grid-template-columns: minmax(0, 1fr) !important;
                     }
