@@ -513,7 +513,7 @@ export default function NewProposalPage() {
                     const selected = isSelected(item.id);
                     const currentService = selectedServices.find(s => s.id === item.id);
                     return (
-                        <div key={item.id} className={`p-4 rounded-2xl border-2 transition-all ${selected ? 'border-blue-500 bg-blue-500/10' : 'border-slate-800 bg-slate-800/50 hover:border-slate-700'}`}>
+                        <div key={item.id} className={`p-4 rounded-2xl border-2 transition-all ${selected ? 'border-blue-500 bg-blue-500/10' : 'border-slate-800 bg-white hover:border-slate-700'}`}>
                             <div className="flex items-start gap-3 w-full">
                                 <div className="mt-1 flex-shrink-0">
                                     <input
