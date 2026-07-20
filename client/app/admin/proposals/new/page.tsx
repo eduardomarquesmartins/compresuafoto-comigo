@@ -745,15 +745,12 @@ export default function NewProposalPage() {
                     {selectedServices.length > 0 && (
                         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-5 shadow-2xl">
                             <h3 className="text-xl font-bold uppercase tracking-widest text-slate-200">Serviços Selecionados</h3>
-                            <div className="space-y-3">
+                            <div className="divide-y divide-slate-800">
                                 {selectedServices.map(service => (
-                                    <div key={service.id} className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 flex flex-col lg:flex-row lg:items-start gap-4">
+                                    <div key={service.id} className="py-4 flex flex-col lg:flex-row lg:items-start gap-4">
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                                            <div className="mb-1">
                                                 <span className="text-white font-bold">{service.name}</span>
-                                                <span className="text-[10px] px-2 py-1 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-300 uppercase tracking-[0.2em]">
-                                                    {service.category}
-                                                </span>
                                             </div>
                                             {service.description && (
                                                 <p className="text-sm text-slate-400 leading-relaxed">{service.description}</p>
