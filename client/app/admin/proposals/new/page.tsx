@@ -862,7 +862,7 @@ export default function NewProposalPage() {
                             <button
                                 type="button"
                                 onClick={handleResetTotal}
-                                className="whitespace-nowrap px-4 py-3 rounded-xl border border-slate-700 text-slate-200 hover:border-blue-500 hover:text-white transition-colors text-sm font-bold uppercase tracking-[0.15em]"
+                                className="whitespace-nowrap flex-shrink-0 px-4 py-3 rounded-xl border border-slate-700 text-slate-200 hover:border-blue-500 hover:text-white transition-colors text-sm font-bold uppercase tracking-[0.15em]"
                             >
                                 Automático
                             </button>
