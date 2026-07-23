@@ -103,7 +103,7 @@ function LoginContent() {
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-900 outline-none focus:border-brand/50 transition-all font-light placeholder-slate-400"
                             value={loginInput}
                             onChange={e => setLoginInput(e.target.value)}
-                            placeholder="seu@email.com ou (11) 99999-9999"
+                            placeholder="email ou telefone"
                         />
                     </div>
                     <div>
