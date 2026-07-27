@@ -98,8 +98,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const router = useRouter();
     const [isAuthorized, setIsAuthorized] = useState(pathname === "/admin/login");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [activeRequests, setActiveRequests] = useState(0);
     const routeMeta = useMemo(() => getRouteMeta(pathname), [pathname]);
     const RouteIcon = routeMeta.icon;
+
+    useEffect(() => {
+        const handleApiLoading = (event: Event) => {
+            const detail = (event as CustomEvent<{ count?: number }>).detail;
+            setActiveRequests(Math.max(0, detail?.count || 0));
+        };
+
+        window.addEventListener("admin-api-loading", handleApiLoading);
+
+        return () => {
+            window.removeEventListener("admin-api-loading", handleApiLoading);
+        };
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -164,6 +178,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
         <div className="admin-shell min-h-dvh text-zinc-900 selection:bg-[#0044ff]/20">
             <div className="admin-grid-background fixed inset-0 -z-10 pointer-events-none" />
+            {activeRequests > 0 && (
+                <div className="admin-global-loading" role="status" aria-live="polite">
+                    <div className="admin-global-loading-bar" />
+                    <div className="admin-global-loading-pill">
+                        <span className="admin-global-loading-spinner" />
+                        Processando...
+                    </div>
+                </div>
+            )}
 
             <header className="xl:hidden sticky top-0 z-40 border-b border-zinc-200 bg-white/92 px-4 py-3 backdrop-blur-xl">
                 <div className="flex items-center justify-between relative h-12">
@@ -293,6 +316,56 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     font-family: var(--font-geist), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
                     font-feature-settings: "liga", "tnum", "cv01";
                     overflow-x: clip;
+                }
+
+                .admin-global-loading {
+                    position: fixed;
+                    inset: 0 0 auto 0;
+                    z-index: 9999;
+                    pointer-events: none;
+                }
+
+                .admin-global-loading-bar {
+                    height: 3px;
+                    width: 100%;
+                    background: linear-gradient(90deg, transparent, #0044ff, #60a5fa, transparent);
+                    background-size: 180% 100%;
+                    animation: admin-loading-slide 1.1s ease-in-out infinite;
+                    box-shadow: 0 0 18px rgba(0, 68, 255, 0.45);
+                }
+
+                .admin-global-loading-pill {
+                    position: fixed;
+                    top: 14px;
+                    right: 18px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.55rem;
+                    border: 1px solid rgba(0, 68, 255, 0.2);
+                    border-radius: 999px;
+                    background: rgba(255, 255, 255, 0.94);
+                    padding: 0.55rem 0.75rem;
+                    color: #0044ff;
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 0.14em;
+                    text-transform: uppercase;
+                    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+                    backdrop-filter: blur(12px);
+                }
+
+                .admin-global-loading-spinner {
+                    height: 14px;
+                    width: 14px;
+                    border-radius: 999px;
+                    border: 2px solid rgba(0, 68, 255, 0.18);
+                    border-top-color: #0044ff;
+                    animation: admin-spin 0.7s linear infinite;
+                }
+
+                @keyframes admin-loading-slide {
+                    0% { background-position: 180% 0; }
+                    100% { background-position: -180% 0; }
                 }
 
                 .admin-shell * {

@@ -563,7 +563,7 @@ export default function AdminContractsPage() {
                     <button
                         onClick={handleGenerate}
                         disabled={loading}
-                        className="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-4 font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500"
+                        className="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-4 font-bold text-white transition-colors hover:bg-blue-500 disabled:bg-blue-100 disabled:text-blue-700 disabled:opacity-80"
                     >
                         <span key={loading ? "loading" : "idle"} className="inline-flex items-center gap-3">
                             {loading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
@@ -573,7 +573,7 @@ export default function AdminContractsPage() {
                     <button
                         onClick={handleSendSignatureLinkEmail}
                         disabled={loading || sendingEmailLink || copyingLink}
-                        className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-4 font-bold text-white transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 disabled:bg-slate-800 disabled:text-slate-500"
+                        className="flex w-full items-center justify-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 font-bold text-blue-800 transition-colors hover:border-blue-300 hover:bg-blue-100 disabled:bg-blue-50 disabled:text-blue-700 disabled:opacity-80"
                     >
                         <span key={sendingEmailLink ? "sending-email" : "idle-email"} className="inline-flex items-center gap-3">
                             {sendingEmailLink ? <Loader2 size={20} className="animate-spin" /> : <Mail size={20} />}
@@ -583,7 +583,7 @@ export default function AdminContractsPage() {
                     <button
                         onClick={handleCopySignatureLink}
                         disabled={loading || sendingEmailLink || copyingLink}
-                        className="flex w-full items-center justify-center gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-5 py-4 font-bold text-white transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/15 disabled:bg-slate-800 disabled:text-slate-500"
+                        className="flex w-full items-center justify-center gap-3 rounded-xl border border-cyan-500/25 bg-cyan-50 px-5 py-4 font-bold text-cyan-800 transition-colors hover:border-cyan-500/40 hover:bg-cyan-100 disabled:border-cyan-200 disabled:bg-cyan-50 disabled:text-cyan-700 disabled:opacity-80"
                     >
                         <span key={copyingLink ? "copying-link" : "idle-copy"} className="inline-flex items-center gap-3">
                             {copyingLink ? <Loader2 size={20} className="animate-spin" /> : <Copy size={20} />}

@@ -13,9 +13,12 @@ const money = (value: number) => value.toLocaleString("pt-BR", {
 
 const getPoint = (canvas: HTMLCanvasElement, clientX: number, clientY: number) => {
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.clientWidth / rect.width || 1;
+    const scaleY = canvas.clientHeight / rect.height || 1;
+
     return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
     };
 };
 
@@ -72,8 +75,9 @@ export default function SignContractPage() {
         if (!context) return;
 
         const ratio = window.devicePixelRatio || 1;
-        const width = canvas.clientWidth || 520;
-        const height = canvas.clientHeight || 220;
+        const rect = canvas.getBoundingClientRect();
+        const width = Math.max(1, Math.round(rect.width || canvas.clientWidth || 520));
+        const height = Math.max(1, Math.round(rect.height || canvas.clientHeight || 220));
 
         // Se as dimensões CSS não mudaram, não reconfigura o canvas físico para evitar limpar o desenho!
         if (width === prevWidthRef.current && height === prevHeightRef.current) {
@@ -130,8 +134,9 @@ export default function SignContractPage() {
 
         // Limpa o guia e placeholder no primeiro toque/desenho
         if (!hasSignatureDrawing) {
-            const width = canvas.clientWidth || 520;
-            const height = canvas.clientHeight || 220;
+            const rect = canvas.getBoundingClientRect();
+            const width = Math.max(1, Math.round(rect.width || canvas.clientWidth || 520));
+            const height = Math.max(1, Math.round(rect.height || canvas.clientHeight || 220));
             context.clearRect(0, 0, width, height);
         }
 
@@ -182,9 +187,22 @@ export default function SignContractPage() {
     useEffect(() => {
         if (signed) return;
 
+        const canvas = canvasRef.current;
         configureCanvas();
+
+        const resizeObserver = canvas && typeof ResizeObserver !== "undefined"
+            ? new ResizeObserver(() => configureCanvas())
+            : null;
+
+        if (canvas && resizeObserver) {
+            resizeObserver.observe(canvas);
+        }
+
         window.addEventListener("resize", configureCanvas);
-        return () => window.removeEventListener("resize", configureCanvas);
+        return () => {
+            window.removeEventListener("resize", configureCanvas);
+            resizeObserver?.disconnect();
+        };
     }, [signed]);
 
     const clearSignature = () => {
@@ -192,8 +210,9 @@ export default function SignContractPage() {
         const context = canvas?.getContext("2d");
 
         if (canvas && context) {
-            const width = canvas.clientWidth || 520;
-            const height = canvas.clientHeight || 220;
+            const rect = canvas.getBoundingClientRect();
+            const width = Math.max(1, Math.round(rect.width || canvas.clientWidth || 520));
+            const height = Math.max(1, Math.round(rect.height || canvas.clientHeight || 220));
             context.clearRect(0, 0, width, height);
             drawGuide(context, width, height);
         }
@@ -260,6 +279,15 @@ export default function SignContractPage() {
             setError("Não consegui baixar o PDF do contrato.");
         }
     };
+
+    const canSubmitSignature = canvasReady && hasSignatureDrawing && accepted && !signing;
+    const signatureButtonLabel = signing
+        ? "Registrando assinatura..."
+        : !hasSignatureDrawing
+            ? "Desenhe sua assinatura"
+            : !accepted
+                ? "Confirme a leitura para assinar"
+                : "Assinar Contrato";
 
     if (loading) {
         return (
@@ -433,21 +461,24 @@ export default function SignContractPage() {
                                     <div className={`rounded-[28px] border p-1 bg-black/40 shadow-inner transition-all duration-300 ${hasSignatureDrawing ? 'border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'border-white/10 hover:border-white/20'}`}>
                                         <canvas
                                             ref={canvasRef}
-                                            onMouseDown={(event) => beginDrawing(event.clientX, event.clientY)}
-                                            onMouseMove={(event) => continueDrawing(event.clientX, event.clientY)}
-                                            onMouseUp={stopDrawing}
-                                            onMouseLeave={stopDrawing}
-                                            onTouchStart={(event) => {
-                                                const touch = event.touches[0];
-                                                if (!touch) return;
-                                                beginDrawing(touch.clientX, touch.clientY);
+                                            onPointerDown={(event) => {
+                                                event.preventDefault();
+                                                event.currentTarget.setPointerCapture(event.pointerId);
+                                                beginDrawing(event.clientX, event.clientY);
                                             }}
-                                            onTouchMove={(event) => {
-                                                const touch = event.touches[0];
-                                                if (!touch) return;
-                                                continueDrawing(touch.clientX, touch.clientY);
+                                            onPointerMove={(event) => {
+                                                event.preventDefault();
+                                                continueDrawing(event.clientX, event.clientY);
                                             }}
-                                            onTouchEnd={stopDrawing}
+                                            onPointerUp={(event) => {
+                                                event.preventDefault();
+                                                if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                                                    event.currentTarget.releasePointerCapture(event.pointerId);
+                                                }
+                                                stopDrawing();
+                                            }}
+                                            onPointerCancel={stopDrawing}
+                                            onLostPointerCapture={stopDrawing}
                                             className="h-56 w-full touch-none rounded-[24px] border border-dashed border-slate-300 bg-white select-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
                                             style={{ cursor: "crosshair" }}
                                         />
@@ -468,11 +499,11 @@ export default function SignContractPage() {
 
                                     <button
                                         onClick={handleSign}
-                                        disabled={signing || !canvasReady}
+                                        disabled={!canSubmitSignature}
                                         className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-5 py-4 text-xs font-bold uppercase tracking-[0.18em] text-white transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/20 disabled:bg-slate-800 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:shadow-none disabled:scale-100 disabled:cursor-not-allowed"
                                     >
                                         {signing ? <Loader2 className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
-                                        {signing ? "Registrando assinatura..." : "Assinar Contrato"}
+                                        {signatureButtonLabel}
                                     </button>
 
                                     <p className="text-[10px] text-center text-slate-500 leading-relaxed pt-2 flex items-center justify-center gap-1.5">

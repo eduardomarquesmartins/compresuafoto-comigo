@@ -32,6 +32,9 @@ const parseOrigin = (url) => {
 const allowedOrigins = new Set([
     parseOrigin(process.env.CLIENT_URL),
     parseOrigin(process.env.SERVER_URL),
+    'https://compresuafoto.econticomigo.com.br',
+    'https://www.compresuafoto.econticomigo.com.br',
+    'https://compresuafoto-comigo.vercel.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:3001',

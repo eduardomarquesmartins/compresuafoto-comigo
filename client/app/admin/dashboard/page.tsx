@@ -204,7 +204,7 @@ export default function AdminDashboard() {
                         <p className="mt-2 text-sm text-slate-500">Receita por dia nos últimos 7 dias.</p>
                     </div>
 
-                    <div className="relative h-[340px] min-h-[320px] w-full min-w-0">
+                    <div className="relative h-[340px] min-h-[320px] w-full min-w-[1px]">
                         {!hasChartData && (
                             <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
                                 <div className="admin-empty-state">
@@ -213,7 +213,7 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
                         )}
-                        {chartMounted ? <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={300}>
+                        {chartMounted ? <ResponsiveContainer width="100%" height={320} minWidth={1} minHeight={300}>
                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">

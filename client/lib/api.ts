@@ -26,6 +26,25 @@ const api = axios.create({
     timeout: 30000,
 });
 
+let activeRequests = 0;
+
+const notifyApiLoading = () => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent('admin-api-loading', {
+        detail: { active: activeRequests > 0, count: activeRequests }
+    }));
+};
+
+const startApiLoading = () => {
+    activeRequests += 1;
+    notifyApiLoading();
+};
+
+const stopApiLoading = () => {
+    activeRequests = Math.max(0, activeRequests - 1);
+    notifyApiLoading();
+};
+
 const isMissingOnlineAdminEndpoint = (error: unknown) => {
     return axios.isAxiosError(error) && error.response?.status === 404;
 };
@@ -42,6 +61,7 @@ const adminEndpointFallback = <T>(endpoint: string, fallback: T, error: unknown)
 };
 
 api.interceptors.request.use((config) => {
+    startApiLoading();
     if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token');
         if (token) {
@@ -49,12 +69,19 @@ api.interceptors.request.use((config) => {
         }
     }
     return config;
+}, (error) => {
+    stopApiLoading();
+    return Promise.reject(error);
 });
 
 // Response interceptor to handle session expiration (Logout Automático)
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        stopApiLoading();
+        return response;
+    },
     (error) => {
+        stopApiLoading();
         if (typeof window !== 'undefined') {
             const status = error.response?.status;
             const message = error.response?.data?.error;
