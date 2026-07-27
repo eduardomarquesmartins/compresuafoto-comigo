@@ -264,7 +264,7 @@ export default function AdminClientsPage() {
                         value={searchTerm}
                         onChange={(event) => setSearchTerm(event.target.value)}
                         className="w-full rounded-xl border border-white/10 bg-[#0f111a] py-4 pl-12 pr-4 text-sm font-medium text-white outline-none transition-all placeholder:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35"
-                        placeholder="Buscar cliente por nome, e-mail, telefone, documento ou cidade..."
+                        placeholder="Buscar cliente por nome, e-mail, telefone ou documento..."
                     />
                 </label>
                 <p className="mt-3 text-xs font-medium text-slate-500">
