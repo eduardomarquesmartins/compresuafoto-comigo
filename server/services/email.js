@@ -158,6 +158,12 @@ exports.sendPasswordResetEmail = async (email, resetToken, clientUrl) => {
  */
 exports.sendProposalEmail = async (email, clientName, selectedServices, total, proposalType = 'empresarial') => {
     try {
+        const getServiceQuantity = (quantity) => {
+            const parsed = Number(quantity);
+            if (!Number.isFinite(parsed) || parsed < 1) return 1;
+            return Math.floor(parsed);
+        };
+
         // Agrupar serviços por categoria para o corpo do e-mail
         const groupedServices = selectedServices.reduce((acc, service) => {
             if (!acc[service.category]) acc[service.category] = [];
@@ -169,12 +175,18 @@ exports.sendProposalEmail = async (email, clientName, selectedServices, total, p
         const servicesEmailHtml = Object.entries(groupedServices).map(([category, items]) => `
             <div style="margin-bottom: 24px;">
                 <h4 style="color: #2563eb; text-transform: uppercase; font-size: 12px; margin-bottom: 8px;">${category}</h4>
-                ${items.map(item => `
+                ${items.map(item => {
+                    const quantity = getServiceQuantity(item.quantity);
+                    const unitPrice = Number(item.price) || 0;
+                    const lineTotal = unitPrice * quantity;
+
+                    return `
                     <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding: 5px 0;">
-                        <span style="font-size: 14px; color: #0f172a;">${item.name}</span>
-                        <span style="font-size: 14px; font-weight: bold;">R$ ${item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        <span style="font-size: 14px; color: #0f172a;">${quantity > 1 ? `${quantity}x ` : ''}${item.name}</span>
+                        <span style="font-size: 14px; font-weight: bold;">R$ ${lineTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
-                `).join('')}
+                    `;
+                }).join('')}
             </div>
         `).join('');
 

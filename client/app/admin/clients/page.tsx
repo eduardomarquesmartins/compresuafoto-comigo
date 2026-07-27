@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Users, Mail, Phone, FileText, Trash2, Edit2, Check, Loader2, Calendar, ShieldAlert } from "lucide-react";
+import { Plus, Users, Mail, Phone, FileText, Trash2, Edit2, Check, Loader2, Calendar, ShieldAlert, Search } from "lucide-react";
 import { 
     getClients, createClient, updateClient, deleteClient, 
     createContract, deleteContract
@@ -12,6 +12,7 @@ export default function AdminClientsPage() {
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Modais
     const [clientModalOpen, setClientModalOpen] = useState(false);
@@ -45,6 +46,15 @@ export default function AdminClientsPage() {
         ...client,
         contracts: Array.isArray(client?.contracts) ? client.contracts : []
     });
+
+    const normalizeSearch = (value: unknown) => String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const isLikelySocialHandle = (value: string) => value.trim().startsWith("@");
 
     const fetchClients = async () => {
         setLoading(true);
@@ -194,6 +204,18 @@ export default function AdminClientsPage() {
         }
     };
 
+    const normalizedSearchTerm = normalizeSearch(searchTerm);
+    const filteredClients = normalizedSearchTerm
+        ? clients.filter((client) => normalizeSearch([
+            client.name,
+            client.email,
+            client.phone,
+            client.document,
+            client.cityState,
+            client.signerName
+        ].filter(Boolean).join(" ")).includes(normalizedSearchTerm))
+        : clients;
+
 
     return (
         <div className="pb-20 max-w-[1400px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -235,6 +257,21 @@ export default function AdminClientsPage() {
                 </div>
             )}
 
+            <div className="rounded-2xl border border-white/10 bg-[#161826]/80 p-4 shadow-xl">
+                <label className="relative block">
+                    <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" />
+                    <input
+                        value={searchTerm}
+                        onChange={(event) => setSearchTerm(event.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-[#0f111a] py-4 pl-12 pr-4 text-sm font-medium text-white outline-none transition-all placeholder:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35"
+                        placeholder="Buscar cliente por nome, e-mail, telefone, documento ou cidade..."
+                    />
+                </label>
+                <p className="mt-3 text-xs font-medium text-slate-500">
+                    {filteredClients.length} de {clients.length} cliente{clients.length === 1 ? "" : "s"} exibido{filteredClients.length === 1 ? "" : "s"}
+                </p>
+            </div>
+
             {/* Clients List */}
             {loading ? (
                 <div className="py-24 flex justify-center items-center">
@@ -256,9 +293,19 @@ export default function AdminClientsPage() {
                         </div>
                     </div>
                 </div>
+            ) : filteredClients.length === 0 ? (
+                <div className="py-20 bg-[#161826]/80 backdrop-blur-xl rounded-[32px] border border-white/10 flex flex-col items-center justify-center text-center shadow-2xl relative overflow-hidden">
+                    <div className="w-16 h-16 rounded-full bg-[#0f111a]/80 flex items-center justify-center border border-white/10 shadow-inner">
+                        <Search size={26} className="text-slate-500" />
+                    </div>
+                    <p className="mt-6 text-slate-200 font-bold tracking-widest uppercase text-xs">Nenhum cliente encontrado</p>
+                    <p className="mt-2 text-slate-400 text-xs max-w-sm leading-relaxed">
+                        Tente buscar por outro nome, e-mail, telefone, documento ou localização.
+                    </p>
+                </div>
             ) : (
                 <div className="grid grid-cols-1 gap-8">
-                    {clients.map(client => {
+                    {filteredClients.map(client => {
                         const clientContracts = Array.isArray(client.contracts) ? client.contracts : [];
 
                         return (
@@ -387,6 +434,9 @@ export default function AdminClientsPage() {
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Nome / Razão Social</span>
                                     <input required value={clientForm.name} onChange={e => setClientForm({...clientForm, name: e.target.value})} className="w-full bg-[#0f111a] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm focus:ring-1 focus:ring-blue-500/35 transition-all" placeholder="Nome da empresa" />
+                                    {isLikelySocialHandle(clientForm.name) && (
+                                        <span className="text-xs font-medium text-amber-600">Parece um @ de Instagram. Use a razão social ou nome completo para contratos.</span>
+                                    )}
                                 </label>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">E-mail Comercial</span>

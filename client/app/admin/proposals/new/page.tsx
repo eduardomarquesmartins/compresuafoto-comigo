@@ -206,6 +206,7 @@ interface SelectedService {
     category: string;
     name: string;
     price: number;
+    quantity: number;
     description?: string;
 }
 
@@ -240,6 +241,12 @@ const parseMoneyInput = (value: string) => {
 
     const parsed = Number(normalized);
     return Number.isFinite(parsed) ? parsed : null;
+};
+
+const normalizeQuantity = (value: unknown) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 1) return 1;
+    return Math.min(99, Math.floor(parsed));
 };
 
 type ProposalType = 'empresarial' | 'casamento' | '15anos' | 'aniversario';
@@ -302,6 +309,7 @@ export default function NewProposalPage() {
                     category: service.category,
                     name: service.name,
                     price: Number(service.price) || 0,
+                    quantity: normalizeQuantity(service.quantity),
                     description: service.description
                 }));
 
@@ -352,6 +360,7 @@ export default function NewProposalPage() {
                 name: item.name,
                 category,
                 price: item.defaultPrice,
+                quantity: 1,
                 description: item.description
             }]);
             setPriceDrafts(prev => ({ ...prev, [item.id]: String(item.defaultPrice) }));
@@ -367,6 +376,15 @@ export default function NewProposalPage() {
         setSelectedServices(prev => prev.map(service => (
             service.id === id
                 ? { ...service, price: parsedPrice ?? 0 }
+                : service
+        )));
+    };
+
+    const handleQuantityChange = (id: string, quantity: number) => {
+        const normalizedQuantity = normalizeQuantity(quantity);
+        setSelectedServices(prev => prev.map(service => (
+            service.id === id
+                ? { ...service, quantity: normalizedQuantity }
                 : service
         )));
     };
@@ -401,7 +419,8 @@ export default function NewProposalPage() {
             category,
             name,
             description,
-            price
+            price,
+            quantity: 1
         };
 
         setSelectedServices(prev => [...prev, newService]);
@@ -415,7 +434,7 @@ export default function NewProposalPage() {
     };
 
     const isSelected = (id: string) => selectedServices.some(s => s.id === id);
-    const subtotal = selectedServices.reduce((acc, curr) => acc + curr.price, 0);
+    const subtotal = selectedServices.reduce((acc, curr) => acc + (curr.price * normalizeQuantity(curr.quantity)), 0);
     const parsedManualTotal = parseMoneyInput(totalFinalDraft);
     const totalFinal = isManualTotal && parsedManualTotal !== null ? parsedManualTotal : subtotal;
 
@@ -512,8 +531,9 @@ export default function NewProposalPage() {
                 {data.map(item => {
                     const selected = isSelected(item.id);
                     const currentService = selectedServices.find(s => s.id === item.id);
+                    const currentQuantity = normalizeQuantity(currentService?.quantity);
                     return (
-                        <div key={item.id} className={`p-4 rounded-2xl border-2 transition-all ${selected ? 'border-blue-500 bg-blue-500/10' : 'border-slate-800 bg-white hover:border-slate-700'}`}>
+                        <div key={item.id} className={`p-5 rounded-2xl border-2 transition-all ${selected ? 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/10' : 'border-slate-800 bg-white hover:border-slate-700'}`}>
                             <div className="flex items-start gap-3 w-full">
                                 <div className="mt-1 flex-shrink-0">
                                     <input
@@ -524,7 +544,7 @@ export default function NewProposalPage() {
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <p className={`font-bold text-sm ${selected ? 'text-white' : 'text-slate-300'}`}>{item.name}</p>
+                                    <p className={`font-bold text-sm ${selected ? 'text-white' : 'text-slate-900'}`}>{item.name}</p>
                                     {item.description && (
                                         <p className="text-[10px] text-slate-500 mt-1 leading-snug">
                                             {item.description}
@@ -532,16 +552,43 @@ export default function NewProposalPage() {
                                     )}
                                     <div className="mt-3">
                                         {selected ? (
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-slate-400 text-sm">R$</span>
-                                                <input
-                                                    type="text"
-                                                    inputMode="decimal"
-                                                    value={priceDrafts[item.id] ?? (currentService?.price ? String(currentService.price) : '')}
-                                                    onChange={(e) => handlePriceChange(item.id, e.target.value)}
-                                                    placeholder="0"
-                                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1 text-white font-mono text-sm focus:border-blue-500 focus:outline-none"
-                                                />
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-slate-400 text-sm">R$</span>
+                                                    <input
+                                                        type="text"
+                                                        inputMode="decimal"
+                                                        value={priceDrafts[item.id] ?? (currentService?.price ? String(currentService.price) : '')}
+                                                        onChange={(e) => handlePriceChange(item.id, e.target.value)}
+                                                        placeholder="0"
+                                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1 text-white font-mono text-sm focus:border-blue-500 focus:outline-none"
+                                                    />
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Qtd</span>
+                                                    <div className="inline-flex items-center overflow-hidden rounded-lg border border-slate-700 bg-slate-950">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleQuantityChange(item.id, currentQuantity - 1)}
+                                                            className="h-8 w-8 text-sm font-black text-slate-300 transition-colors hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                                                            disabled={currentQuantity <= 1}
+                                                            aria-label="Diminuir quantidade"
+                                                        >
+                                                            -
+                                                        </button>
+                                                        <span className="min-w-8 border-x border-slate-700 px-2 text-center text-xs font-black text-white">
+                                                            {currentQuantity}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleQuantityChange(item.id, currentQuantity + 1)}
+                                                            className="h-8 w-8 text-sm font-black text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                                            aria-label="Aumentar quantidade"
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         ) : (
                                             <p className="text-slate-500 text-sm font-mono">R$ {item.defaultPrice.toFixed(2)}</p>
@@ -655,12 +702,12 @@ export default function NewProposalPage() {
                             </select>
                         </div>
                         <div className="space-y-3">
-                            <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Nome do Cliente / Empresa</label>
+                            <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Nome / Razão Social do Cliente</label>
                             <input
                                 type="text"
                                 value={clientName}
                                 onChange={e => setClientName(e.target.value)}
-                                placeholder="Ex: Empresa Conti Marketing"
+                                placeholder="Ex: Empresa Conti Marketing, não @ do Instagram"
                                 className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
                             />
                         </div>
@@ -757,7 +804,21 @@ export default function NewProposalPage() {
                                             )}
                                         </div>
 
-                                        <div className="flex items-center gap-3 lg:w-[260px]">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 lg:w-[430px]">
+                                            <div className="flex items-center gap-2 sm:w-[170px]">
+                                                <span className="text-slate-400 text-sm">Qtd</span>
+                                                <button type="button" onClick={() => handleQuantityChange(service.id, normalizeQuantity(service.quantity) - 1)} className="h-9 w-9 rounded-lg border border-slate-700 text-slate-300 hover:border-blue-500 hover:text-white">-</button>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="99"
+                                                    value={normalizeQuantity(service.quantity)}
+                                                    onChange={e => handleQuantityChange(service.id, Number(e.target.value))}
+                                                    className="h-9 w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 text-center text-white font-mono text-sm focus:border-blue-500 focus:outline-none"
+                                                    aria-label={`Quantidade do serviço ${service.name}`}
+                                                />
+                                                <button type="button" onClick={() => handleQuantityChange(service.id, normalizeQuantity(service.quantity) + 1)} className="h-9 w-9 rounded-lg border border-slate-700 text-slate-300 hover:border-blue-500 hover:text-white">+</button>
+                                            </div>
                                             <div className="flex items-center gap-2 flex-1">
                                                 <span className="text-slate-400 text-sm">R$</span>
                                                 <input
@@ -766,8 +827,12 @@ export default function NewProposalPage() {
                                                     value={priceDrafts[service.id] ?? String(service.price)}
                                                     onChange={e => handlePriceChange(service.id, e.target.value)}
                                                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono text-sm focus:border-blue-500 focus:outline-none"
-                                                    aria-label={`Valor do serviço ${service.name}`}
+                                                    aria-label={`Valor unitário do serviço ${service.name}`}
                                                 />
+                                            </div>
+                                            <div className="text-right sm:w-[110px]">
+                                                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Subtotal</p>
+                                                <p className="text-sm font-black text-white font-mono">R$ {formatMoney(service.price * normalizeQuantity(service.quantity))}</p>
                                             </div>
                                             <button
                                                 type="button"

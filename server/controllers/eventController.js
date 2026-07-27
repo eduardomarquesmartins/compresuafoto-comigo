@@ -17,6 +17,13 @@ exports.createEvent = async (req, res) => {
         const { name, date, description } = req.body;
         let coverImage = null;
 
+        // Process Additional Photos in the background if provided
+        const photos = req.files && req.files['photos'] ? req.files['photos'] : [];
+        const rawFile = photos.find(file => isRawImage(file.originalname));
+        if (rawFile) {
+            return res.status(400).json({ error: 'Arquivos .ARW nao sao suportados neste servidor. Exporte as fotos em JPG antes do upload.' });
+        }
+
         // Cover Image Upload
         if (req.files && req.files['coverImage']) {
             const file = req.files['coverImage'][0];
@@ -47,12 +54,6 @@ exports.createEvent = async (req, res) => {
         });
         logToFile(`Event created successfully: ID ${event.id}`);
 
-        // Process Additional Photos in the background if provided
-        const photos = req.files && req.files['photos'] ? req.files['photos'] : [];
-        const rawFile = photos.find(file => isRawImage(file.originalname));
-        if (rawFile) {
-            return res.status(400).json({ error: 'Arquivos .ARW nao sao suportados neste servidor. Exporte as fotos em JPG antes do upload.' });
-        }
         logToFile(`[UPLOAD] Fotos recebidas para processamento: ${photos.length}`);
         if (photos.length > 0) {
             logToFile(`Starting background processing for ${photos.length} photos for event ${event.id}`);

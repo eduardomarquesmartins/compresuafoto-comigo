@@ -17,7 +17,9 @@ const initialForm = {
     weeklyPosts: "2",
     includesPaidTraffic: "true",
     includesAudiovisual: "false",
-    scope: "gestão de redes sociais, incluindo planejamento, criação de conteúdo, publicações, acompanhamento estratégico e serviços de marketing digital conforme proposta aprovada",
+    proposalType: "empresarial",
+    proposalServices: "",
+    scope: "",
     monthlyValue: "1000",
     durationMonths: "6",
     paymentDay: "25",
@@ -73,6 +75,67 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 const yesNo = (value: string) => value === "true" ? "sim" : "não";
 
+const isLikelySocialHandle = (value: string) => value.trim().startsWith("@");
+const getContractClientName = (...values: Array<string | undefined | null>) => {
+    const value = values.find((item) => item && !isLikelySocialHandle(item));
+    return value || "";
+};
+
+const normalizeText = (value: unknown) => String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+const getProposalServiceText = (service: any) => normalizeText([
+    service?.name,
+    service?.category,
+    service?.description
+].filter(Boolean).join(" "));
+
+const getContractFieldsFromProposalServices = (services: any[]) => {
+    const selectedServices = Array.isArray(services) ? services : [];
+    const primaryPlan = selectedServices.find((service) => {
+        const text = getProposalServiceText(service);
+        return text.includes("social media") || text.includes("pacote");
+    });
+    const postsService = selectedServices.find((service) => /\d+\s+postage/.test(getProposalServiceText(service)));
+    const postsMatch = postsService
+        ? getProposalServiceText(postsService).match(/(\d+)\s+postage/)
+        : null;
+    const includesPaidTraffic = selectedServices.some((service) => {
+        const text = getProposalServiceText(service);
+        return text.includes("meta ads") || text.includes("trafego") || text.includes("anuncio");
+    });
+    const includesAudiovisual = selectedServices.some((service) => {
+        const text = getProposalServiceText(service);
+        return text.includes("audiovisual") || text.includes("fotografia") || text.includes("fotos") || text.includes("video");
+    });
+
+    return {
+        planName: primaryPlan?.name || selectedServices[0]?.name || "",
+        weeklyPosts: postsMatch?.[1] || "0",
+        includesPaidTraffic: includesPaidTraffic ? "true" : "false",
+        includesAudiovisual: includesAudiovisual ? "true" : "false"
+    };
+};
+
+const formatProposalServicesForContract = (services: any[]) => {
+    const selectedServices = Array.isArray(services) ? services : [];
+
+    return selectedServices
+        .map((service) => {
+            const quantity = Number(service?.quantity);
+            const quantityLabel = Number.isFinite(quantity) && quantity > 1 ? `${Math.floor(quantity)}x ` : "";
+            const price = Number(service?.price) || 0;
+            const priceText = price.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+            const category = service?.category ? ` (${service.category})` : "";
+            const description = service?.description ? ` - ${service.description}` : "";
+
+            return `- ${quantityLabel}${service?.name || "Serviço"}${category}: R$ ${priceText}${description}`;
+        })
+        .join("\n");
+};
+
 export default function AdminContractsPage() {
     const [form, setForm] = useState(initialForm);
     const [clients, setClients] = useState<any[]>([]);
@@ -123,12 +186,8 @@ export default function AdminContractsPage() {
                 const proposal = await getProposal(proposalId);
                 if (!proposal) return;
 
-                const services = proposal.selectedServices || [];
-                const servicesList = services
-                    .map((service: any) => `**- ${service.name} (${service.category}): R$ ${Number(service.price).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}**${service.description ? ` - ${service.description}` : ""}`)
-                    .join("\n");
-
-                const scopeText = `prestação de serviços de marketing digital e produção de conteúdo, compreendendo os seguintes itens da proposta comercial aprovada:\n\n${servicesList}`;
+                const contractFields = getContractFieldsFromProposalServices(proposal.selectedServices);
+                const proposalServices = formatProposalServicesForContract(proposal.selectedServices);
                 const formattedTotal = typeof proposal.total === "number"
                     ? proposal.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
                     : String(proposal.total || "");
@@ -136,13 +195,18 @@ export default function AdminContractsPage() {
                 setForm((prev) => ({
                     ...prev,
                     clientId: proposal.clientId ? String(proposal.clientId) : proposal.client?.id ? String(proposal.client.id) : prev.clientId,
-                    clientName: proposal.clientName || proposal.client?.name || prev.clientName,
+                    clientName: getContractClientName(proposal.client?.name, proposal.clientName, prev.clientName),
                     clientEmail: proposal.client?.email || proposal.clientEmail || prev.clientEmail,
                     clientDocument: proposal.client?.document || prev.clientDocument,
                     clientAddress: proposal.client?.address || prev.clientAddress,
                     clientCityState: proposal.client?.cityState || prev.clientCityState,
-                    monthlyValue: formattedTotal,
-                    scope: scopeText
+                    planName: contractFields.planName || prev.planName,
+                    weeklyPosts: contractFields.weeklyPosts || prev.weeklyPosts,
+                    includesPaidTraffic: contractFields.includesPaidTraffic,
+                    includesAudiovisual: contractFields.includesAudiovisual,
+                    proposalType: proposal.proposalType || prev.proposalType,
+                    proposalServices,
+                    monthlyValue: formattedTotal
                 }));
             } catch (error) {
                 console.warn("Erro ao carregar dados da proposta:", error);
@@ -168,7 +232,7 @@ export default function AdminContractsPage() {
         setForm((prev) => ({
             ...prev,
             clientId,
-            clientName: client?.name || prev.clientName,
+            clientName: getContractClientName(client?.name),
             clientEmail: client?.email || prev.clientEmail,
             clientDocument: client?.document ? formatCpfCnpj(client.document) : prev.clientDocument,
             clientAddress: client?.address || prev.clientAddress,
@@ -179,11 +243,13 @@ export default function AdminContractsPage() {
     const selectedClient = clients.find((client) => String(client.id) === form.clientId);
     const resolvedClientEmail = (form.clientEmail || selectedClient?.email || "").trim();
     const resolvedScope = [
+        `Tipo de proposta: ${form.proposalType}.`,
         `Plano contratado: ${form.planName || "não informado"}.`,
         `Quantidade de postagens: ${form.weeklyPosts || "0"} postagens semanais para Instagram/Facebook.`,
         `Gestão de tráfego pago (Meta Ads): ${yesNo(form.includesPaidTraffic)}.`,
         `Audiovisual incluso no plano: ${yesNo(form.includesAudiovisual)}.`,
-        form.scope.trim()
+        form.proposalServices.trim() ? `Serviços contratados:\n${form.proposalServices.trim()}` : "",
+        form.scope.trim() ? `Observações adicionais: ${form.scope.trim()}` : ""
     ].filter(Boolean).join("\n");
 
     const getSignaturePayload = (delivery: "email" | "copy") => ({
@@ -377,7 +443,7 @@ export default function AdminContractsPage() {
             </header>
 
             {errorMessage && (
-                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
                     {errorMessage}
                 </div>
             )}
@@ -407,6 +473,9 @@ export default function AdminContractsPage() {
                             <label className="space-y-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Nome / Razão Social</span>
                                 <input value={form.clientName} onChange={(e) => updateField("clientName", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Empresa" />
+                                {isLikelySocialHandle(form.clientName) && (
+                                    <p className="text-xs font-medium text-amber-600">Este campo parece um @ de Instagram. Para contrato, informe a razão social ou nome completo do contratante.</p>
+                                )}
                             </label>
                             <label className="space-y-2">
                                 <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">CPF / CNPJ</span>
@@ -458,8 +527,8 @@ export default function AdminContractsPage() {
                             </label>
                         </div>
                         <label className="block space-y-2">
-                            <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Escopo dos Serviços</span>
-                            <textarea value={form.scope} onChange={(e) => updateField("scope", e.target.value)} rows={5} className="w-full resize-none rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" />
+                            <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Observações adicionais</span>
+                            <textarea value={form.scope} onChange={(e) => updateField("scope", e.target.value)} rows={5} className="w-full resize-none rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="" />
                         </label>
                         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
                             <label className="space-y-2">

@@ -4,7 +4,10 @@ const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config({ path: path.join(__dirname, 'compresuafoto-comigo.env') });
+dotenv.config({ path: path.join(__dirname, '..', 'compresuafoto-comigo.env') });
 
 if (!process.env.JWT_SECRET) {
     console.error('[CRITICAL] JWT_SECRET is missing in environment variables!');

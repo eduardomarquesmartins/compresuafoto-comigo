@@ -150,7 +150,6 @@ export default function SignContractPage() {
         const nextPoint = getPoint(canvas, clientX, clientY);
         drawSegment(lastPointRef.current, nextPoint);
         lastPointRef.current = nextPoint;
-        setHasSignatureDrawing(true);
     };
 
     const stopDrawing = () => {
@@ -189,8 +188,20 @@ export default function SignContractPage() {
     }, [signed]);
 
     const clearSignature = () => {
-        configureCanvas();
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext("2d");
+
+        if (canvas && context) {
+            const width = canvas.clientWidth || 520;
+            const height = canvas.clientHeight || 220;
+            context.clearRect(0, 0, width, height);
+            drawGuide(context, width, height);
+        }
+
+        drawingRef.current = false;
+        lastPointRef.current = null;
         setHasSignatureDrawing(false);
+        setError(null);
     };
 
     const getSignatureDataUrl = () => {
@@ -317,7 +328,7 @@ export default function SignContractPage() {
 
                 <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.15fr_0.85fr] items-start">
                     {/* Card de Detalhes do Contrato à Esquerda */}
-                    <section className="overflow-hidden rounded-[32px] border border-white/[0.06] bg-[linear-gradient(180deg,rgba(15,18,36,0.7),rgba(9,11,20,0.7))] backdrop-blur-xl shadow-2xl p-6 md:p-8 space-y-6">
+                    <section className="overflow-hidden rounded-[32px] border border-white/[0.06] bg-gradient-to-b from-[#111424] to-[#0a0c16] shadow-2xl p-6 md:p-8 space-y-6">
                         <div className="flex items-center gap-4 border-b border-white/[0.06] pb-5">
                             <FileText size={22} className="text-blue-400 shrink-0 mt-1" />
                             <div>
@@ -354,7 +365,7 @@ export default function SignContractPage() {
                     </section>
 
                     {/* Painel da Assinatura Interativa à Direita */}
-                    <aside className="rounded-[32px] border border-white/[0.06] bg-[linear-gradient(180deg,rgba(15,18,36,0.7),rgba(9,11,20,0.7))] backdrop-blur-xl p-6 md:p-8 shadow-2xl">
+                    <aside className="rounded-[32px] border border-white/[0.06] bg-gradient-to-b from-[#111424] to-[#0a0c16] p-6 md:p-8 shadow-2xl">
                         {signed ? (
                             <div className="space-y-6 text-center py-6">
                                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shadow-lg shadow-emerald-500/10">

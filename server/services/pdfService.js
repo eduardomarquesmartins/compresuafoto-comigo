@@ -43,6 +43,12 @@ const PROPOSAL_TYPES = {
 
 const getProposalTheme = (proposalType = 'empresarial') => PROPOSAL_TYPES[proposalType] || PROPOSAL_TYPES.empresarial;
 
+const getServiceQuantity = (quantity) => {
+    const parsed = Number(quantity);
+    if (!Number.isFinite(parsed) || parsed < 1) return 1;
+    return Math.floor(parsed);
+};
+
 const CATEGORY_DESCRIPTIONS = {
     "Social Media": "Postagens Facebook e Instagram, organização de feed, análise de mercado, estratégia, designer (cards), copyright, pesquisa do mês através do forms, Trello para organização.",
     "Social Media + Audiovisual": "Postagens Facebook e Instagram, organização de feed, análise de mercado, estratégia, designer (cards), copyright, pesquisa do mês através do forms, Trello para organização, social media, + fotografias, vídeos e drone (uma vez ao mês) + cadastro Google meu negócio.",
@@ -200,10 +206,21 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
                         currentY = 90;
                     }
 
+                    const quantity = getServiceQuantity(item.quantity);
+                    const unitPrice = Number(item.price) || 0;
+                    const lineTotal = unitPrice * quantity;
+                    const itemName = quantity > 1 ? `${quantity}x ${item.name}` : item.name;
+
                     doc.fillColor(SLATE_900).fontSize(13).font('Helvetica-Bold')
-                        .text(item.name, 65, currentY);
-                    const priceStr = `R$ ${item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                        .text(itemName, 65, currentY);
+                    const priceStr = `R$ ${lineTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
                     doc.text(priceStr, 55, currentY, { align: 'right' });
+
+                    if (quantity > 1) {
+                        currentY += 13;
+                        doc.fillColor(SLATE_400).fontSize(9).font('Helvetica')
+                            .text(`${quantity} x R$ ${unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 65, currentY, { width: doc.page.width - 250 });
+                    }
 
                     if (item.description) {
                         currentY += 16;

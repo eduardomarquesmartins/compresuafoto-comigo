@@ -5,6 +5,7 @@ interface SelectedService {
     category: string;
     name: string;
     price: number;
+    quantity?: number;
     description?: string;
 }
 
@@ -23,6 +24,8 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
 };
 
 const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, subtotal, total }) => {
+    const getQuantity = (quantity?: number) => Math.max(1, Math.floor(Number(quantity) || 1));
+
     // Agrupar serviços por categoria
     const groupedServices = selectedServices.reduce((acc, service) => {
         if (!acc[service.category]) {
@@ -69,10 +72,16 @@ const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, s
                             )}
 
                             <div className="space-y-4">
-                                {services.map((service, index) => (
+                                {services.map((service, index) => {
+                                    const quantity = getQuantity(service.quantity);
+                                    const lineTotal = service.price * quantity;
+
+                                    return (
                                     <div key={index} className="flex justify-between items-start py-4 border-b border-slate-100">
                                         <div className="flex-1">
-                                            <p className="text-[4mm] text-slate-900 font-bold tracking-tight">{service.name}</p>
+                                            <p className="text-[4mm] text-slate-900 font-bold tracking-tight">
+                                                {quantity > 1 ? `${quantity}x ` : ''}{service.name}
+                                            </p>
                                             {service.description && (
                                                 <p className="text-[3mm] text-slate-400 mt-0.5 leading-tight">
                                                     {service.description}
@@ -82,11 +91,17 @@ const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, s
                                         <div className="text-right ml-4">
                                             <p className="text-[4.5mm] font-bold text-slate-900 font-mono">
                                                 <span className="text-[3mm] font-semibold text-slate-400 mr-2">R$</span>
-                                                {service.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                {lineTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                             </p>
+                                            {quantity > 1 && (
+                                                <p className="text-[2.6mm] text-slate-400 font-mono mt-1">
+                                                    {quantity} x R$ {service.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}

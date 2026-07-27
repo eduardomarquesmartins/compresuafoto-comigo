@@ -195,6 +195,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 <aside
                     className={`
+                        admin-sidebar
                         fixed inset-y-0 left-0 z-50 flex h-dvh w-[292px] max-w-[86vw] flex-col
                         border-r border-zinc-200 bg-white/94 backdrop-blur-2xl
                         transition-transform duration-300 ease-out
@@ -298,7 +299,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     font-family: var(--font-geist), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
                 }
 
-                .admin-shell aside {
+                .admin-shell .admin-sidebar {
                     background-color: #ffffff !important;
                     height: 100vh !important;
                     height: 100dvh !important;
@@ -801,6 +802,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     background-color: #ffffff !important;
                 }
                 .admin-shell .bg-slate-900, 
+                .admin-shell .bg-slate-800,
                 .admin-shell .bg-zinc-900 {
                     background-color: #ffffff !important;
                 }
@@ -809,11 +811,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }
 
                 /* Specific dark background overrides */
+                .admin-shell [class*="bg-[#030303]"],
                 .admin-shell [class*="bg-[#050505]"],
                 .admin-shell [class*="bg-[#0a0a0c]"],
                 .admin-shell [class*="bg-[#0b0b0d]"],
                 .admin-shell [class*="bg-[#0e0f1d]"],
+                .admin-shell [class*="bg-[#10121a]"],
                 .admin-shell [class*="bg-[#131526]"],
+                .admin-shell [class*="bg-[#161825]"],
+                .admin-shell [class*="bg-[#161827]"],
                 .admin-shell [class*="bg-[#1b1c31]"],
                 .admin-shell [class*="bg-[#242742]"],
                 .admin-shell [class*="bg-[#1b1d30]"],
@@ -877,6 +883,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     color: #ffffff !important;
                     border-color: #0044ff !important;
                     box-shadow: 0 4px 12px rgba(0, 68, 255, 0.15) !important;
+                }
+
+                .admin-shell a[class*="bg-gradient-to-r"][class*="from-blue-"] *,
+                .admin-shell button[class*="bg-gradient-to-r"][class*="from-blue-"] *,
+                .admin-shell a[class*="bg-blue-"] *,
+                .admin-shell button[class*="bg-blue-"] * {
+                    color: #ffffff !important;
+                }
+
+                .admin-shell button[class*="bg-green-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+                .admin-shell button[class*="bg-emerald-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+                .admin-shell button[class*="bg-red-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+                .admin-shell button[class*="bg-rose-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+                .admin-shell button[class*="bg-amber-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]),
+                .admin-shell button[class*="bg-yellow-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) {
+                    color: #ffffff !important;
+                }
+
+                .admin-shell button[class*="bg-green-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+                .admin-shell button[class*="bg-emerald-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+                .admin-shell button[class*="bg-red-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+                .admin-shell button[class*="bg-rose-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+                .admin-shell button[class*="bg-amber-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+                .admin-shell button[class*="bg-yellow-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) * {
+                    color: #ffffff !important;
+                }
+
+                .admin-shell .text-amber-500,
+                .admin-shell .text-amber-600 {
+                    color: #d97706 !important;
+                }
+
+                .admin-shell .text-emerald-500,
+                .admin-shell .text-emerald-600 {
+                    color: #059669 !important;
+                }
+
+                .admin-shell .text-red-500,
+                .admin-shell .text-red-600 {
+                    color: #dc2626 !important;
                 }
                 .admin-shell a[class*="bg-gradient-to-r"][class*="from-blue-"]:hover,
                 .admin-shell button[class*="bg-gradient-to-r"][class*="from-blue-"]:hover,
