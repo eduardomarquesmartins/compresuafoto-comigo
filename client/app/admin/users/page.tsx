@@ -121,11 +121,7 @@ export default function UsersPage() {
             <section className="admin-card p-5 md:p-6">
                 <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <span className="admin-kicker">Access control</span>
-                        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.065em] text-white md:text-5xl">Usuários</h1>
-                        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-                            Gerencie administradores e fotógrafos com uma interface mais resiliente: falha de API vira estado visual, não tela quebrada.
-                        </p>
+                        <h1 className="text-4xl font-semibold tracking-[-0.065em] text-white md:text-5xl">Usuários</h1>
                     </div>
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
@@ -160,8 +156,7 @@ export default function UsersPage() {
             <section className="admin-card overflow-hidden p-0">
                 <div className="flex flex-col gap-4 border-b border-white/10 p-5 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <span className="admin-kicker">Directory</span>
-                        <h2 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-white">Diretório de acesso</h2>
+                        <h2 className="text-xl font-semibold tracking-[-0.04em] text-white">Acessos</h2>
                     </div>
                     <div className="relative w-full max-w-md">
                         <input
