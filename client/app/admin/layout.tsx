@@ -337,7 +337,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 .admin-global-loading-pill {
                     position: fixed;
                     top: 14px;
-                    right: 18px;
+                    left: 50%;
+                    transform: translateX(-50%);
                     display: inline-flex;
                     align-items: center;
                     gap: 0.55rem;
