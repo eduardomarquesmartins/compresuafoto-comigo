@@ -490,7 +490,7 @@ export default function SignContractPage() {
                                             type="checkbox"
                                             checked={accepted}
                                             onChange={(event) => setAccepted(event.target.checked)}
-                                            className="mt-0.5 h-4 w-4 rounded border-zinc-300 bg-white text-blue-600 focus:ring-blue-500/20 focus:ring-offset-0"
+                                            className="mt-0.5 h-5 w-5 shrink-0 rounded-md border-zinc-300 bg-white text-blue-600 focus:ring-blue-500/20 focus:ring-offset-0"
                                         />
                                         <span className="leading-relaxed">
                                             Declaro que li integralmente o contrato e autorizo a inserção da minha assinatura digital como validação jurídica definitiva deste documento.
