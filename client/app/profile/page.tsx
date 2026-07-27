@@ -2,6 +2,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
+import { getSafeRedirectPath } from '@/lib/safeRedirect';
 import { User, Phone, Lock, Save, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -78,7 +79,7 @@ function ProfileContent() {
 
             // Redirect logic after a short delay to show the success message
             setTimeout(() => {
-                const redirectTo = searchParams.get('redirectTo');
+                const redirectTo = getSafeRedirectPath(searchParams.get('redirectTo'));
                 if (redirectTo) {
                     router.push(redirectTo);
                 } else {

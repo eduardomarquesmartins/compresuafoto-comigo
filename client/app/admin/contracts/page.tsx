@@ -13,6 +13,10 @@ const initialForm = {
     clientCityState: "",
     signerName: "",
     signerDocument: "",
+    planName: "Gestão de Redes Sociais",
+    weeklyPosts: "2",
+    includesPaidTraffic: "true",
+    includesAudiovisual: "false",
     scope: "gestão de redes sociais, incluindo planejamento, criação de conteúdo, publicações, acompanhamento estratégico e serviços de marketing digital conforme proposta aprovada",
     monthlyValue: "1000",
     durationMonths: "6",
@@ -66,6 +70,8 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
     return fallback;
 };
+
+const yesNo = (value: string) => value === "true" ? "sim" : "não";
 
 export default function AdminContractsPage() {
     const [form, setForm] = useState(initialForm);
@@ -172,6 +178,13 @@ export default function AdminContractsPage() {
 
     const selectedClient = clients.find((client) => String(client.id) === form.clientId);
     const resolvedClientEmail = (form.clientEmail || selectedClient?.email || "").trim();
+    const resolvedScope = [
+        `Plano contratado: ${form.planName || "não informado"}.`,
+        `Quantidade de postagens: ${form.weeklyPosts || "0"} postagens semanais para Instagram/Facebook.`,
+        `Gestão de tráfego pago (Meta Ads): ${yesNo(form.includesPaidTraffic)}.`,
+        `Audiovisual incluso no plano: ${yesNo(form.includesAudiovisual)}.`,
+        form.scope.trim()
+    ].filter(Boolean).join("\n");
 
     const getSignaturePayload = (delivery: "email" | "copy") => ({
         clientId: form.clientId ? Number(form.clientId) : undefined,
@@ -182,7 +195,7 @@ export default function AdminContractsPage() {
         clientCityState: form.clientCityState.trim() || undefined,
         signerName: form.signerName.trim() || undefined,
         signerDocument: form.signerDocument.trim() || undefined,
-        scope: form.scope,
+        scope: resolvedScope,
         monthlyValue: moneyToNumber(form.monthlyValue),
         durationMonths: form.durationMonths,
         paymentDay: form.paymentDay,
@@ -202,6 +215,7 @@ export default function AdminContractsPage() {
             setLoading(true);
             const blob = await downloadContractPdf({
                 ...form,
+                scope: resolvedScope,
                 signerName: "",
                 signerDocument: "",
                 monthlyValue: moneyToNumber(form.monthlyValue)
@@ -210,7 +224,7 @@ export default function AdminContractsPage() {
             if (form.clientId) {
                 await createContract({
                     clientId: Number(form.clientId),
-                    scope: form.scope,
+                    scope: resolvedScope,
                     monthlyValue: moneyToNumber(form.monthlyValue),
                     durationMonths: form.durationMonths,
                     paymentDay: form.paymentDay,
@@ -419,6 +433,30 @@ export default function AdminContractsPage() {
 
                     <div className="space-y-5">
                         <h2 className="text-lg font-semibold text-white">Escopo e Pagamento</h2>
+                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                            <label className="space-y-2">
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Plano contratado</span>
+                                <input value={form.planName} onChange={(e) => updateField("planName", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="Gestão de Redes Sociais" />
+                            </label>
+                            <label className="space-y-2">
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Postagens semanais</span>
+                                <input value={form.weeklyPosts} onChange={(e) => updateField("weeklyPosts", e.target.value)} inputMode="numeric" className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" placeholder="2" />
+                            </label>
+                            <label className="space-y-2">
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Tráfego pago Meta Ads</span>
+                                <select value={form.includesPaidTraffic} onChange={(e) => updateField("includesPaidTraffic", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35">
+                                    <option value="true">Incluído</option>
+                                    <option value="false">Não incluído</option>
+                                </select>
+                            </label>
+                            <label className="space-y-2">
+                                <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Audiovisual</span>
+                                <select value={form.includesAudiovisual} onChange={(e) => updateField("includesAudiovisual", e.target.value)} className="w-full rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35">
+                                    <option value="false">Não incluído</option>
+                                    <option value="true">Incluído no plano</option>
+                                </select>
+                            </label>
+                        </div>
                         <label className="block space-y-2">
                             <span className="ml-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Escopo dos Serviços</span>
                             <textarea value={form.scope} onChange={(e) => updateField("scope", e.target.value)} rows={5} className="w-full resize-none rounded-xl border border-white/10 bg-[#0f111a] px-4 py-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500/35" />

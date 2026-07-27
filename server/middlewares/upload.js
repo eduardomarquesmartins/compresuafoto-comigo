@@ -22,7 +22,12 @@ const upload = multer({
     storage: storage,
     limits: {
         fileSize: 15 * 1024 * 1024, // Increased to 15MB limit per file
-        files: 1000 // Support up to 1000 files per request
+        files: 600 // Up to 200 photos with original/watermarked/face variants
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (allowedTypes.includes(file.mimetype)) return cb(null, true);
+        cb(new Error('Formato inválido. Envie imagens JPG, PNG ou WEBP.'));
     }
 });
 

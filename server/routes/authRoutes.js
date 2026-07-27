@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const rateLimit = require('../middlewares/rateLimit');
+const { authenticate } = require('../middlewares/auth');
 
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 const passwordResetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5 });
@@ -14,5 +15,6 @@ router.post('/reset-password', passwordResetLimiter, authController.resetPasswor
 router.post('/forgot-password', passwordResetLimiter, authController.forgotPassword);
 router.post('/reset-with-token', passwordResetLimiter, authController.resetPasswordWithToken);
 router.post('/google', authLimiter, authController.googleLogin);
+router.get('/me', authenticate, authController.me);
 
 module.exports = router;

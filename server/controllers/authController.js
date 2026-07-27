@@ -5,6 +5,11 @@ const { OAuth2Client } = require('google-auth-library');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const emailService = require('../services/email');
 
+const getConfiguredClientUrl = () => {
+    const clientUrl = process.env.CLIENT_URL || 'https://compresuafoto-comigo.vercel.app';
+    return clientUrl.startsWith('http') ? clientUrl : `http://${clientUrl}`;
+};
+
 const cleanOptionalUniqueValue = (value) => {
     if (typeof value !== 'string') return null;
     const trimmed = value.trim();
@@ -31,6 +36,32 @@ const buildLoginWhere = (rawValue) => {
             ...(normalizedPhone ? [{ phone: normalizedPhone }] : [])
         ]
     };
+};
+
+exports.me = async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.userId },
+            select: {
+                id: true,
+                name: true,
+                fullName: true,
+                cpf: true,
+                email: true,
+                role: true,
+                phone: true
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Usuario nao encontrado' });
+        }
+
+        res.json({ user });
+    } catch (error) {
+        console.error('Me Error:', error);
+        res.status(500).json({ error: 'Erro ao validar sessao' });
+    }
 };
 
 exports.register = async (req, res) => {
@@ -284,20 +315,7 @@ exports.forgotPassword = async (req, res) => {
             { expiresIn: '1h' }
         );
 
-        let clientUrl = process.env.CLIENT_URL || 'https://compresuafoto-comigo.vercel.app';
-        const referer = req.headers.referer || req.headers.origin;
-        if (referer) {
-            try {
-                const urlObj = new URL(referer);
-                clientUrl = `${urlObj.protocol}//${urlObj.host}`;
-            } catch (e) {
-                // Ignore parse errors
-            }
-        }
-
-        if (!clientUrl.startsWith('http')) {
-            clientUrl = `http://${clientUrl}`;
-        }
+        const clientUrl = getConfiguredClientUrl();
 
         await emailService.sendPasswordResetEmail(user.email, resetToken, clientUrl);
 

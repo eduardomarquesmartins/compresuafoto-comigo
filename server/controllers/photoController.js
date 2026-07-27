@@ -31,6 +31,10 @@ exports.createDirectUploadUrls = async (req, res) => {
             return res.status(400).json({ error: 'Nenhum arquivo informado' });
         }
 
+        if (files.length > 200) {
+            return res.status(400).json({ error: 'Envie no máximo 200 fotos por lote.' });
+        }
+
         const event = await prisma.event.findUnique({ where: { id: parsedEventId } });
         if (!event) {
             return res.status(404).json({ error: 'Event not found' });

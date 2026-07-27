@@ -7,7 +7,7 @@ const { authenticate, isAdmin, optionalAuth } = require('../middlewares/auth');
 // Updated to support multiple photo uploads during event creation with explicit limits
 const eventUploads = upload.fields([
     { name: 'coverImage', maxCount: 1 },
-    { name: 'photos', maxCount: 1000 } // Support up to 1000 photos per event
+    { name: 'photos', maxCount: 200 }
 ]);
 
 const photoController = require('../controllers/photoController');

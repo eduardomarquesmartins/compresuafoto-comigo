@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import api from "@/lib/api";
 import AdminUserMenu from "@/components/AdminUserMenu";
 import logoAdmin from "./logo-admin.jpg";
 import {
@@ -74,21 +75,6 @@ const isCurrentRoute = (pathname: string, href: string) => {
     return pathname === href || pathname.startsWith(`${href}/`);
 };
 
-const hasAdminSession = () => {
-    if (typeof window === "undefined") return false;
-
-    const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-
-    if (!token || !storedUser) return false;
-
-    try {
-        return JSON.parse(storedUser)?.role === "ADMIN";
-    } catch {
-        return false;
-    }
-};
-
 const clearAdminSession = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -116,24 +102,50 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const RouteIcon = routeMeta.icon;
 
     useEffect(() => {
-        const authTimer = window.setTimeout(() => {
+        let cancelled = false;
+
+        const validateAdminSession = async () => {
             if (pathname === "/admin/login") {
                 setIsAuthorized(true);
                 return;
             }
 
-            if (!hasAdminSession()) {
+            const token = localStorage.getItem("token");
+            if (!token) {
                 clearAdminSession();
-                setIsAuthorized(false);
+                if (!cancelled) setIsAuthorized(false);
                 router.push("/admin/login");
                 return;
             }
 
-            setIsAuthorized(true);
-            setSidebarOpen(false);
-        }, 0);
+            try {
+                const response = await api.get("/auth/me");
+                const user = response.data?.user;
 
-        return () => window.clearTimeout(authTimer);
+                if (user?.role !== "ADMIN") {
+                    clearAdminSession();
+                    if (!cancelled) setIsAuthorized(false);
+                    router.push("/admin/login");
+                    return;
+                }
+
+                localStorage.setItem("user", JSON.stringify(user));
+                if (!cancelled) {
+                    setIsAuthorized(true);
+                    setSidebarOpen(false);
+                }
+            } catch {
+                clearAdminSession();
+                if (!cancelled) setIsAuthorized(false);
+                router.push("/admin/login");
+            }
+        };
+
+        validateAdminSession();
+
+        return () => {
+            cancelled = true;
+        };
     }, [pathname, router]);
 
     const handleLogout = () => {

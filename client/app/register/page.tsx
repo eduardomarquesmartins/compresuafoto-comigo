@@ -3,11 +3,12 @@ import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { getSafeRedirectPath } from '@/lib/safeRedirect';
 
 function RegisterContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const redirectTo = searchParams.get('redirectTo');
+    const redirectTo = getSafeRedirectPath(searchParams.get('redirectTo'));
     const [fullName, setFullName] = useState('');
     const [cpf, setCpf] = useState('');
     const [email, setEmail] = useState('');

@@ -48,12 +48,22 @@ function getDriveClient() {
 exports.listImagesFromFolder = async (folderId) => {
     try {
         const drive = getDriveClient();
-        const response = await drive.files.list({
-            q: `'${folderId}' in parents and mimeType contains 'image/' and trashed = false`,
-            fields: 'files(id, name, mimeType)',
-            pageSize: 100 // Limite inicial
-        });
-        return response.data.files;
+        const files = [];
+        let pageToken;
+
+        do {
+            const response = await drive.files.list({
+                q: `'${folderId}' in parents and mimeType contains 'image/' and trashed = false`,
+                fields: 'nextPageToken, files(id, name, mimeType)',
+                pageSize: 1000,
+                pageToken
+            });
+
+            files.push(...(response.data.files || []));
+            pageToken = response.data.nextPageToken;
+        } while (pageToken);
+
+        return files;
     } catch (error) {
         console.error('Google Drive List Error:', error);
         throw new Error('Failed to list files from Google Drive: ' + error.message);

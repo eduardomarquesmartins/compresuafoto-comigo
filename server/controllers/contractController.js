@@ -19,6 +19,36 @@ const getClientBaseUrl = () => {
 
 const buildSignatureLink = (token) => `${getClientBaseUrl()}/assinar-contrato/${token}`;
 
+const parsePositiveMoney = (value, fieldName) => {
+    const parsed = parseFloat(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        const error = new Error(`${fieldName} deve ser maior que zero.`);
+        error.status = 400;
+        throw error;
+    }
+    return parsed;
+};
+
+const parsePositiveInt = (value, fieldName, fallback) => {
+    const parsed = parseInt(value || fallback, 10);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+        const error = new Error(`${fieldName} deve ser maior que zero.`);
+        error.status = 400;
+        throw error;
+    }
+    return parsed;
+};
+
+const parsePaymentDay = (value) => {
+    const parsed = parsePositiveInt(value, 'Dia de pagamento', 25);
+    if (parsed > 31) {
+        const error = new Error('Dia de pagamento deve estar entre 1 e 31.');
+        error.status = 400;
+        throw error;
+    }
+    return parsed;
+};
+
 const buildPlaceholderClientEmail = (clientName, clientDocument) => {
     const namePart = sanitizeFileName(clientName || 'cliente') || 'cliente';
     const documentPart = String(clientDocument || '').replace(/\D/g, '').slice(-6);
@@ -132,11 +162,15 @@ const resolveContractClient = async ({
 
 exports.generateContract = async (req, res) => {
     try {
-        const { clientName, clientDocument } = req.body;
+        const { clientName, clientDocument, scope, monthlyValue, durationMonths, paymentDay } = req.body;
 
-        if (!clientName || !clientDocument) {
-            return res.status(400).json({ error: 'Nome/Razao social e CPF ou CNPJ sao obrigatorios.' });
+        if (!clientName || !clientDocument || !scope) {
+            return res.status(400).json({ error: 'Nome/Razao social, CPF/CNPJ e escopo sao obrigatorios.' });
         }
+
+        parsePositiveMoney(monthlyValue, 'Valor mensal');
+        parsePositiveInt(durationMonths, 'Vigencia', 6);
+        parsePaymentDay(paymentDay);
 
         const pdfBuffer = await contractService.generateContractBuffer(req.body);
         const fileName = `contrato_${sanitizeFileName(clientName)}.pdf`;
@@ -146,7 +180,7 @@ exports.generateContract = async (req, res) => {
         res.send(pdfBuffer);
     } catch (error) {
         console.error('[CONTRACT GENERATE ERROR]:', error);
-        res.status(500).json({ error: 'Erro ao gerar contrato.' });
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Erro ao gerar contrato.' });
     }
 };
 
@@ -182,7 +216,9 @@ exports.createContract = async (req, res) => {
 
         const parsedClientId = parseInt(clientId, 10);
         const start = startDate ? new Date(startDate) : new Date();
-        const duration = parseInt(durationMonths || 6, 10);
+        const parsedMonthlyValue = parsePositiveMoney(monthlyValue, 'Valor mensal');
+        const duration = parsePositiveInt(durationMonths, 'Vigencia', 6);
+        const parsedPaymentDay = parsePaymentDay(paymentDay);
         const end = new Date(start);
         end.setMonth(end.getMonth() + duration);
 
@@ -190,9 +226,9 @@ exports.createContract = async (req, res) => {
             data: {
                 clientId: parsedClientId,
                 scope,
-                monthlyValue: parseFloat(monthlyValue),
+                monthlyValue: parsedMonthlyValue,
                 durationMonths: duration,
-                paymentDay: parseInt(paymentDay || 25, 10),
+                paymentDay: parsedPaymentDay,
                 startDate: start,
                 endDate: end,
                 status: 'ACTIVE',
@@ -205,7 +241,7 @@ exports.createContract = async (req, res) => {
         res.status(201).json(contract);
     } catch (err) {
         console.error('[CREATE CONTRACT ERROR]:', err);
-        res.status(500).json({ error: 'Erro ao criar contrato: ' + err.message });
+        res.status(err.status || 500).json({ error: err.status ? err.message : 'Erro ao criar contrato: ' + err.message });
     }
 };
 
@@ -232,6 +268,10 @@ exports.sendSignatureLink = async (req, res) => {
         if (!scope || !monthlyValue) {
             return res.status(400).json({ error: 'Escopo e valor mensal sao obrigatorios.' });
         }
+
+        const parsedMonthlyValue = parsePositiveMoney(monthlyValue, 'Valor mensal');
+        const duration = parsePositiveInt(durationMonths, 'Vigencia', 6);
+        const parsedPaymentDay = parsePaymentDay(paymentDay);
 
         let client;
         try {
@@ -267,7 +307,6 @@ exports.sendSignatureLink = async (req, res) => {
         }
 
         const start = startDate ? new Date(startDate) : new Date();
-        const duration = parseInt(durationMonths || 6, 10);
         const end = new Date(start);
         end.setMonth(end.getMonth() + duration);
         const signatureToken = crypto.randomBytes(24).toString('hex');
@@ -276,9 +315,9 @@ exports.sendSignatureLink = async (req, res) => {
             data: {
                 clientId: client.id,
                 scope,
-                monthlyValue: parseFloat(monthlyValue),
+                monthlyValue: parsedMonthlyValue,
                 durationMonths: duration,
-                paymentDay: parseInt(paymentDay || 25, 10),
+                paymentDay: parsedPaymentDay,
                 startDate: start,
                 endDate: end,
                 status: 'PENDING_SIGNATURE',
@@ -322,7 +361,7 @@ exports.sendSignatureLink = async (req, res) => {
         });
     } catch (err) {
         console.error('[SEND SIGNATURE LINK ERROR]:', err);
-        res.status(500).json({ error: 'Erro ao enviar link de assinatura: ' + err.message });
+        res.status(err.status || 500).json({ error: err.status ? err.message : 'Erro ao enviar link de assinatura: ' + err.message });
     }
 };
 

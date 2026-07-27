@@ -3,12 +3,13 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { getSafeRedirectPath } from '@/lib/safeRedirect';
 import { GoogleLogin } from '@react-oauth/google';
 import { ArrowLeft } from 'lucide-react';
 function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const redirectTo = searchParams.get('redirectTo');
+    const redirectTo = getSafeRedirectPath(searchParams.get('redirectTo'));
 
     const [loginInput, setLoginInput] = useState('');
     const [password, setPassword] = useState('');
