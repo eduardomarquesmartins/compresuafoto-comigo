@@ -64,6 +64,12 @@ const navSections: NavSection[] = [
             { href: "/admin/emails", label: "E-mails", icon: Mail },
             { href: "/admin/presentation", label: "Apresentação", icon: MonitorPlay }
         ]
+    },
+    {
+        label: "Equipe",
+        items: [
+            { href: "/admin/collaborators", label: "Colaboradores", icon: ClipboardCheck }
+        ]
     }
 ];
 
@@ -178,15 +184,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
         <div className="admin-shell min-h-dvh text-zinc-900 selection:bg-[#0044ff]/20">
             <div className="admin-grid-background fixed inset-0 -z-10 pointer-events-none" />
-            {activeRequests > 0 && (
-                <div className="admin-global-loading" role="status" aria-live="polite">
-                    <div className="admin-global-loading-bar" />
-                    <div className="admin-global-loading-pill">
-                        <span className="admin-global-loading-spinner" />
-                        Processando...
+                {activeRequests > 0 && (
+                    <div className="admin-global-loading" role="status" aria-live="polite">
+                        <div className="admin-global-loading-bar" />
                     </div>
-                </div>
-            )}
+                )}
 
             <header className="xl:hidden sticky top-0 z-40 border-b border-zinc-200 bg-white/92 px-4 py-3 backdrop-blur-xl">
                 <div className="flex items-center justify-between relative h-12">
@@ -657,6 +659,51 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     color: #ff0000;
                     background: rgba(255, 0, 0, 0.05);
                     border-color: rgba(255, 0, 0, 0.1);
+                }
+
+                /* Feedback must remain readable on the light admin surface. */
+                .admin-shell main .bg-blue-500\/10 {
+                    background-color: #eaf2ff !important;
+                }
+
+                .admin-shell main .border-blue-400\/20,
+                .admin-shell main .border-blue-500\/20 {
+                    border-color: #8cb8ff !important;
+                }
+
+                .admin-shell main .text-blue-100 {
+                    color: #173b73 !important;
+                    font-weight: 600;
+                }
+
+                .admin-shell .admin-card .text-white {
+                    color: #111111 !important;
+                }
+
+                .admin-shell .admin-card .text-slate-400,
+                .admin-shell .admin-card .text-slate-500 {
+                    color: #64748b !important;
+                }
+
+                .admin-shell .admin-card [class*="bg-black"] {
+                    background-color: #fafafa !important;
+                    border-color: #e5e7eb !important;
+                    color: #111111 !important;
+                }
+
+                .admin-shell .admin-card .admin-primary-button,
+                .admin-shell .admin-card .admin-primary-button * {
+                    color: #ffffff !important;
+                }
+
+                .admin-shell main button.bg-blue-500\/10 .text-white {
+                    color: #ffffff !important;
+                }
+
+                .admin-shell main button.bg-blue-500\/10 .text-slate-400,
+                .admin-shell main button.bg-blue-500\/10 .text-slate-500 {
+                    color: #dbeafe !important;
+                    font-weight: 500;
                 }
 
                 .admin-empty-state {

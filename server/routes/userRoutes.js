@@ -5,6 +5,7 @@ const { authenticate, isAdmin } = require('../middlewares/auth');
 
 router.get('/', authenticate, isAdmin, userController.getUsers);
 router.post('/', authenticate, isAdmin, userController.createUser);
+router.patch('/:id/role', authenticate, isAdmin, userController.updateRole);
 router.delete('/:id', authenticate, isAdmin, userController.deleteUser);
 router.patch('/profile', authenticate, userController.updateProfile);
 

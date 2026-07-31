@@ -92,6 +92,8 @@ exports.getUsers = async (req, res) => {
                 cpf: true,
                 phone: true,
                 role: true,
+                collaboratorProfile: true,
+                contractUrl: true,
                 createdAt: true
             },
             orderBy: { createdAt: 'desc' }
@@ -116,9 +118,28 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
+exports.updateRole = async (req, res) => {
+    const allowedRoles = ['DESIGNER', 'DEMANDAS'];
+    const { role } = req.body;
+    if (!allowedRoles.includes(role)) return res.status(400).json({ error: 'Perfil inválido' });
+    try {
+        const user = await prisma.user.update({
+            where: { id: parseInt(req.params.id, 10) },
+            data: { role: 'COLLABORATOR', collaboratorProfile: role === 'DESIGNER' ? 'DESIGNER' : 'COMPANY_DEMANDS' },
+            select: { id: true, name: true, fullName: true, email: true, role: true, collaboratorProfile: true, createdAt: true }
+        });
+        res.json(user);
+    } catch (error) {
+        console.error('Update user role error:', error);
+        res.status(500).json({ error: 'Erro ao atualizar perfil do usuário' });
+    }
+};
+
 exports.createUser = async (req, res) => {
     try {
         const { name, fullName, cpf, email, password, role } = req.body;
+        const allowedRoles = ['ADMIN', 'PHOTOGRAPHER', 'DESIGNER', 'DEMANDAS', 'COLLABORATOR'];
+        const selectedRole = allowedRoles.includes(role) ? role : 'PHOTOGRAPHER';
         const normalizedEmail = String(email || '').trim().toLowerCase();
         const normalizedCpf = cleanCpf(cpf);
 
@@ -144,7 +165,8 @@ exports.createUser = async (req, res) => {
                 cpf: normalizedCpf,
                 email: normalizedEmail,
                 password: hashedPassword,
-                role: role || 'PHOTOGRAPHER'
+                role: ['DESIGNER', 'DEMANDAS'].includes(selectedRole) ? 'COLLABORATOR' : selectedRole,
+                collaboratorProfile: selectedRole === 'DESIGNER' ? 'DESIGNER' : selectedRole === 'DEMANDAS' ? 'COMPANY_DEMANDS' : null
             }
         });
 

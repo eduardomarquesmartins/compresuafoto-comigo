@@ -38,6 +38,12 @@ function LoginContent() {
                     router.push(redirectTo);
                 } else if (res.data.user.role === 'ADMIN') {
                     router.push('/admin/dashboard');
+                } else if (res.data.user.role === 'DESIGNER') {
+                    router.push('/designer');
+                } else if (res.data.user.role === 'DEMANDAS') {
+                    router.push('/demandas');
+                } else if (res.data.user.role === 'COLLABORATOR') {
+                    router.push(res.data.user.collaboratorProfile === 'DESIGNER' ? '/designer' : '/demandas');
                 } else {
                     router.push('/my-orders');
                 }
@@ -68,7 +74,7 @@ function LoginContent() {
                 } else if (redirectTo) {
                     router.push(redirectTo);
                 } else {
-                    router.push(res.data.user.role === 'ADMIN' ? '/admin/dashboard' : '/my-orders');
+                    router.push(res.data.user.role === 'ADMIN' ? '/admin/dashboard' : res.data.user.role === 'DESIGNER' || (res.data.user.role === 'COLLABORATOR' && res.data.user.collaboratorProfile === 'DESIGNER') ? '/designer' : res.data.user.role === 'DEMANDAS' || res.data.user.role === 'COLLABORATOR' ? '/demandas' : '/my-orders');
                 }
             }
         } catch (err: any) {

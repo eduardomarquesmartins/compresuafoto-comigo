@@ -39,3 +39,8 @@ exports.isAdmin = (req, res, next) => {
         res.status(403).json({ error: 'Admin access required' });
     }
 };
+
+exports.isCollaborator = (req, res, next) => {
+    if (req.user && (['DESIGNER', 'DEMANDAS'].includes(req.user.role) || (req.user.role === 'COLLABORATOR' && req.user.collaboratorProfile))) return next();
+    return res.status(403).json({ error: 'Acesso de colaborador obrigatório' });
+};

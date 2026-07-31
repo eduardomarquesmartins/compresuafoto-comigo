@@ -49,6 +49,7 @@ exports.me = async (req, res) => {
                 cpf: true,
                 email: true,
                 role: true,
+                collaboratorProfile: true,
                 phone: true
             }
         });
@@ -107,7 +108,7 @@ exports.register = async (req, res) => {
         });
 
         const token = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role },
+            { userId: user.id, email: user.email, role: user.role, collaboratorProfile: user.collaboratorProfile },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
@@ -120,6 +121,7 @@ exports.register = async (req, res) => {
                 cpf: user.cpf,
                 email: user.email,
                 role: user.role,
+                collaboratorProfile: user.collaboratorProfile,
                 phone: user.phone
             }
         });
@@ -149,7 +151,7 @@ exports.login = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role },
+            { userId: user.id, email: user.email, role: user.role, collaboratorProfile: user.collaboratorProfile },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
@@ -162,6 +164,7 @@ exports.login = async (req, res) => {
                 cpf: user.cpf,
                 email: user.email,
                 role: user.role,
+                collaboratorProfile: user.collaboratorProfile,
                 phone: user.phone
             }
         });

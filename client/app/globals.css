@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* The collaborator portal uses the primary headings directly; hide redundant eyebrow labels. */
+main.min-h-screen.bg-white .grid.border > section > div > div > p.uppercase {
+  display: none;
+}
+
+/* Keep the collaborator header focused on the page title. */
+.admin-page-stack h1.tracking-\[-\.065em\] + p.mt-3.text-slate-400 {
+  display: none;
+}
+
 :root {
   --background: #ebeae6;
 

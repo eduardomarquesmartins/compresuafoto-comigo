@@ -2,15 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
-import { AlertTriangle, RefreshCw, Search, Shield, Trash2, UserPlus, X } from "lucide-react";
+import { AlertTriangle, FileText, RefreshCw, Search, Shield, Trash2, UserPlus, X } from "lucide-react";
 
-type UserRole = "ADMIN" | "PHOTOGRAPHER" | string;
+type UserRole = "ADMIN" | "PHOTOGRAPHER" | "DESIGNER" | "DEMANDAS" | string;
 
 interface User {
     id: number;
     name: string | null;
     email: string;
     role: UserRole;
+    collaboratorProfile?: "DESIGNER" | "COMPANY_DEMANDS" | null;
+    contractUrl?: string | null;
     lastLogin?: string | null;
     createdAt: string;
 }
@@ -19,10 +21,17 @@ type NewUser = {
     name: string;
     email: string;
     password: string;
-    role: "ADMIN" | "PHOTOGRAPHER";
+    role: "ADMIN" | "PHOTOGRAPHER" | "DESIGNER" | "DEMANDAS";
 };
 
 const emptyNewUser: NewUser = { name: "", email: "", password: "", role: "PHOTOGRAPHER" };
+
+const roleLabel = (user: User) => {
+    if (user.collaboratorProfile === "DESIGNER") return "Designer";
+    if (user.collaboratorProfile === "COMPANY_DEMANDS") return "Demandas da empresa";
+    const labels: Record<string, string> = { ADMIN: "Administrador", CUSTOMER: "Cliente", COLLABORATOR: "Colaborador", PHOTOGRAPHER: "Fotógrafo" };
+    return labels[user.role] || user.role;
+};
 
 const getUsersErrorMessage = (error: unknown) => {
     if (typeof error === "object" && error !== null && "code" in error) {
@@ -39,6 +48,9 @@ const getUsersErrorMessage = (error: unknown) => {
         const response = (error as { response?: { status?: number; data?: { error?: string } } }).response;
         if (response?.status === 401 || response?.status === 403) {
             return "Sessão expirada ou sem permissão para gerenciar usuários. Faça login novamente.";
+        }
+        if (response?.data?.error) {
+            return response.data.error;
         }
         if (response?.status) {
             return `A API respondeu com erro ${response.status}.`;
@@ -113,6 +125,23 @@ export default function UsersPage() {
             setActionMessage(getUsersErrorMessage(error));
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleSetCollaboratorArea = async (user: User) => {
+        const selection = prompt("Defina o perfil: DESIGNER ou DEMANDAS", user.role === "COLLABORATOR" ? "" : user.role);
+        if (selection === null) return;
+        const role = selection.trim().toUpperCase();
+        if (role !== "DESIGNER" && role !== "DEMANDAS") {
+            setActionMessage("Informe DESIGNER ou DEMANDAS.");
+            return;
+        }
+        try {
+            const response = await api.patch<User>(`/users/${user.id}/role`, { role });
+            setUsers(current => current.map(item => item.id === user.id ? response.data : item));
+            setActionMessage("Perfil do colaborador atualizado.");
+        } catch (error) {
+            setActionMessage(getUsersErrorMessage(error));
         }
     };
 
@@ -218,14 +247,32 @@ export default function UsersPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${user.role === "ADMIN" ? "bg-[#de1d8d]/15 text-[#ff8ccf]" : "bg-[#0a72ef]/15 text-[#7fbdff]"}`}>
-                                                <Shield size={12} />
-                                                {user.role}
+                                                {roleLabel(user)}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-slate-400">
                                             {user.createdAt ? new Date(user.createdAt).toLocaleDateString("pt-BR") : "-"}
                                         </td>
                                         <td className="px-6 py-4 text-right">
+                                            {user.contractUrl && (
+                                                <a
+                                                    href={`${String(api.defaults.baseURL).replace(/\/api$/, "")}${user.contractUrl}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="mr-2 inline-flex rounded-xl p-2 text-slate-500 transition hover:bg-blue-500/10 hover:text-blue-500"
+                                                    title="Ver contrato"
+                                                >
+                                                    <FileText size={18} />
+                                                </a>
+                                            )}
+                                            {user.role === "COLLABORATOR" && (
+                                                <button
+                                                    onClick={() => handleSetCollaboratorArea(user)}
+                                                    className="mr-2 rounded-xl px-3 py-2 text-xs font-medium text-blue-300 transition hover:bg-blue-500/10"
+                                                >
+                                                    Definir área
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => handleDelete(user.id)}
                                                 className="rounded-xl p-2 text-slate-500 transition hover:bg-red-500/10 hover:text-red-300"
@@ -294,6 +341,8 @@ export default function UsersPage() {
                                     onChange={e => setNewUser({ ...newUser, role: e.target.value as NewUser["role"] })}
                                 >
                                     <option value="ADMIN">Administrador</option>
+                                    <option value="DESIGNER">Designer</option>
+                                    <option value="DEMANDAS">Demandas da empresa</option>
                                     <option value="PHOTOGRAPHER">Fotógrafo</option>
                                 </select>
                             </div>

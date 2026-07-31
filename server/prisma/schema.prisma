@@ -20,9 +20,22 @@ model User {
   securityQuestion String?
   securityAnswer   String?
   googleId         String?   @unique
+  collaboratorProfile CollaboratorProfile?
+  profileLockedAt  DateTime?
+  mustChangePassword Boolean @default(false)
+  authVersion      Int      @default(1)
+  contractUrl      String?
   lastLogin        DateTime?
   createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   orders           Order[]
+  completedServices ServiceCompletion[] @relation("CollaboratorServices")
+  serviceDefinitions ServiceDefinition[] @relation("ServiceCollaborator")
+}
+
+enum CollaboratorProfile {
+  DESIGNER
+  COMPANY_DEMANDS
 }
 
 model Event {
@@ -184,4 +197,40 @@ model MentoriaDemand {
   obs         String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ServiceDefinition {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  value       Float
+  role        String
+  collaboratorId Int?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  completions ServiceCompletion[]
+  collaborator User? @relation("ServiceCollaborator", fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  @@index([collaboratorId])
+}
+
+model ServiceCompletion {
+  id          Int      @id @default(autoincrement())
+  serviceId   Int
+  collaboratorId Int
+  quantity    Int      @default(1)
+  unitValue   Float
+  totalValue  Float
+  notes       String?
+  completedAt DateTime @default(now())
+  paymentStatus String @default("PENDING")
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  service     ServiceDefinition @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  collaborator User @relation("CollaboratorServices", fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  @@index([collaboratorId, paymentStatus])
+  @@index([serviceId])
 }
