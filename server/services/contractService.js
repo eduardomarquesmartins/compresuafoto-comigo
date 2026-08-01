@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 
 const LOGO_PATH = path.join(__dirname, '../../client/public/logo.png');
-const CONTI_SIGNATURE_PATH = path.join(__dirname, '../assets/conti-signature.png');
 
 const BLUE = '#2563eb';
 const NAVY = '#172b49';
@@ -509,6 +508,15 @@ const drawSignatureImage = (doc, dataUrl, x, y, width = 130, height = 50) => {
     }
 };
 
+const getSignatureDate = (data) => {
+    const source = data.signedAt ? new Date(data.signedAt) : null;
+    if (source && !Number.isNaN(source.getTime())) {
+        const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+        return `VIAMÃO, ${String(source.getDate()).padStart(2, '0')} de ${months[source.getMonth()].toUpperCase()} de ${source.getFullYear()}`;
+    }
+    return 'VIAMÃO, ____ de __________ de ______';
+};
+
 const calculatePartyBoxBodyHeight = (doc, lines, width = 220) => {
     let totalLinesHeight = 0;
     const activeLines = lines.filter(Boolean);
@@ -554,27 +562,23 @@ const drawSignatureBlock = (doc, data) => {
     doc.moveDown(4);
 
     const y = doc.y + 115;
-    if (fs.existsSync(CONTI_SIGNATURE_PATH)) {
-        doc.image(CONTI_SIGNATURE_PATH, 124, y - 110, { width: 72 });
-    }
-
     doc.strokeColor('#cbd5e1').lineWidth(1).moveTo(70, y).lineTo(255, y).stroke();
-    doc.strokeColor('#cbd5e1').lineWidth(1).moveTo(340, y).lineTo(525, y).stroke();
 
     doc.fillColor(TEXT).font('Helvetica-Bold').fontSize(9).text('& CONTI MARKETING DIGITAL', 70, y + 10, { width: 185, align: 'center' });
     doc.font('Helvetica').fontSize(8).text('CNPJ: 30.795.540/0001-70', 70, y + 25, { width: 185, align: 'center' });
     doc.text('Representante: Fernando Barbosa', 70, y + 38, { width: 185, align: 'center' });
     doc.text('CPF: 853.143.150-68', 70, y + 51, { width: 185, align: 'center' });
+    doc.font('Helvetica-BoldOblique').fontSize(10).fillColor(NAVY)
+        .text('Assinatura Contratada', 70, y + 67, { width: 185, align: 'center' });
 
-    doc.font('Helvetica-Bold').fontSize(9).text(sanitize(data.clientName, 'CONTRATANTE'), 340, y + 10, { width: 185, align: 'center' });
-    doc.font('Helvetica').fontSize(8).text(`${getDocumentLabel(data.clientDocument)}: ${sanitize(data.clientDocument)}`, 340, y + 32, { width: 185, align: 'center' });
-    drawSignatureImage(doc, data.signedSignatureData, 367, y - 58, 130, 46);
-    if (data.signerName) doc.text(`Representante: ${sanitize(data.signerName)}`, 340, y + 45, { width: 185, align: 'center' });
-    if (data.signerDocument) doc.text(`CPF: ${sanitize(data.signerDocument)}`, 340, y + 58, { width: 185, align: 'center' });
-    if (data.signedAt) {
-        const signedLabel = new Date(data.signedAt).toLocaleString('pt-BR');
-        doc.text(`Assinado em: ${signedLabel}`, 340, y + 71, { width: 185, align: 'center' });
-    }
+    const clientX = 320;
+    const clientWidth = 220;
+    doc.fillColor(NAVY).font('Helvetica').fontSize(8.5)
+        .text(getSignatureDate(data), clientX, y - 112, { width: clientWidth, align: 'center', characterSpacing: 0.4 });
+    drawSignatureImage(doc, data.signedSignatureData, 380, y - 79, 100, 64);
+    doc.strokeColor(NAVY).lineWidth(1).moveTo(clientX, y).lineTo(clientX + clientWidth, y).stroke();
+    doc.fillColor(NAVY).font('Helvetica-BoldOblique').fontSize(11)
+        .text('Assinatura Contratante', clientX, y + 12, { width: clientWidth, align: 'center' });
 
 };
 
