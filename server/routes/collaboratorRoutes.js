@@ -4,6 +4,7 @@ const controller = require('../controllers/collaboratorController');
 const { authenticate, isAdmin, isCollaborator } = require('../middlewares/auth');
 
 router.get('/portal', authenticate, isCollaborator, controller.getMyPortal);
+router.get('/portal/receipt', authenticate, isCollaborator, controller.downloadMyReceipt);
 router.post('/portal/completions', authenticate, isCollaborator, controller.createCompletion);
 router.delete('/portal/completions/:id', authenticate, isCollaborator, controller.deleteMyCompletion);
 router.get('/admin', authenticate, isAdmin, controller.getAdminOverview);

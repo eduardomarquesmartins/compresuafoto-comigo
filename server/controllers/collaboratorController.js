@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const path = require('path');
 const collaboratorContractService = require('../services/collaboratorContractService');
+const collaboratorReceiptService = require('../services/collaboratorReceiptService');
 
 const collaboratorRoles = ['DESIGNER', 'DEMANDAS'];
 const validRole = (role) => collaboratorRoles.includes(role);
@@ -45,6 +46,25 @@ exports.deleteMyCompletion = async (req, res) => {
         console.error('[DELETE COLLABORATOR COMPLETION]', error);
         res.status(500).json({ error: 'Erro ao remover lançamento' });
     }
+};
+
+exports.downloadMyReceipt = async (req, res) => {
+    try {
+        const competence = String(req.query.competence || '');
+        if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(competence)) return res.status(400).json({ error: 'Informe uma competencia valida' });
+        const [year, month] = competence.split('-').map(Number);
+        const start = new Date(year, month - 1, 1);
+        const end = new Date(year, month, 1);
+        const [collaborator, completions] = await Promise.all([
+            prisma.user.findUnique({ where: { id: req.user.userId }, select: { name: true, fullName: true, email: true } }),
+            prisma.serviceCompletion.findMany({ where: { collaboratorId: req.user.userId, completedAt: { gte: start, lt: end } }, include: { service: true }, orderBy: { completedAt: 'asc' } })
+        ]);
+        if (!collaborator || !completions.length) return res.status(400).json({ error: 'Nao ha servicos registrados nesta competencia' });
+        const pdf = await collaboratorReceiptService.generateReceiptBuffer({ collaborator, competence, completions });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=recibo-servicos-${competence}.pdf`);
+        res.send(pdf);
+    } catch (error) { console.error('[DOWNLOAD COLLABORATOR RECEIPT]', error); res.status(500).json({ error: 'Erro ao gerar o recibo de servicos' }); }
 };
 
 exports.getAdminOverview = async (_req, res) => {
@@ -129,7 +149,7 @@ exports.generateMonthlyContract = async (req, res) => {
         const baseContractPath = collaborator.contractUrl
             ? path.join(__dirname, '..', String(collaborator.contractUrl).replace(/^[\\/]+/, ''))
             : null;
-        const pdf = await collaboratorContractService.generateMonthlyContractBuffer({ collaborator, competence, completions, additionalClauses: req.body.additionalClauses, baseContractPath });
+        const pdf = await collaboratorContractService.generateMonthlyContractBuffer({ collaborator, competence, completions, additionalClauses: req.body.additionalClauses, closingDate: req.body.closingDate, baseContractPath });
         const baseName = String(collaborator.fullName || collaborator.name || 'colaborador').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase();
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=fechamento-${baseName}-${competence}.pdf`);

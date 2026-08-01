@@ -36,7 +36,7 @@ const footer = (doc) => {
     }
 };
 
-const buildAnnex = ({ collaborator, competence, completions, additionalClauses }) => new Promise((resolve, reject) => {
+const buildAnnex = ({ collaborator, competence, completions, additionalClauses, closingDate }) => new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: PAGE_LEFT, bufferPages: true });
     const chunks = [];
     doc.on('data', (chunk) => chunks.push(chunk));
@@ -103,8 +103,11 @@ const buildAnnex = ({ collaborator, competence, completions, additionalClauses }
     if (clean(additionalClauses)) section(doc, '4. OBSERVACOES ADICIONAIS', [clean(additionalClauses)]);
 
     if (doc.y > 660) doc.addPage();
+    const contractDate = /^\d{4}-\d{2}-\d{2}$/.test(String(closingDate || ''))
+        ? new Date(`${closingDate}T12:00:00`).toLocaleDateString('pt-BR')
+        : new Date().toLocaleDateString('pt-BR');
     doc.moveDown(2).font('Helvetica').fontSize(9.5).fillColor(MUTED);
-    fullText(doc, `Viamao/RS, ${new Date().toLocaleDateString('pt-BR')}.`, { align: 'center' });
+    fullText(doc, `Viamao/RS, ${contractDate}.`, { align: 'center' });
     doc.moveDown(3.5).strokeColor(LINE).moveTo(75, doc.y).lineTo(280, doc.y).stroke().moveTo(320, doc.y).lineTo(525, doc.y).stroke();
     doc.moveDown(0.35).font('Helvetica').fontSize(8.5).fillColor(MUTED);
     const signatureY = doc.y;
