@@ -1,8 +1,10 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
 
 const LOGO_PATH = path.join(__dirname, '../../client/public/logo.png');
+const CONTI_SIGNATURE_PATH = path.join(__dirname, '../assets/conti-signature.png');
 
 const BLUE = '#2563eb';
 const NAVY = '#172b49';
@@ -508,15 +510,6 @@ const drawSignatureImage = (doc, dataUrl, x, y, width = 130, height = 50) => {
     }
 };
 
-const getSignatureDate = (data) => {
-    const source = data.signedAt ? new Date(data.signedAt) : null;
-    if (source && !Number.isNaN(source.getTime())) {
-        const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-        return `VIAMÃO, ${String(source.getDate()).padStart(2, '0')} de ${months[source.getMonth()].toUpperCase()} de ${source.getFullYear()}`;
-    }
-    return 'VIAMÃO, ____ de __________ de ______';
-};
-
 const calculatePartyBoxBodyHeight = (doc, lines, width = 220) => {
     let totalLinesHeight = 0;
     const activeLines = lines.filter(Boolean);
@@ -557,24 +550,24 @@ const drawPartyBox = (doc, title, lines, x, y = 190, width = 220, bodyHeight = 1
     });
 };
 
-const drawSignatureBlock = (doc, data) => {
+const drawSignatureBlock = async (doc, data) => {
     ensureSpace(doc, 200);
     doc.moveDown(4);
 
     const y = doc.y + 115;
+    if (fs.existsSync(CONTI_SIGNATURE_PATH)) {
+        const signatureBuffer = await sharp(CONTI_SIGNATURE_PATH).rotate(90).png().toBuffer();
+        doc.image(signatureBuffer, 105, y - 68, { fit: [115, 70], align: 'center', valign: 'center' });
+    }
     doc.strokeColor('#cbd5e1').lineWidth(1).moveTo(70, y).lineTo(255, y).stroke();
 
     doc.fillColor(TEXT).font('Helvetica-Bold').fontSize(9).text('& CONTI MARKETING DIGITAL', 70, y + 10, { width: 185, align: 'center' });
     doc.font('Helvetica').fontSize(8).text('CNPJ: 30.795.540/0001-70', 70, y + 25, { width: 185, align: 'center' });
     doc.text('Representante: Fernando Barbosa', 70, y + 38, { width: 185, align: 'center' });
     doc.text('CPF: 853.143.150-68', 70, y + 51, { width: 185, align: 'center' });
-    doc.font('Helvetica-BoldOblique').fontSize(10).fillColor(NAVY)
-        .text('Assinatura Contratada', 70, y + 67, { width: 185, align: 'center' });
 
     const clientX = 320;
     const clientWidth = 220;
-    doc.fillColor(NAVY).font('Helvetica').fontSize(8.5)
-        .text(getSignatureDate(data), clientX, y - 112, { width: clientWidth, align: 'center', characterSpacing: 0.4 });
     drawSignatureImage(doc, data.signedSignatureData, 380, y - 79, 100, 64);
     doc.strokeColor(NAVY).lineWidth(1).moveTo(clientX, y).lineTo(clientX + clientWidth, y).stroke();
     doc.fillColor(NAVY).font('Helvetica-BoldOblique').fontSize(11)
@@ -584,6 +577,7 @@ const drawSignatureBlock = (doc, data) => {
 
 exports.generateContractBuffer = async (data) => {
     return new Promise((resolve, reject) => {
+        (async () => {
         try {
             const doc = new PDFDocument({
                 size: 'A4',
@@ -640,7 +634,7 @@ exports.generateContractBuffer = async (data) => {
             if (data.contractDate) {
                 paragraph(doc, `Local e data: ${sanitize(data.contractDate)}.`);
             }
-            drawSignatureBlock(doc, data);
+            await drawSignatureBlock(doc, data);
 
             // Adiciona o header a todas as páginas exceto a primeira, usando bufferPages
             const range = doc.bufferedPageRange();
@@ -653,5 +647,6 @@ exports.generateContractBuffer = async (data) => {
         } catch (error) {
             reject(error);
         }
+        })();
     });
 };
