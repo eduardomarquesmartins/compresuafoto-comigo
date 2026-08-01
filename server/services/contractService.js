@@ -632,7 +632,7 @@ exports.generateContractBuffer = async (data) => {
 
             sectionTitle(doc, 'Assinaturas');
             if (data.contractDate) {
-                paragraph(doc, `Local e data: ${sanitize(data.contractDate)}.`);
+                paragraph(doc, `Porto Alegre, Rio Grande do Sul, ${sanitize(data.contractDate)}.`);
             }
             await drawSignatureBlock(doc, data);
 
