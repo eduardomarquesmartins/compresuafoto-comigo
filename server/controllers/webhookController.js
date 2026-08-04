@@ -16,7 +16,14 @@ exports.handleMercadoPagoWebhook = async (req, res) => {
         const xRequestId = req.headers['x-request-id'];
         const webhookSecret = process.env.MP_WEBHOOK_SECRET;
 
-        if (webhookSecret && xSignature && xRequestId) {
+        if (webhookSecret) {
+            if (!xSignature || !xRequestId) {
+                // A notification without the Mercado Pago headers cannot be trusted when
+                // signature validation has been configured.
+                console.error('[WEBHOOK ERROR] Missing Mercado Pago signature headers');
+                return res.status(401).send('Signature Required');
+            }
+
             try {
                 const parts = xSignature.split(',');
                 let ts = '';
@@ -28,12 +35,18 @@ exports.handleMercadoPagoWebhook = async (req, res) => {
                     if (key === 'v1') v1 = value;
                 });
 
-                const manifest = `id:${req.query['data.id'] || req.body.data?.id};request-id:${xRequestId};ts:${ts};`;
+                const notificationId = req.query['data.id'] || req.body?.data?.id;
+                if (!notificationId || !ts || !v1) {
+                    console.error('[WEBHOOK ERROR] Incomplete Mercado Pago signature data');
+                    return res.status(401).send('Invalid Signature');
+                }
+
+                const manifest = `id:${notificationId};request-id:${xRequestId};ts:${ts};`;
                 const hmac = crypto.createHmac('sha256', webhookSecret);
                 hmac.update(manifest);
                 const sha = hmac.digest('hex');
 
-                if (sha !== v1) {
+                if (!crypto.timingSafeEqual(Buffer.from(sha, 'hex'), Buffer.from(v1, 'hex'))) {
                     console.error('[WEBHOOK ERROR] Invalid Signature');
                     return res.status(401).send('Invalid Signature');
                 }
@@ -41,9 +54,11 @@ exports.handleMercadoPagoWebhook = async (req, res) => {
                 console.error('[WEBHOOK ERROR] Signature Verification Failed:', err.message);
                 return res.status(401).send('Signature Verification Failed');
             }
-        } else if (process.env.NODE_ENV === 'production') {
-            console.error('[WEBHOOK ERROR] Missing signature or webhook secret in production!');
-            return res.status(401).send('Signature Required');
+        } else {
+            // The payment is always fetched directly from Mercado Pago below with the
+            // private access token. This keeps checkout working while the optional
+            // webhook secret is not configured, without trusting the request body.
+            console.warn('[WEBHOOK WARNING] MP_WEBHOOK_SECRET is not configured; payment will be verified with Mercado Pago API');
         }
 
         const { type, data } = req.body;
@@ -58,18 +73,23 @@ exports.handleMercadoPagoWebhook = async (req, res) => {
             const paymentDetails = await payment.get({ id: paymentId });
 
             const status = paymentDetails.status;
-            const externalReference = paymentDetails.external_reference; // This is our Order PublicId or ID
+            const externalReference = String(paymentDetails.external_reference || ''); // This is our Order PublicId or ID
 
             console.log(`[WEBHOOK] Payment ${paymentId} status: ${status} for Order: ${externalReference}`);
 
             if (status === 'approved') {
                 // Update order in database
                 // Support both ID and PublicID
-                let where = {};
+                let where;
                 if (externalReference.includes('-')) {
                     where = { publicId: externalReference };
                 } else if (!isNaN(externalReference)) {
                     where = { id: parseInt(externalReference) };
+                }
+
+                if (!where) {
+                    logToFile(`Invalid external reference for payment ${paymentId}: ${externalReference}`);
+                    return res.status(200).send('OK');
                 }
 
                 const existingOrder = await prisma.order.findUnique({ where, select: { id: true, status: true } });

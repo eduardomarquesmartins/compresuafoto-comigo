@@ -21,8 +21,10 @@ interface Order {
 function OrderSuccessContent() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get("external_reference") || searchParams.get("id"); // From Mercado Pago OR Email Link
-    const paymentStatus = searchParams.get("status"); // 'approved', 'pending'
-    const paymentId = searchParams.get("payment_id"); // Added paymentId from Mercado Pago URL query
+    // Mercado Pago can return either `status` or `collection_status`, depending on
+    // the checkout flow. Both must be accepted before attempting the server sync.
+    const paymentStatus = searchParams.get("status") || searchParams.get("collection_status");
+    const paymentId = searchParams.get("payment_id") || searchParams.get("collection_id");
 
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
