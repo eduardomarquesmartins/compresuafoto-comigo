@@ -50,13 +50,24 @@ exports.getPresignedUrl = async (url, expiresIn = 900) => {
     try {
         const key = exports.extractS3Key(url);
         if (!key) return url;
+        const parsedUrl = new URL(url);
+        const hostParts = parsedUrl.hostname.split('.');
+        const bucket = hostParts[0] || BUCKET_NAME;
+        const region = hostParts[2] || process.env.AWS_REGION || 'us-east-1';
+        const client = region === (process.env.AWS_REGION || 'us-east-1') ? s3Client : new S3Client({
+            region,
+            credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+            },
+        });
 
         const command = new GetObjectCommand({
-            Bucket: BUCKET_NAME,
+            Bucket: bucket,
             Key: key,
         });
 
-        return await getSignedUrl(s3Client, command, { expiresIn });
+        return await getSignedUrl(client, command, { expiresIn });
     } catch (error) {
         console.error('Error generating Presigned URL:', error);
         return url;
