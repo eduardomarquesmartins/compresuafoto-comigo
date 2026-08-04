@@ -43,6 +43,9 @@ export default function CollaboratorPortal({ role, title }: { role: "DESIGNER" |
         input?.addEventListener("click", openPicker);
         return () => input?.removeEventListener("click", openPicker);
     }, []);
+    useEffect(() => {
+        document.querySelectorAll<HTMLElement>('main article .min-w-fit > div > span').forEach(status => { status.style.display = "none"; });
+    }, [completions]);
 
     const submit = async (event: FormEvent) => {
         event.preventDefault(); setSaving(true); setMessage("");
