@@ -174,12 +174,11 @@ exports.getEventById = async (req, res) => {
 
         // Strip originalUrl for non-admin users to protect unwatermarked photos
         const isAdmin = req.user && req.user.role === 'ADMIN';
-        if (!isAdmin) {
-            event.photos = event.photos.map(photo => ({
-                ...photo,
-                originalUrl: null
-            }));
-        }
+        event.photos = await Promise.all(event.photos.map(async (photo) => ({
+            ...photo,
+            originalUrl: isAdmin ? photo.originalUrl : null,
+            watermarkedUrl: photo.watermarkedUrl ? await s3Service.getPresignedUrl(photo.watermarkedUrl, 3600) : null
+        })));
 
         res.json(event);
     } catch (error) {
