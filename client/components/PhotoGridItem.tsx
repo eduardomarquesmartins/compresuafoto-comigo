@@ -43,6 +43,9 @@ export default function PhotoGridItem({ photo, isSelected, onToggle, getImageUrl
                             src={getImageUrl(photoUrl)}
                             alt={`Photo ${photo.id}`}
                             fill
+                            // The public gallery must not depend on Vercel's paid image optimizer.
+                            // Photos are already served directly by S3.
+                            unoptimized
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             className="object-cover"
                             onLoad={() => setIsLoaded(true)}
