@@ -11,7 +11,9 @@ const nextConfig = {
             },
             {
                 protocol: 'https',
-                hostname: '*.amazonaws.com',
+                // S3 URLs include multiple subdomain levels, e.g.
+                // bucket.s3.sa-east-1.amazonaws.com.
+                hostname: '**.amazonaws.com',
             },
             {
                 protocol: 'https',

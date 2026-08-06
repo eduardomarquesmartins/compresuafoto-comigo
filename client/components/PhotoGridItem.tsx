@@ -14,6 +14,7 @@ interface PhotoGridItemProps {
 
 export default function PhotoGridItem({ photo, isSelected, onToggle, getImageUrl, getPhotoUrl }: PhotoGridItemProps) {
     const [isLoaded, setIsLoaded] = useState(false);
+    const [hasImageError, setHasImageError] = useState(false);
     const photoUrl = getPhotoUrl(photo);
 
     return (
@@ -24,9 +25,15 @@ export default function PhotoGridItem({ photo, isSelected, onToggle, getImageUrl
             <div className={`rounded-2xl overflow-hidden bg-slate-900 border relative transition-all shadow-sm aspect-[2/3] ${isSelected ? 'border-brand ring-4 ring-brand/20' : 'border-black/5 hover:border-brand/30 hover:shadow-md'}`}>
 
                 {/* Skeleton visible while image is loading */}
-                {(!isLoaded || !photoUrl) && (
+                {((!isLoaded && !hasImageError) || !photoUrl) && (
                     <div className="absolute inset-0 w-full h-full">
                         <PhotoSkeleton />
+                    </div>
+                )}
+
+                {hasImageError && photoUrl && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-800 px-6 text-center text-sm text-slate-300">
+                        Não foi possível carregar esta foto.
                     </div>
                 )}
 
@@ -39,6 +46,7 @@ export default function PhotoGridItem({ photo, isSelected, onToggle, getImageUrl
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             className="object-cover"
                             onLoad={() => setIsLoaded(true)}
+                            onError={() => setHasImageError(true)}
                             loading="lazy"
                         />
                     </div>
