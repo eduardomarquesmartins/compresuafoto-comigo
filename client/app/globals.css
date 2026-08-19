@@ -52,6 +52,45 @@ main.min-h-screen.bg-white .grid.border > section > div > div > p.uppercase {
   }
 }
 
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.01);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 6s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: floatGentle 4.5s ease-in-out infinite;
+}
+
 html {
   width: 100%;
   max-width: 100%;
