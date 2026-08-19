@@ -46,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="pt-BR" dir="ltr" suppressHydrationWarning>
       <body suppressHydrationWarning className={`${montserrat.variable} ${geist.variable} ${geistMono.variable} font-sans antialiased text-foreground bg-background`}>
         <SecurityWrapper>
           <GoogleWrapper>
