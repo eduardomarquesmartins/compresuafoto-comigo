@@ -8,7 +8,16 @@ const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfAkyeXUOrtnlk0QTrBMGk
 
 type ImageSlide = { kind: "image"; title: string; src: string };
 type FormSlide = { kind: "form"; title: string };
-type IntroSlide = { kind: "intro"; title: string; year?: string; eyebrow?: string; body?: string; emphasis?: string; quote?: string };
+type IntroSlide = {
+    kind: "intro";
+    title: string;
+    chapter?: string;
+    year?: string;
+    subtitle?: string;
+    body?: string;
+    emphasis?: string;
+    quote?: string;
+};
 type CaseSlide = {
     kind: "case";
     title: string;
@@ -28,17 +37,105 @@ type Slide = ImageSlide | FormSlide | IntroSlide | CaseSlide | PairSlide;
 
 const introSlides: IntroSlide[] = [
     { kind: "intro", title: "CONHEÇA MAIS" },
-    { kind: "intro", title: "PRIMEIROS PASSOS\nNO MARKETING", year: "2018", body: "TUDO COMEÇOU EM 2018, QUANDO, TRABALHANDO COMO CAIXA EM UM SHOPPING, SURGIU A OPORTUNIDADE DE UMA PROMOÇÃO PARA VENDEDORA. PERCEBENDO O POTENCIAL DAS REDES SOCIAIS PARA IMPULSIONAR AS VENDAS, A ESTRATÉGIA DE ELABORAÇÃO DE CONTEÚDOS TOMOU FORMA.", emphasis: "DISPONIBILIZANDO-SE PARA TIRAR FOTOS, GRAVAR VÍDEOS E ATÉ ATUAR COMO MODELO, A PAIXÃO PELA CRIAÇÃO DE CONTEÚDO FLORESCEU. PARALELAMENTE, A VENDA DE COSMÉTICOS TAMBÉM GANHOU DESTAQUE, CULMINANDO NA CRIAÇÃO DE UMA REDE SOCIAL PRÓPRIA PARA COMERCIALIZAÇÃO." },
-    { kind: "intro", title: "CRESCIMENTO E\nNOVAS OPORTUNIDADES", year: "2019", body: "EM 2019, UMA NOVA JORNADA COMEÇOU EM UMA OUTRA EMPRESA, ONDE RAPIDAMENTE SE DESTACOU PELAS HABILIDADES EXCEPCIONAIS NA ÁREA DE MARKETING. ESSE RECONHECIMENTO LEVOU À RESPONSABILIDADE INTEGRAL PELA GESTÃO DAS REDES SOCIAIS, TANTO DA MATRIZ QUANTO DA FILIAL. CADA CAMPANHA, CADA POST, REFLETIA UM DOMÍNIO CRESCENTE DAS ESTRATÉGIAS DIGITAIS, MOSTRANDO UM COMPROMISSO COM A INOVAÇÃO E A EFICÁCIA." },
-    { kind: "intro", title: "DESAFIOS E NOVAS\nCONQUISTAS", year: "2020", body: "EM 2020, SURGIU A CHANCE DE AGENCIAR UMA CAMPANHA POLÍTICA. FOI UM GRANDE DESAFIO, MAS TAMBÉM UMA OPORTUNIDADE DE CRESCIMENTO. ATUOU NA CRIAÇÃO DE PANFLETOS, CARTÕES DE VISITA, BANDEIRAS E ADESIVOS, ELABORANDO TODA A IDENTIDADE VISUAL DA CAMPANHA. ESSE TRABALHO EXIGIU ORGANIZAÇÃO, CRIATIVIDADE E UMA COMPREENSÃO PROFUNDA DAS NECESSIDADES DO CLIENTE, SENDO CRUCIAL PARA SEU DESENVOLVIMENTO PROFISSIONAL." },
-    { kind: "intro", title: "ESTUDO E PRIMEIROS\nCLIENTES", year: "2021", body: "2021 FOI UM ANO DE EVOLUÇÃO. INICIOU A FACULDADE DE MARKETING, APROFUNDANDO SEUS CONHECIMENTOS TEÓRICOS E PRÁTICOS. EM 7 DE AGOSTO, CONQUISTOU O PRIMEIRO CLIENTE PARA UMA NOVA EMPRESA QUE NÃO POSSUÍA PRESENÇA NAS REDES SOCIAIS, MOSTRANDO TALENTO AO CRIAR UMA PRESENÇA ONLINE EFETIVA. ESSE CLIENTE INICIAL FOI O PRIMEIRO DE MUITOS, CONSOLIDANDO SUA REPUTAÇÃO NA ÁREA. APÓS ESSES ACONTECIMENTOS, AINDA EM 2021, COMEÇOU A TRABALHAR NA CREFISA, ONDE APRIMOROU AINDA MAIS SEUS CONHECIMENTOS, EXPANDINDO SUAS HABILIDADES E EXPERIÊNCIAS NO SETOR FINANCEIRO." },
-    { kind: "intro", title: "ÚLTIMA EXPERIÊNCIA\nANTES DA & CONTI", year: "2022", body: "EM 2022, DUDA INICIOU SEU TRABALHO NA MACROMAC, SUA ÚLTIMA EXPERIÊNCIA EM REGIME CLT ANTES DE DAR UM GRANDE PASSO RUMO AO EMPREENDEDORISMO COM A & CONTI. NESSA POSIÇÃO, CONTRIBUIU SIGNIFICATIVAMENTE COM SEU CONHECIMENTO EM MARKETING, COLABORANDO NA CRIAÇÃO DE SLIDES, CURSOS E OUTRAS ATIVIDADES QUE ENRIQUECERAM SUA TRAJETÓRIA PROFISSIONAL." },
-    { kind: "intro", title: "CONQUISTA ACADÊMICA", year: "2022", body: "EM 2022, DUDA CELEBROU A FORMATURA NA FACULDADE DE MARKETING, UM MARCO IMPORTANTE EM SUA JORNADA PROFISSIONAL.", emphasis: "COM O CONHECIMENTO TEÓRICO SÓLIDO E PRÁTICO ADQUIRIDO AO LONGO DOS ESTUDOS, ESTAVA MAIS PREPARADA DO QUE NUNCA PARA ENFRENTAR OS DESAFIOS E APROVEITAR AS OPORTUNIDADES EM SUA CARREIRA DE EMPREENDEDORA." },
-    { kind: "intro", title: "A GRANDE DECISÃO E\nFUNDAÇÃO DA & CONTI", year: "2023", body: "APÓS PEDIR DEMISSÃO DA MACROMAC, DUDA TOMOU UMA DECISÃO CORAJOSA DE SEGUIR SUA PAIXÃO PELO EMPREENDEDORISMO E FUNDOU A &CONTI. COM ANOS DE EXPERIÊNCIA EM MARKETING, DESDE SEUS DIAS COMO CAIXA NO SHOPPING ATÉ SUA FORMAÇÃO ACADÊMICA E DIVERSAS CONQUISTAS PROFISSIONAIS, ELA TRANSFORMOU SUA VISÃO EM REALIDADE. A & CONTI NASCEU PARA OFERECER SOLUÇÕES INOVADORAS EM MARKETING DIGITAL, COM FOCO NA CRIAÇÃO DE VALOR E IMPACTO POSITIVO PARA SEUS CLIENTES.", quote: "Logo teste para a &Conti" },
-    { kind: "intro", title: "O NOSSO HOJE!", year: "2024", body: "HOJE, A & CONTI CELEBRA UM MARCO SIGNIFICATIVO: JÁ TRABALHAMOS COM MAIS DE 70 EMPRESAS, PARTICIPANDO EM DIVERSOS PROJETOS PARA MARCAS RENOMADAS COMO MERCADO LIVRE E STOCK CAR. SE NÃO FOSSE PELA PERSISTÊNCIA DE EDUARDA DESDE O INÍCIO, NÃO ESTARÍAMOS ONDE ESTAMOS HOJE. NOSSA JORNADA DESDE A FUNDAÇÃO TEM SIDO MARCADA PELO COMPROMISSO COM SOLUÇÕES INOVADORAS EM MARKETING DIGITAL, CRIANDO VALOR E IMPACTO POSITIVO PARA NOSSOS CLIENTES EM CADA PROJETO QUE REALIZAMOS.", quote: "LEMBRE-SE, SE VOCÊ DESEJA ALGO, VÁ ATÉ O FINAL COM DETERMINAÇÃO E PAIXÃO." },
-    { kind: "intro", title: "EXPANSÃO, EQUIPAMENTOS E\nDIREÇÃO DE COMUNICAÇÃO", year: "2024", body: "EM 2024, A & CONTI EXPANDIU SEU ALCANCE ATENDENDO DIVERSAS EMPRESAS E REALIZANDO INVESTIMENTOS ESTRATÉGICOS EM NOVOS EQUIPAMENTOS PARA ENTREGAR A MÁXIMA QUALIDADE AOS CLIENTES.", emphasis: "PARALELAMENTE, DUDA ASSUMIU O DESAFIO COMO DIRETORA DE COMUNICAÇÃO NA CÂMARA DE VEREADORES DE VIAMÃO, CONSOLIDANDO AINDA MAIS SEU RECONHECIMENTO E LIDERANÇA NO SETOR DE COMUNICAÇÃO E MARKETING." },
-    { kind: "intro", title: "CONSOLIDAÇÃO, GRANDES MARCAS E\nEVOLUÇÃO CONTÍNUA", year: "2025", body: "EM 2025, CONTINUAMOS NOSSA ATUAÇÃO NA CÂMARA DE VEREADORES E SEGUIMOS EM CONSTANTE EVOLUÇÃO NO NÚMERO DE CLIENTES E VOLUME DE ENTREGAS.", emphasis: "ENTRE OS PROJETOS DE DESTAQUE, ATENDEMOS O CLIENTE SCAPINI (VIVENDA SCAPINI), REALIZANDO A COBERTURA COMPLETA DA COLHEITA MECANIZADA DE OLIVEIRAS COM PRODUÇÃO AUDIOVISUAL DE ALTO NÍVEL." },
-    { kind: "intro", title: "DEDICAÇÃO TOTAL E\nVIVENDO DA & CONTI", year: "2026", body: "EM 2026, TOMAMOS A MAIOR DECISÃO DA NOSSA JORNADA: PEDIMOS DEMISSÃO DOS NOSSOS CARGOS E PASSAMOS A VIVER EXCLUSIVAMENTE DA & CONTI!", emphasis: "COM ESTRUTURA COMPLETA, EQUIPAMENTOS DE CINEMA E DEDICAÇÃO 100% INTEGRAL, TRANSFORMAMOS O NOSSO PROPÓSITO NA NOSSA MAIOR REALIDADE." }
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 01 • O PONTO DE PARTIDA",
+        year: "2018",
+        title: "Primeiros Passos no Marketing",
+        subtitle: "Da atuação no varejo à descoberta da criação de conteúdo",
+        body: "Tudo começou em 2018 quando, trabalhando como caixa em um shopping, surgiu a oportunidade de uma promoção para vendedora. Ao perceber o potencial transformador das redes sociais para impulsionar as vendas, a estratégia de elaboração de conteúdo tomou forma.",
+        emphasis: "Disponibilizando-se para tirar fotos, gravar vídeos e até atuar como modelo, a paixão pela criação de conteúdo floresceu — incluindo a criação de uma rede social própria para comercialização de cosméticos."
+    },
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 02 • EXPANSÃO E GESTÃO",
+        year: "2019",
+        title: "Crescimento & Novas Oportunidades",
+        subtitle: "Assumindo a liderança de redes sociais de matriz e filial",
+        body: "Em 2019, uma nova jornada teve início. Com rápido destaque pelas habilidades estratégicas no marketing, veio a responsabilidade integral pela gestão das redes sociais, tanto da matriz quanto da filial.",
+        emphasis: "Cada campanha e publicação refletiam um domínio crescente das ferramentas digitais, com compromisso inegociável por inovação e eficácia de resultados."
+    },
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 03 • O GRANDE DESAFIO",
+        year: "2020",
+        title: "Campanha Política & Identidade Visual",
+        subtitle: "Agenciamento completo, velocidade de entrega e posicionamento",
+        body: "Em 2020, surgiu o desafio de agenciar uma campanha política de ponta a ponta. Um trabalho que exigiu criatividade máxima, organização e rapidez na elaboração de toda a identidade visual da campanha: panfletos, cartões de visita, bandeiras e adesivos.",
+        emphasis: "Um marco decisivo que comprovou a capacidade de entrega sob pressão e fortaleceu a visão estratégica de comunicação."
+    },
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 04 • ESTUDO E PRIMEIROS CLIENTES",
+        year: "2021",
+        title: "Faculdade de Marketing & Primeiras Parcerias",
+        subtitle: "O início da graduação e a conquista das primeiras empresas parceiras",
+        body: "2021 foi um ano de evolução acelerada. Ingressou na faculdade de Marketing e, em 7 de agosto, conquistou o primeiro cliente oficial para criar uma presença digital do zero — o primeiro de muitos.",
+        emphasis: "Ainda em 2021, a atuação na Crefisa agregou profundo conhecimento do setor financeiro, elevando os padrões de análise e execução."
+    },
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 05 • EXPERIÊNCIA CORPORATIVA",
+        year: "2022",
+        title: "A Bagagem na Macromac",
+        subtitle: "Última atuação corporativa CLT antes do salto ao empreendedorismo",
+        body: "Em 2022, iniciou seu trabalho na Macromac, sua última experiência corporativa CLT. Contribuiu ativamente na elaboração de apresentações estratégicas, materiais executivos e cursos internos.",
+        emphasis: "Uma vivência enriquecedora que lapidou a visão corporativa e a determinação de fundar sua própria agência."
+    },
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 06 • CONQUISTA ACADÊMICA",
+        year: "2022",
+        title: "Formatura em Marketing",
+        subtitle: "Celebração do diploma e consolidação do conhecimento",
+        body: "Em 2022, Duda celebrou a formatura na faculdade de Marketing, coroando anos de dedicação entre trabalho e estudo intenso.",
+        emphasis: "Com fundamentação teórica sólida e ampla bagagem prática, estava mais preparada do que nunca para liderar sua própria empresa com excelência."
+    },
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 07 • A GRANDE DECISÃO",
+        year: "2023",
+        title: "O Nascimento da &CONTI",
+        subtitle: "A virada de chave para transformar marcas",
+        body: "Após pedir demissão da Macromac, tomou a decisão corajosa de fundar oficialmente a &CONTI. Dos dias de shopping à formação acadêmica, cada passo convergiu para este propósito.",
+        emphasis: "A &CONTI nasceu para entregar soluções inovadoras de marketing digital, gerando valor tangível e impacto positivo real para cada cliente parceiro."
+    },
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 08 • CONSOLIDAÇÃO",
+        year: "2024",
+        title: "O Nosso Hoje: +70 Empresas",
+        subtitle: "Presença consolidada ao lado de grandes nomes do mercado",
+        body: "A &CONTI alcançou a marca de mais de 70 empresas atendidas, participando de projetos marcantes para gigantes como Mercado Livre e Stock Car Pro Series.",
+        quote: "Se você deseja algo, vá até o final com determinação e paixão."
+    },
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 09 • EXPANSÃO E LIDERANÇA",
+        year: "2024",
+        title: "Produções de Alto Impacto & Direção Institucional",
+        subtitle: "Grandes marcas no circuito nacional e liderança na comunicação pública",
+        body: "Um salto de nível técnico com equipamentos de padrão de cinema e produções dinâmicas para gigantes do mercado, como Mercado Livre e Stock Car Pro Series.",
+        emphasis: "Consolidando a maturidade na gestão estratégica, Duda assumiu como Diretora de Comunicação da Câmara de Viamão, comandando a comunicação pública institucional."
+    },
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 10 • GRANDES PRODUÇÕES",
+        year: "2025",
+        title: "+CLIENTES & Produções",
+        subtitle: "Coberturas de grande escala e evolução contínua",
+        body: "Em 2025, mantivemos a liderança na Câmara de Vereadores e aceleramos o volume de produções de alto calibre.",
+        emphasis: "Destaque para a cobertura completa da colheita mecanizada de oliveiras para o cliente Scapini (Vivenda Scapini), unindo inovação e estética cinematográfica."
+    },
+    {
+        kind: "intro",
+        chapter: "CAPÍTULO 11 • O NOSSO PRESENTE",
+        year: "2026",
+        title: "Vivendo 100% da &CONTI",
+        subtitle: "Dedicação integral.",
+        body: "Em 2026, demos o passo definitivo: pedimos demissão dos nossos cargos e passamos a viver exclusivamente da &CONTI.",
+        emphasis: "Com parque de equipamentos próprio, equipe dedicada e estúdio estruturado, transformamos o nosso sonho na nossa realidade de todos os dias."
+    }
 ];
 
 const caseSlides: CaseSlide[] = [
@@ -98,42 +195,56 @@ const slides: Slide[] = [
     { kind: "form", title: "Formulário de conteúdos do mês" },
     lastSlide
 ];
-const common = "relative m-auto w-full max-w-6xl px-6 py-10 sm:px-10 md:px-14";
 
-const Highlight = ({ children }: { children: ReactNode }) => <mark className="bg-[#00b6ef] px-1 text-inherit">{children}</mark>;
+const common = "relative m-auto w-full max-w-7xl px-4 py-8 sm:px-8 md:px-12";
 
-function YearHeading({ year, title }: Pick<IntroSlide, "year" | "title">) {
-    return <header className="relative ml-auto max-w-xs text-right"><p className="text-5xl font-black leading-none tracking-[-.08em] text-[#063d5d] sm:text-7xl"><span className="mr-1 inline-block h-3 w-3 rounded-full bg-[#00b6ef] align-middle" />{year}</p><h2 className="whitespace-pre-line text-sm font-black leading-none tracking-[-.045em] sm:text-lg">{title}</h2></header>;
+function EditorialHeader({ year, title, subtitle }: { chapter?: string; year?: string; title: string; subtitle?: string }) {
+    return (
+        <header className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-4 border-b border-white/20 pb-5 font-sans">
+            <div className="space-y-1.5">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight text-white uppercase leading-tight">
+                    {title}
+                </h2>
+                {subtitle && (
+                    <p className="text-xs sm:text-sm font-normal uppercase tracking-[0.35em] text-black max-w-3xl">
+                        {subtitle}
+                    </p>
+                )}
+            </div>
+
+            {year && (
+                <div className="flex items-center md:items-end justify-start md:justify-end text-right">
+                    <p className="text-5xl sm:text-6xl lg:text-7xl font-medium tracking-tight text-white font-sans">
+                        {year}
+                    </p>
+                </div>
+            )}
+        </header>
+    );
 }
 
-function BrandMark({ dark = false }: { dark?: boolean }) {
-    return <span className={`inline-flex items-end font-black leading-none tracking-[-.08em] ${dark ? "text-[#073b59]" : "text-white"}`}><i className="mr-0.5 font-serif text-[.75em] not-italic">&amp;</i>CONTI</span>;
-}
-
-function BrushStroke({ children }: { children: ReactNode }) {
-    return <span className="relative inline-block isolate px-5 py-2"><svg className="absolute -inset-x-3 -inset-y-3 -z-10 h-[calc(100%+1.5rem)] w-[calc(100%+1.5rem)]" viewBox="0 0 500 120" preserveAspectRatio="none" aria-hidden="true"><path d="M13 42C47 18 88 31 126 22c72-17 123 12 191-2 58-12 113-29 171-4l-13 17 19 12-22 11 16 16-27 8 20 12c-83 24-166 3-241 13-78 11-158-4-231 3l18-18-27-10 24-14-25-14Z" fill="#00aeef" /><circle cx="23" cy="100" r="5" fill="#00aeef" /><circle cx="478" cy="25" r="4" fill="#00aeef" /></svg>{children}</span>;
-}
-
-function IdBadge() {
-    return <svg className="h-32 w-28 text-[#0063b5]" viewBox="0 0 120 140" fill="none" aria-label="Crachá corporativo" role="img"><path d="M38 18h44v16H38zM47 4h26v14H47zM18 29h84v98H18z" stroke="currentColor" strokeWidth="7" strokeLinejoin="round" /><path d="M41 74c0-13 8-24 19-24s19 11 19 24v20H41V74Z" stroke="currentColor" strokeWidth="6" /><circle cx="60" cy="63" r="10" stroke="currentColor" strokeWidth="6" /><path d="M34 108h20m8 0h24m-52 15h52" stroke="currentColor" strokeWidth="6" strokeLinecap="round" /></svg>;
-}
-
-function HeartBalloon({ className = "" }: { className?: string }) {
-    return <span className={`relative inline-grid h-8 w-9 rotate-[18deg] place-items-center rounded-[55%_55%_55%_12%] bg-white text-[#f69daa] shadow ${className}`} aria-hidden="true">♥</span>;
+function Tape({ className = "" }: { className?: string }) {
+    return (
+        <div className={`pointer-events-none absolute h-4 w-16 -rotate-3 bg-white/80 border border-white/40 backdrop-blur-xs shadow-xs z-30 ${className}`} aria-hidden="true" />
+    );
 }
 
 function QuoteGraphic() {
-    return <svg className="absolute -right-2 -top-7 h-20 w-28 text-[#ffc400]" viewBox="0 0 120 80" aria-hidden="true"><path d="M9 7h39v32c0 23-14 34-37 35V57c10-1 16-6 17-16H9V7Zm62 0h39v32c0 23-14 34-37 35V57c10-1 16-6 17-16H71V7Z" fill="currentColor" /></svg>;
+    return (
+        <svg className="absolute -right-2 -top-6 h-16 w-20 text-white/20" viewBox="0 0 120 80" aria-hidden="true">
+            <path d="M9 7h39v32c0 23-14 34-37 35V57c10-1 16-6 17-16H9V7Zm62 0h39v32c0 23-14 34-37 35V57c10-1 16-6 17-16H71V7Z" fill="currentColor" />
+        </svg>
+    );
 }
 
 function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
     if (!slide.year) {
         return (
-            <article className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#2f7fde] text-white px-6 py-12 select-none" aria-label="Conheça mais - &CONTI">
+            <article className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#2f7fde] text-white px-6 py-12 select-none font-sans" aria-label="Conheça mais - &CONTI">
                 <div className="relative z-10 flex h-full w-full max-w-6xl flex-col items-center justify-between py-6 text-center">
                     <div className="h-4 sm:h-8" />
 
-                    {/* Full Seamless Center Logo - Exact Original Font & Weight */}
+                    {/* Full Seamless Center Logo */}
                     <div className="flex flex-col items-center justify-center my-auto">
                         <h1 className="text-6xl font-medium tracking-tight text-white sm:text-8xl md:text-9xl lg:text-[11rem] leading-none font-sans">
                             &amp;CONTI
@@ -153,203 +264,471 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
             </article>
         );
     }
-    return <article className="relative flex h-full w-full overflow-y-auto bg-[#fcfcfa] text-[#111]" aria-label={`${slide.year}: ${slide.title.replace(/\n/g, " ")}`}><div className="absolute left-0 right-0 top-8 border-t-2 border-dashed border-[#00b6ef]" aria-hidden="true" />
-        {slide.year === "2018" && <div className={common}><YearHeading {...slide} /><div className="mt-8 grid gap-7 lg:grid-cols-2"><div className="space-y-5 text-center text-lg font-black leading-[1.35] sm:text-2xl"><p>{slide.body?.split("PERCEBENDO")[0]}<Highlight>PERCEBENDO O POTENCIAL DAS REDES SOCIAIS PARA IMPULSIONAR AS VENDAS,</Highlight> A ESTRATÉGIA DE ELABORAÇÃO DE CONTEÚDOS TOMOU FORMA.</p><p>DISPONIBILIZANDO-SE PARA TIRAR FOTOS, GRAVAR VÍDEOS E ATÉ ATUAR COMO MODELO, A <Highlight>PAIXÃO PELA CRIAÇÃO DE CONTEÚDO</Highlight> FLORESCEU. PARALELAMENTE, A VENDA DE COSMÉTICOS TAMBÉM GANHOU DESTAQUE, CULMINANDO NA CRIAÇÃO DE UMA REDE SOCIAL PRÓPRIA PARA COMERCIALIZAÇÃO.</p></div><aside className="relative flex min-h-[460px] items-end justify-center pb-2"><div className="animate-in fade-in zoom-in-75 slide-in-from-left-6 duration-700 animate-float-slow absolute -left-2 -top-6 h-52 w-72 -rotate-3 overflow-hidden border-[10px] border-white bg-slate-200 shadow-2xl transition-all hover:z-20 hover:scale-105 sm:h-60 sm:w-80 md:-left-8"><img src="/apresentacao/2018-1.jpg" alt="Registro visual de 2018" className="h-full w-full object-cover" /></div><div className="animate-in fade-in zoom-in-75 slide-in-from-right-6 duration-700 delay-200 animate-float-reverse absolute -right-2 top-20 h-64 w-52 rotate-3 overflow-hidden border-[10px] border-white bg-slate-200 shadow-2xl transition-all hover:z-20 hover:scale-105 sm:h-72 sm:w-56 md:-right-6"><img src="/apresentacao/2018-2.jpg" alt="Registro visual de 2018" className="h-full w-full object-cover" /></div><div className="animate-in fade-in zoom-in-90 duration-700 delay-300 animate-float-gentle relative z-10 rounded-[2rem] bg-white p-5 text-center shadow-2xl transition-transform hover:scale-105"><p className="mb-2 text-center text-lg font-bold leading-tight text-[#00aeea]">Primeira logo de quando eu era consultora</p><img src="/apresentacao/2018-logo.png" alt="Primeira logo de quando eu era consultora Eduarda Conti" className="mx-auto h-44 w-auto object-contain sm:h-48" /></div></aside></div></div>}
-        {slide.year === "2019" && <TextSlide slide={slide} highlight="RAPIDAMENTE SE DESTACOU PELAS HABILIDADES EXCEPCIONAIS NA ÁREA DE MARKETING. ESSE RECONHECIMENTO LEVOU À RESPONSABILIDADE INTEGRAL PELA GESTÃO DAS REDES SOCIAIS, TANTO DA MATRIZ QUANTO DA FILIAL." />}
-        {slide.year === "2020" && <div className={common}><YearHeading {...slide} /><div className="mt-8 grid gap-7 lg:grid-cols-2"><div className="flex items-center text-center text-lg font-black leading-[1.35] sm:text-2xl"><p>EM 2020, SURGIU A CHANCE DE AGENCIAR UMA CAMPANHA POLÍTICA. FOI UM GRANDE DESAFIO, MAS TAMBÉM UMA OPORTUNIDADE DE CRESCIMENTO. ATUOU NA CRIAÇÃO DE PANFLETOS, CARTÕES DE VISITA, BANDEIRAS E ADESIVOS, ELABORANDO TODA A IDENTIDADE VISUAL DA CAMPANHA. ESSE TRABALHO EXIGIU ORGANIZAÇÃO, CRIATIVIDADE E UMA COMPREENSÃO PROFUNDA DAS NECESSIDADES DO CLIENTE, SENDO <Highlight>CRUCIAL PARA SEU DESENVOLVIMENTO PROFISSIONAL.</Highlight></p></div><aside className="relative flex min-h-[460px] items-center justify-center pb-2"><div className="animate-in fade-in zoom-in-75 slide-in-from-left-6 duration-700 animate-float-slow absolute -left-2 top-0 h-64 w-52 -rotate-3 overflow-hidden border-[10px] border-white bg-slate-200 shadow-2xl transition-all hover:z-20 hover:scale-105 sm:h-72 sm:w-56 md:-left-8"><img src="/apresentacao/2020-1.jpg" alt="Registro visual de 2020" className="h-full w-full object-cover" /></div><div className="animate-in fade-in zoom-in-75 slide-in-from-right-6 duration-700 delay-200 animate-float-reverse absolute -right-2 top-16 h-64 w-52 rotate-4 overflow-hidden border-[10px] border-white bg-slate-200 shadow-2xl transition-all hover:z-20 hover:scale-105 sm:h-72 sm:w-56 md:-right-6"><img src="/apresentacao/2020-2.jpg" alt="Registro visual de 2020" className="h-full w-full object-cover" /></div></aside></div></div>}
-        {slide.year === "2021" && <ClientsSlide slide={slide} />}
-        {slide.year === "2022" && (slide.title.startsWith("ÚLTIMA") ? <MacromacSlide slide={slide} /> : <GraduationSlide slide={slide} />)}
-        {slide.year === "2023" && <FoundationSlide slide={slide} />}
-        {slide.year === "2024" && (slide.title.startsWith("O NOSSO") ? <TodaySlide slide={slide} /> : <TodayPart2Slide slide={slide} />)}
-        {slide.year === "2025" && <Year2025Slide slide={slide} />}
-        {slide.year === "2026" && <Year2026Slide slide={slide} />}
-    </article>;
-}
 
-function TextSlide({ slide, highlight }: { slide: IntroSlide; highlight: string }) {
-    return <div className={common}>
-        <YearHeading {...slide} />
-        <div className="mt-8 grid items-center gap-8 lg:grid-cols-[1fr_0.95fr]">
-            <p className="text-center text-lg font-black leading-[1.35] sm:text-2xl">{slide.body?.split(highlight)[0]}<Highlight>{highlight}</Highlight>{slide.body?.split(highlight)[1]}</p>
-            <aside className="relative flex min-h-[460px] items-center justify-center pb-2">
-                <div className="animate-in fade-in zoom-in-75 slide-in-from-top-6 duration-700 animate-float-slow absolute -left-2 -top-4 h-48 w-64 -rotate-3 overflow-hidden border-[10px] border-white bg-slate-200 shadow-2xl transition-all hover:z-30 hover:scale-105 sm:h-56 sm:w-72 md:-left-6">
-                    <img src="/apresentacao/2019-1.jpg" alt="Registro visual de 2019" className="h-full w-full object-cover" />
-                </div>
-                <div className="animate-in fade-in zoom-in-75 slide-in-from-bottom-6 duration-700 delay-150 animate-float-reverse absolute bottom-0 left-0 z-10 h-56 w-44 rotate-6 overflow-hidden border-[10px] border-white bg-slate-200 shadow-2xl transition-all hover:z-30 hover:scale-105 sm:h-64 sm:w-48">
-                    <img src="/apresentacao/2019-2.jpg" alt="Registro visual de 2019" className="h-full w-full object-cover" />
-                </div>
-                <div className="animate-in fade-in zoom-in-75 slide-in-from-right-6 duration-700 delay-300 animate-float-gentle absolute -right-2 bottom-2 z-20 h-56 w-44 -rotate-4 overflow-hidden border-[10px] border-white bg-slate-200 shadow-2xl transition-all hover:z-30 hover:scale-105 sm:h-64 sm:w-48 md:-right-6">
-                    <img src="/apresentacao/2019-3.jpg" alt="Registro visual de 2019" className="h-full w-full object-cover" />
-                </div>
-            </aside>
-        </div>
-    </div>;
-}
-
-function ClientsSlide({ slide }: { slide: IntroSlide }) {
-    const clients = [
-        { name: "DONNA VALL", img: "/apresentacao/2021-donnavall.jpg", class: "left-0 top-0 h-28 w-44 -rotate-4 bg-white p-2 border-4 border-[#00b6ef]", anim: "animate-in fade-in zoom-in-75 duration-700 animate-float-slow", fit: "object-contain" },
-        { name: "tuttipromo", img: "/apresentacao/2021-tuttipromo.jpg", class: "-left-6 top-[100px] h-40 w-52 rotate-3 z-10 border-4 border-white", anim: "animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse", fit: "object-cover" },
-        { name: "BARBEARIA ENÉIAS BITTENCOURT", img: "/apresentacao/2021-barbearia.jpg", class: "left-2 bottom-0 h-28 w-44 -rotate-2 bg-[#251e1a] p-2 border-4 border-[#00b6ef]", anim: "animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-slow", fit: "object-contain" },
-        { name: "Crefisa", img: "/apresentacao/2021-crefisa.jpg", class: "right-0 bottom-4 h-44 w-44 rotate-4 z-20 border-4 border-white", anim: "animate-in fade-in zoom-in-75 duration-700 delay-450 animate-float-reverse", fit: "object-cover" }
-    ];
-    return <div className={common}><YearHeading {...slide} /><div className="mt-6 grid items-center gap-7 lg:grid-cols-[1fr_1.1fr]"><div className="relative mx-auto h-[420px] w-96"><svg className="absolute inset-0 h-full w-full" viewBox="0 0 320 390" aria-hidden="true"><path d="M91 58C245 40 304 145 245 244C211 301 125 357 53 299C-1 255 22 137 91 58Z" fill="none" stroke="#111" strokeDasharray="12 10" strokeWidth="5" /><g fill="#00b6ef" stroke="#073b59" strokeWidth="3"><circle cx="91" cy="58" r="10" /><circle cx="31" cy="155" r="10" /><circle cx="53" cy="299" r="10" /><circle cx="205" cy="349" r="10" /></g></svg>{clients.map((client) => <div key={client.name} className={`absolute overflow-hidden rounded-lg shadow-xl transition-all hover:z-30 hover:scale-110 hover:shadow-2xl ${client.class} ${client.anim}`}><img src={client.img} alt={client.name} className={`h-full w-full ${client.fit}`} /></div>)}</div><p className="text-center text-lg font-black leading-[1.3] sm:text-2xl">2021 FOI UM ANO DE EVOLUÇÃO. INICIOU A FACULDADE DE MARKETING, APROFUNDANDO SEUS CONHECIMENTOS TEÓRICOS E PRÁTICOS. EM 7 DE AGOSTO, CONQUISTOU O <Highlight>PRIMEIRO CLIENTE</Highlight> PARA UMA NOVA EMPRESA QUE NÃO POSSUÍA PRESENÇA NAS REDES SOCIAIS, MOSTRANDO TALENTO AO CRIAR UMA PRESENÇA ONLINE EFETIVA. ESSE CLIENTE INICIAL FOI O PRIMEIRO DE MUITOS, CONSOLIDANDO SUA REPUTAÇÃO NA ÁREA. APÓS ESSES ACONTECIMENTOS, AINDA EM 2021, COMEÇOU A TRABALHAR NA CREFISA, ONDE APRIMOROU AINDA MAIS SEUS CONHECIMENTOS, EXPANDINDO SUAS HABILIDADES E EXPERIÊNCIAS NO SETOR FINANCEIRO.</p></div></div>;
-}
-
-function MacromacSlide({ slide }: { slide: IntroSlide }) {
-    const photos = [
-        { src: "/apresentacao/2022-1.jpg", alt: "Equipe à noite", class: "-left-4 -top-4 h-44 w-60 -rotate-3 sm:h-48 sm:w-64", anim: "animate-in fade-in zoom-in-75 duration-700 delay-75 animate-float-slow" },
-        { src: "/apresentacao/2022-2.jpg", alt: "Cadeiras azuis", class: "-right-2 top-0 h-48 w-36 rotate-4 sm:h-52 sm:w-40 z-10", anim: "animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse" },
-        { src: "/apresentacao/2022-3.jpg", alt: "Arraiá", class: "left-2 top-28 h-48 w-36 -rotate-6 sm:h-52 sm:w-40 z-20", anim: "animate-in fade-in zoom-in-75 duration-700 delay-225 animate-float-slow" },
-        { src: "/apresentacao/2022-4.jpg", alt: "Empilhadeiras", class: "right-4 top-32 h-48 w-36 rotate-3 sm:h-52 sm:w-40 z-20", anim: "animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-reverse" },
-        { src: "/apresentacao/2022-5.jpg", alt: "Selfie Ambev", class: "left-8 bottom-0 h-44 w-60 rotate-2 sm:h-48 sm:w-64 z-30", anim: "animate-in fade-in zoom-in-75 duration-700 delay-375 animate-float-gentle" }
-    ];
-    return <div className={common}><YearHeading {...slide} /><div className="mt-8 grid items-center gap-8 lg:grid-cols-[1.1fr_1fr]"><div className="space-y-5 text-center text-lg font-black leading-[1.35] sm:text-2xl"><p>EM 2022, DUDA INICIOU SEU TRABALHO NA MACROMAC, SUA <Highlight>ÚLTIMA EXPERIÊNCIA EM REGIME CLT</Highlight> ANTES DE DAR UM GRANDE PASSO RUMO AO EMPREENDEDORISMO COM A &amp; CONTI.</p><p>NESSA POSIÇÃO, CONTRIBUIU SIGNIFICATIVAMENTE COM SEU CONHECIMENTO EM MARKETING, COLABORANDO NA CRIAÇÃO DE SLIDES, CURSOS E OUTRAS ATIVIDADES QUE <Highlight>ENRIQUECERAM SUA TRAJETÓRIA PROFISSIONAL.</Highlight></p></div><aside className="relative flex min-h-[460px] items-center justify-center pb-2">{photos.map((photo) => <div key={photo.src} className={`absolute overflow-hidden border-[8px] border-white bg-slate-200 shadow-2xl transition-all hover:z-40 hover:scale-110 hover:shadow-2xl ${photo.class} ${photo.anim}`}><img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" /></div>)}</aside></div></div>;
-}
-
-function GraduationSlide({ slide }: { slide: IntroSlide }) {
-    const photos = [
-        { src: "/apresentacao/2022-grad-1.jpg", alt: "Dia do Profissional de Marketing - Palco", class: "-left-2 -top-4 h-56 w-44 -rotate-4 sm:h-64 sm:w-48", anim: "animate-in fade-in zoom-in-75 duration-700 animate-float-slow" },
-        { src: "/apresentacao/2022-grad-2.jpg", alt: "Selfie com Beca de Formatura", class: "left-16 top-12 z-10 h-60 w-44 rotate-3 sm:h-68 sm:w-48", anim: "animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse" },
-        { src: "/apresentacao/2022-grad-3.jpg", alt: "Formatura no Corredor", class: "-right-2 bottom-0 z-20 h-56 w-44 -rotate-3 sm:h-64 sm:w-48 md:-right-6", anim: "animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-gentle" }
-    ];
-    return <div className={`${common} overflow-hidden`}><YearHeading {...slide} /><div className="mt-8 grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]"><div className="space-y-6 text-center text-lg font-black leading-[1.3] sm:text-2xl"><p>EM 2022, DUDA CELEBROU A FORMATURA NA FACULDADE DE MARKETING, <Highlight>UM MARCO IMPORTANTE EM SUA JORNADA PROFISSIONAL.</Highlight></p><p>COM O CONHECIMENTO TEÓRICO SÓLIDO E PRÁTICO ADQUIRIDO AO LONGO DOS ESTUDOS, ESTAVA MAIS PREPARADA DO QUE NUNCA PARA ENFRENTAR OS DESAFIOS E <Highlight>APROVEITAR AS OPORTUNIDADES EM SUA CARREIRA DE EMPREENDEDORA.</Highlight></p></div><aside className="relative flex min-h-[460px] items-center justify-center pb-2">{photos.map((photo) => <div key={photo.src} className={`absolute overflow-hidden border-[10px] border-white bg-slate-200 shadow-2xl transition-all hover:z-30 hover:scale-110 hover:shadow-2xl ${photo.class} ${photo.anim}`}><img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" /></div>)}</aside></div></div>;
-}
-
-function FoundationSlide({ slide }: { slide: IntroSlide }) {
-    const logos = [
-        "/apresentacao/2023-logo-1.jpg",
-        "/apresentacao/2023-logo-2.jpg",
-        "/apresentacao/2023-logo-3.jpg",
-        "/apresentacao/2023-logo-4.jpg"
-    ];
-    return <div className={common}><YearHeading {...slide} /><div className="mt-8 grid items-center gap-8 lg:grid-cols-[1fr_1fr]"><div className="space-y-5 text-center text-lg font-black leading-[1.35] sm:text-2xl"><p>APÓS PEDIR DEMISSÃO DA MACROMAC, DUDA TOMOU UMA DECISÃO CORAJOSA DE SEGUIR SUA PAIXÃO PELO EMPREENDEDORISMO E <Highlight>FUNDOU A &amp;CONTI.</Highlight></p><p>COM ANOS DE EXPERIÊNCIA EM MARKETING, DESDE SEUS DIAS COMO CAIXA NO SHOPPING ATÉ SUA FORMAÇÃO ACADÊMICA E DIVERSAS CONQUISTAS PROFISSIONAIS, ELA TRANSFORMOU SUA VISÃO EM REALIDADE.</p><p><Highlight>A &amp; CONTI NASCEU PARA OFERECER SOLUÇÕES INOVADORAS EM MARKETING DIGITAL, COM FOCO NA CRIAÇÃO DE VALOR E IMPACTO POSITIVO PARA SEUS CLIENTES.</Highlight></p></div><div className="grid grid-cols-2 gap-4">{logos.map((src, i) => <div key={src} className={`animate-in fade-in zoom-in-90 duration-500 delay-[${(i + 1) * 100}ms] animate-float-gentle overflow-hidden rounded-2xl border-4 border-white bg-slate-100 shadow-xl transition-all hover:scale-108 hover:shadow-2xl`}><img src={src} alt={`Logo ${i + 1} &Conti`} className="aspect-square h-full w-full object-contain" /></div>)}</div></div></div>;
-}
-
-function TodaySlide({ slide }: { slide: IntroSlide }) {
-    return <div className={common}><YearHeading {...slide} /><div className="mt-8 grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]"><div className="space-y-6"><p className="text-center text-lg font-black leading-[1.3] sm:text-2xl">HOJE, A <Highlight>&amp; CONTI CELEBRA UM MARCO SIGNIFICATIVO:</Highlight> JÁ TRABALHAMOS COM <Highlight>MAIS DE 70 EMPRESAS,</Highlight> PARTICIPANDO EM DIVERSOS PROJETOS PARA MARCAS RENOMADAS COMO <Highlight>MERCADO LIVRE E STOCK CAR. SE NÃO FOSSE PELA PERSISTÊNCIA DE EDUARDA</Highlight> DESDE O INÍCIO, NÃO ESTARÍAMOS ONDE ESTAMOS HOJE. NOSSA JORNADA DESDE A FUNDAÇÃO TEM SIDO MARCADA PELO COMPROMISSO COM SOLUÇÕES INOVADORAS EM MARKETING DIGITAL, CRIANDO VALOR E IMPACTO POSITIVO PARA NOSSOS CLIENTES EM CADA PROJETO QUE REALIZAMOS.</p><blockquote className="relative mx-auto max-w-2xl text-center text-lg font-black leading-tight sm:text-3xl"><QuoteGraphic />LEMBRE-SE, SE VOCÊ DESEJA ALGO, VÁ ATÉ O FINAL COM DETERMINAÇÃO E PAIXÃO.</blockquote><div className="flex flex-col items-center gap-2"><span className="text-3xl"><BrandMark dark /></span><span className="rounded bg-[#00aeea] px-4 py-1 text-xs font-black text-white">&amp;CONTI</span></div></div><div className="mx-auto w-full max-w-md"><div className="animate-in fade-in zoom-in-90 duration-700 delay-150 animate-float-gentle overflow-hidden rounded-3xl border-[10px] border-white bg-slate-200 shadow-2xl transition-all hover:scale-105 hover:shadow-[0_25px_60px_rgba(0,174,238,0.25)]"><img src="/apresentacao/2024.jpg" alt="Eduarda Conti 2024 - &amp;CONTI" className="h-full w-full object-cover" /></div></div></div></div>;
-}
-
-function TodayPart2Slide({ slide }: { slide: IntroSlide }) {
-    return <div className={common}><YearHeading {...slide} /><div className="mt-8 grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]"><div className="space-y-5 text-center text-lg font-black leading-[1.35] sm:text-2xl"><p>EM 2024, A &amp; CONTI EXPANDIU SEU ALCANCE ATENDENDO DIVERSAS EMPRESAS E <Highlight>REALIZANDO INVESTIMENTOS ESTRATÉGICOS EM NOVOS EQUIPAMENTOS</Highlight> PARA ENTREGAR A MÁXIMA QUALIDADE E EFICIÊNCIA AOS CLIENTES.</p><p>PARALELAMENTE, DUDA ASSUMIU O DESAFIO COMO <Highlight>DIRETORA DE COMUNICAÇÃO NA CÂMARA DE VIAMÃO,</Highlight> CONSOLIDANDO AINDA MAIS SEU RECONHECIMENTO E LIDERANÇA NO SETOR DE COMUNICAÇÃO.</p></div><aside className="relative flex min-h-[440px] items-center justify-center pb-2"><a href="https://www.instagram.com/reel/C6Ctr7gL5vW/" target="_blank" rel="noreferrer" title="Ver projeto Mercado Livre no Instagram" className="group animate-in fade-in slide-in-from-left-6 duration-700 delay-100 animate-float-slow absolute -left-2 top-8 z-10 block h-48 w-64 -rotate-4 overflow-hidden rounded-2xl border-[6px] border-white bg-slate-100 shadow-2xl transition-all duration-300 hover:z-30 hover:scale-105 sm:h-56 sm:w-72 md:-left-4"><img src="/apresentacao/2024-mercadolivre.jpg" alt="Mercado Livre - Projeto Instagram" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" /><span className="absolute bottom-3 left-3 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">Mercado Livre ↗</span></a><a href="https://www.instagram.com/reel/C5hFQSwLxFZ/" target="_blank" rel="noreferrer" title="Ver projeto Stock Car no Instagram" className="group animate-in fade-in slide-in-from-right-6 duration-700 delay-250 animate-float-reverse absolute -right-2 bottom-8 z-20 block h-48 w-64 rotate-4 overflow-hidden rounded-2xl border-[6px] border-white bg-slate-100 shadow-2xl transition-all duration-300 hover:z-30 hover:scale-105 sm:h-56 sm:w-72 md:-right-4"><img src="/apresentacao/2024-stockcar.jpg" alt="Stock Car Pro Series - Projeto Instagram" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" /><span className="absolute bottom-3 left-3 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">Stock Car ↗</span></a></aside></div></div>;
-}
-
-function Year2025Slide({ slide }: { slide: IntroSlide }) {
     return (
-        <div className={common}>
-            <YearHeading {...slide} />
-            <div className="mt-8 grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="space-y-5 text-center text-lg font-black leading-[1.35] sm:text-2xl">
-                    <p>
-                        EM 2025, <Highlight>CONTINUAMOS NOSSA ATUAÇÃO NA CÂMARA DE VEREADORES</Highlight> E FOMOS EVOLUINDO CONTINUAMENTE NO <Highlight>NÚMERO DE CLIENTES E VOLUME DE ENTREGAS.</Highlight>
-                    </p>
-                    <p>
-                        CONSOLIDANDO PRODUÇÕES AUDIOVISUAIS DE ALTO IMPACTO, DESTACAMOS O CLIENTE <Highlight>SCAPINI (VIVENDA SCAPINI),</Highlight> REGISTRANDO A COBERTURA DA COLHEITA MECANIZADA DE OLIVEIRAS COM MÁXIMA PRECISÃO, INOVAÇÃO E QUALIDADE CINEMATOGRÁFICA.
-                    </p>
-                </div>
-                <aside className="relative flex min-h-[460px] items-center justify-center pb-2">
-                    <a
-                        href="https://www.instagram.com/reel/DJfRa7MyZuE/"
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Ver cobertura Vivenda Scapini no Instagram"
-                        className="group animate-in fade-in zoom-in-75 slide-in-from-left-6 duration-700 delay-100 animate-float-slow absolute -left-2 top-2 z-20 block w-64 overflow-hidden rounded-2xl border-[8px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:z-40 hover:scale-105 sm:w-72 md:-left-6"
-                    >
-                        <div className="relative aspect-[9/16] max-h-[380px] w-full overflow-hidden bg-black">
-                            <img
-                                src="/apresentacao/2025-scapini.jpg"
-                                alt="Cliente Scapini - Vivenda Scapini Colheita Mecanizada"
-                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                            <div className="absolute left-3 right-3 top-3 flex items-center justify-between gap-2">
-                                <span className="rounded-full bg-[#00b6ef] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-black shadow">
-                                    Cliente Scapini
-                                </span>
-                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur">
-                                    <Play size={12} fill="currentColor" />
-                                </span>
-                            </div>
-                            <div className="absolute bottom-3 left-3 right-3 text-left">
-                                <p className="text-xs font-bold text-[#00b6ef] uppercase tracking-wider">Vivenda Scapini</p>
-                                <p className="text-xs font-semibold text-white/90 line-clamp-2">Cobertura da colheita mecanizada de oliveiras</p>
-                                <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-slate-300">
-                                    Ver Reel no Instagram ↗
-                                </span>
+        <article className="relative flex min-h-full h-full w-full flex-col justify-center overflow-y-auto overflow-x-hidden no-scrollbar bg-[#2f7fde] text-white font-sans" aria-label={`${slide.year}: ${slide.title}`}>
+            {/* Ambient Background Glows */}
+            <div className="pointer-events-none absolute -left-20 top-0 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
+            <div className="pointer-events-none absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-black/10 blur-3xl" />
+
+            {slide.year === "2018" && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1.1fr_1.1fr] items-center">
+                        <div className="space-y-4">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                                <div className="rounded-2xl border-l-4 border-[#2f7fde] bg-slate-50 p-4">
+                                    <p className="text-sm sm:text-base font-medium leading-snug text-slate-900">
+                                        {slide.emphasis}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </a>
 
-                    <div className="animate-in fade-in zoom-in-75 slide-in-from-right-6 duration-700 delay-250 animate-float-reverse absolute -right-2 top-8 z-10 w-56 -rotate-3 overflow-hidden rounded-xl border-4 border-white bg-white p-3 shadow-xl transition-all hover:z-30 hover:scale-105 sm:w-60 md:-right-4">
-                        <img
-                            src="/apresentacao/2024-viamao.jpg"
-                            alt="Câmara de Vereadores - Continuidade em 2025"
-                            className="h-36 w-full rounded-lg object-cover"
-                        />
-                        <div className="mt-2 text-center">
-                            <span className="inline-block rounded bg-[#073b59] px-2 py-0.5 text-[10px] font-black uppercase text-white">
-                                Câmara de Viamão
-                            </span>
-                            <p className="mt-1 text-[11px] font-bold text-slate-700">
-                                Continuidade &amp; Liderança em Comunicação
-                            </p>
+                        {/* Clean Non-Overlapping Gallery */}
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Photo 1 */}
+                                <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                    <Tape className="-top-3 left-6" />
+                                    <img src="/apresentacao/2018-1.jpg" alt="Eduarda Conti em 2018" className="h-48 sm:h-52 w-full object-cover rounded-lg" />
+                                </div>
+
+                                {/* Photo 2 */}
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                    <Tape className="-top-3 right-6" />
+                                    <img src="/apresentacao/2018-2.jpg" alt="Início das produções de conteúdo" className="h-48 sm:h-52 w-full object-cover rounded-lg" />
+                                </div>
+                            </div>
+
+                            {/* First Consultant Logo Card */}
+                            <div className="animate-in fade-in zoom-in-90 duration-700 delay-300 animate-float-gentle rounded-2xl border-4 border-white bg-white p-3 text-center shadow-2xl transition-transform hover:scale-102 flex items-center justify-center gap-4">
+                                <img src="/apresentacao/2018-logo.png" alt="Primeira logo consultora Eduarda Conti" className="h-20 sm:h-24 w-auto object-contain" />
+                                <div className="text-left">
+                                    <span className="block text-[11px] font-normal uppercase tracking-[0.25em] text-black">
+                                        1ª Identidade Visual
+                                    </span>
+                                    <p className="text-xs text-slate-600 font-medium">Consultora Eduarda Conti</p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400 animate-float-gentle absolute -right-1 bottom-4 z-30 flex items-center gap-2 rounded-2xl border-2 border-white/60 bg-[#00b6ef] px-4 py-2.5 text-black shadow-2xl transition-transform hover:scale-105">
-                        <span className="text-2xl font-black leading-none">2025</span>
-                        <div className="text-left font-bold text-[11px] leading-tight">
-                            <p>+ Clientes</p>
-                            <p className="opacity-80">+ Entregas</p>
-                        </div>
-                    </div>
-                </aside>
-            </div>
-        </div>
-    );
-}
-
-function Year2026Slide({ slide }: { slide: IntroSlide }) {
-    return (
-        <div className={common}>
-            <YearHeading {...slide} />
-            <div className="mt-8 grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="space-y-6 text-center text-lg font-black leading-[1.35] sm:text-2xl">
-                    <p>
-                        EM 2026, TOMAMOS A MAIOR DECISÃO DA NOSSA TRAJETÓRIA: <Highlight>PEDIMOS DEMISSÃO DOS NOSSOS CARGOS</Highlight> PARA NOS DEDICAR 100% AO NOSSO PRÓPRIO NEGÓCIO.
-                    </p>
-                    <p>
-                        HOJE, <Highlight>VIVEMOS EXCLUSIVAMENTE DA &amp; CONTI!</Highlight> COM EQUIPAMENTOS CINEMATOGRÁFICOS DE ÚLTIMA GERAÇÃO, ESTRUTURA COMPLETA E FOCO TOTAL EM RESULTADOS, TRANSFORMAMOS O NOSSO SONHO NA NOSSA MAIOR REALIDADE.
-                    </p>
-                    <div className="flex flex-col items-center gap-2 pt-2">
-                        <span className="text-3xl"><BrandMark dark /></span>
                     </div>
                 </div>
-                <aside className="relative flex min-h-[470px] items-center justify-center pb-2">
-                    <div className="animate-in fade-in zoom-in-75 slide-in-from-left-6 duration-700 delay-100 animate-float-slow absolute -left-2 top-2 z-20 h-72 w-56 -rotate-3 overflow-hidden rounded-2xl border-[8px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:z-40 hover:scale-105 sm:h-80 sm:w-60 md:-left-4">
-                        <img
-                            src="/apresentacao/2026-2.jpg"
-                            alt="Fundadores &CONTI - Vivendo do nosso negócio"
-                            className="h-full w-full object-cover object-top"
-                        />
-                    </div>
-                    <div className="animate-in fade-in zoom-in-75 slide-in-from-right-6 duration-700 delay-250 animate-float-reverse absolute -right-2 bottom-6 z-10 h-68 w-52 rotate-4 overflow-hidden rounded-2xl border-[8px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:z-40 hover:scale-105 sm:h-76 sm:w-56 md:-right-4">
-                        <img
-                            src="/apresentacao/2026-1.jpg"
-                            alt="Produção audiovisual e equipamentos &CONTI"
-                            className="h-full w-full object-cover object-top"
-                        />
-                    </div>
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400 animate-float-gentle absolute left-1/2 -bottom-2 z-30 -translate-x-1/2 flex items-center gap-2.5 rounded-2xl border-2 border-white bg-[#073b59] px-5 py-2.5 text-white shadow-2xl transition-transform hover:scale-105">
-                        <span className="text-2xl font-black leading-none text-[#00b6ef]">2026</span>
-                        <div className="text-left font-bold text-[11px] leading-tight">
-                            <p className="text-white">Vivendo da &amp;CONTI</p>
-                            <p className="text-slate-300">Tempo Integral</p>
+            )}
+
+            {slide.year === "2019" && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_1.2fr] items-center">
+                        <div className="space-y-4">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                                <div className="rounded-2xl border-l-4 border-[#2f7fde] bg-slate-50 p-4">
+                                    <p className="text-sm sm:text-base font-medium leading-snug text-slate-900">
+                                        {slide.emphasis}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Clean 3-Column Side-by-Side Gallery */}
+                        <div className="grid grid-cols-3 gap-3.5">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <Tape className="-top-3 left-4" />
+                                <img src="/apresentacao/2019-1.jpg" alt="Gestão de marketing 2019" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                            </div>
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <Tape className="-top-3 left-4" />
+                                <img src="/apresentacao/2019-2.jpg" alt="Crescimento profissional 2019" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                            </div>
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-gentle relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <Tape className="-top-3 right-4" />
+                                <img src="/apresentacao/2019-3.jpg" alt="Apresentação de resultados 2019" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                            </div>
                         </div>
                     </div>
-                </aside>
-            </div>
-        </div>
+                </div>
+            )}
+
+            {slide.year === "2020" && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_1.1fr] items-center">
+                        <div className="space-y-4">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                                <div className="rounded-2xl border-l-4 border-[#2f7fde] bg-slate-50 p-4">
+                                    <p className="text-sm sm:text-base font-medium leading-snug text-slate-900">
+                                        {slide.emphasis}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Clean 2-Column Side-by-Side Gallery */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-[10px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <Tape className="-top-3 left-6" />
+                                <img src="/apresentacao/2020-1.jpg" alt="Campanha Política 2020" className="h-64 sm:h-72 w-full object-cover rounded-lg" />
+                            </div>
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-200 animate-float-reverse relative overflow-hidden rounded-2xl border-[10px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <Tape className="-top-3 right-6" />
+                                <img src="/apresentacao/2020-2.jpg" alt="Materiais de Identidade Visual 2020" className="h-64 sm:h-72 w-full object-cover rounded-lg" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {slide.year === "2021" && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1.1fr_1fr] items-center">
+                        <div className="space-y-4">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                                <div className="rounded-2xl border-l-4 border-[#2f7fde] bg-slate-50 p-4">
+                                    <p className="text-sm sm:text-base font-medium leading-snug text-slate-900">
+                                        {slide.emphasis}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-75 animate-float-slow flex flex-col items-center justify-center rounded-2xl border-4 border-white bg-white p-4 shadow-2xl transition-all hover:scale-105">
+                                <img src="/apresentacao/2021-donnavall.jpg" alt="Cliente Donna Vall" className="h-20 w-auto object-contain" />
+                                <span className="mt-2 text-[11px] font-normal uppercase tracking-[0.2em] text-black">DONNA VALL</span>
+                            </div>
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse flex flex-col items-center justify-center rounded-2xl border-4 border-white bg-white p-4 shadow-2xl transition-all hover:scale-105">
+                                <img src="/apresentacao/2021-tuttipromo.jpg" alt="Cliente Tuttipromo" className="h-20 w-auto object-cover rounded-lg" />
+                                <span className="mt-2 text-[11px] font-normal uppercase tracking-[0.2em] text-black">tuttipromo</span>
+                            </div>
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-225 animate-float-slow flex flex-col items-center justify-center rounded-2xl border-4 border-white bg-[#251e1a] p-4 shadow-2xl transition-all hover:scale-105">
+                                <img src="/apresentacao/2021-barbearia.jpg" alt="Barbearia Enéias Bittencourt" className="h-20 w-auto object-contain" />
+                                <span className="mt-2 text-[11px] font-normal uppercase tracking-[0.2em] text-amber-200">BARBEARIA ENÉIAS</span>
+                            </div>
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-reverse flex flex-col items-center justify-center rounded-2xl border-4 border-white bg-white p-4 shadow-2xl transition-all hover:scale-105">
+                                <img src="/apresentacao/2021-crefisa.jpg" alt="Crefisa Experiência Financeira" className="h-20 w-auto object-cover rounded-lg" />
+                                <span className="mt-2 text-[11px] font-normal uppercase tracking-[0.2em] text-black">CREFISA</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {slide.year === "2022" && slide.title.includes("Macromac") && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_1.2fr] items-center">
+                        <div className="space-y-4">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                                <div className="rounded-2xl border-l-4 border-[#2f7fde] bg-slate-50 p-4">
+                                    <p className="text-sm sm:text-base font-medium leading-snug text-slate-900">
+                                        {slide.emphasis}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Clean 5-Photo Mosaic Gallery (3 top + 2 bottom, Zero Overlap) */}
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-75 animate-float-slow overflow-hidden rounded-2xl border-[6px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                    <img src="/apresentacao/2022-1.jpg" alt="Equipe Macromac" className="h-36 sm:h-40 w-full object-cover rounded-lg" />
+                                </div>
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse overflow-hidden rounded-2xl border-[6px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                    <img src="/apresentacao/2022-2.jpg" alt="Apresentações Corporativas" className="h-36 sm:h-40 w-full object-cover rounded-lg" />
+                                </div>
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-225 animate-float-slow overflow-hidden rounded-2xl border-[6px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                    <img src="/apresentacao/2022-3.jpg" alt="Eventos e Ações" className="h-36 sm:h-40 w-full object-cover rounded-lg" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-reverse overflow-hidden rounded-2xl border-[6px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                    <img src="/apresentacao/2022-4.jpg" alt="Treinamentos e Slides" className="h-36 sm:h-40 w-full object-cover rounded-lg" />
+                                </div>
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-375 animate-float-gentle overflow-hidden rounded-2xl border-[6px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                    <img src="/apresentacao/2022-5.jpg" alt="Projetos Especiais" className="h-36 sm:h-40 w-full object-cover rounded-lg" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {slide.year === "2022" && slide.title.includes("Formatura") && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_1.2fr] items-center">
+                        <div className="space-y-4">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                                <div className="rounded-2xl border-l-4 border-[#2f7fde] bg-slate-50 p-4">
+                                    <p className="text-sm sm:text-base font-medium leading-snug text-slate-900">
+                                        {slide.emphasis}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Clean 3-Column Side-by-Side Gallery */}
+                        <div className="grid grid-cols-3 gap-3.5">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <Tape className="-top-3 left-4" />
+                                <img src="/apresentacao/2022-grad-1.jpg" alt="Dia do Profissional de Marketing" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                            </div>
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <Tape className="-top-3 left-4" />
+                                <img src="/apresentacao/2022-grad-2.jpg" alt="Formatura em Marketing" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                            </div>
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-gentle relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <Tape className="-top-3 right-4" />
+                                <img src="/apresentacao/2022-grad-3.jpg" alt="Diplomação" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {slide.year === "2023" && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1.1fr_1fr] items-center">
+                        <div className="space-y-4">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                                <div className="rounded-2xl border-l-4 border-[#2f7fde] bg-slate-50 p-4">
+                                    <p className="text-sm sm:text-base font-medium leading-snug text-slate-900">
+                                        {slide.emphasis}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            {[1, 2, 3, 4].map((num, i) => (
+                                <div key={num} className={`animate-in fade-in zoom-in-90 duration-500 delay-[${(i + 1) * 100}ms] animate-float-gentle overflow-hidden rounded-2xl border-4 border-white bg-white p-2.5 shadow-2xl transition-all hover:scale-105 flex items-center justify-center`}>
+                                    <img src={`/apresentacao/2023-logo-${num}.jpg`} alt={`Conceito de logo &Conti ${num}`} className="aspect-square h-full w-full rounded-xl object-contain" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {slide.year === "2024" && slide.title.includes("+70") && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] items-center">
+                        <div className="space-y-5">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                            </div>
+                            {slide.quote && (
+                                <blockquote className="relative rounded-3xl bg-black p-6 sm:p-7 text-white shadow-2xl">
+                                    <QuoteGraphic />
+                                    <p className="text-base sm:text-xl font-medium italic leading-snug">
+                                        "{slide.quote}"
+                                    </p>
+                                    <p className="mt-3 text-xs font-normal uppercase tracking-[0.35em] text-[#2f7fde]">
+                                        Eduarda Conti • Fundadora &amp;CONTI
+                                    </p>
+                                </blockquote>
+                            )}
+                        </div>
+
+                        <div className="mx-auto w-full max-w-sm">
+                            <div className="animate-in fade-in zoom-in-90 duration-700 delay-150 animate-float-gentle overflow-hidden rounded-3xl border-[12px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <img src="/apresentacao/2024.jpg" alt="Eduarda Conti em 2024" className="h-full w-full object-cover rounded-xl" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {slide.year === "2024" && (slide.chapter?.includes("09") || slide.title.includes("Impacto") || slide.title.includes("Cinema")) && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_1.2fr] items-center">
+                        <div className="space-y-4">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                                <div className="rounded-2xl border-l-4 border-[#2f7fde] bg-slate-50 p-4">
+                                    <p className="text-sm sm:text-base font-medium leading-snug text-slate-900">
+                                        {slide.emphasis}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Clean 2-Column Side-by-Side Video Projects (Zero Overlap) */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <a
+                                href="https://www.instagram.com/reel/C6Ctr7gL5vW/"
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Ver projeto Mercado Livre no Instagram"
+                                className="group animate-in fade-in zoom-in-75 duration-700 delay-100 animate-float-slow block overflow-hidden rounded-2xl border-[8px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105"
+                            >
+                                <div className="relative h-56 sm:h-64 w-full overflow-hidden">
+                                    <img src="/apresentacao/2024-mercadolivre.jpg" alt="Mercado Livre - Reels &CONTI" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+                                    <span className="absolute bottom-3 left-3 right-3 truncate rounded-full bg-black/75 px-3 py-1 text-[10px] font-normal uppercase tracking-[0.2em] text-white backdrop-blur text-center">
+                                        Mercado Livre ↗
+                                    </span>
+                                </div>
+                            </a>
+
+                            <a
+                                href="https://www.instagram.com/reel/C5hFQSwLxFZ/"
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Ver projeto Stock Car no Instagram"
+                                className="group animate-in fade-in zoom-in-75 duration-700 delay-250 animate-float-reverse block overflow-hidden rounded-2xl border-[8px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105"
+                            >
+                                <div className="relative h-56 sm:h-64 w-full overflow-hidden">
+                                    <img src="/apresentacao/2024-stockcar.jpg" alt="Stock Car Pro Series - Reels &CONTI" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+                                    <span className="absolute bottom-3 left-3 right-3 truncate rounded-full bg-black/75 px-3 py-1 text-[10px] font-normal uppercase tracking-[0.2em] text-white backdrop-blur text-center">
+                                        Stock Car ↗
+                                    </span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {slide.year === "2025" && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_1.2fr] items-center">
+                        <div className="space-y-4">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                                <div className="rounded-2xl border-l-4 border-[#2f7fde] bg-slate-50 p-4">
+                                    <p className="text-sm sm:text-base font-medium leading-snug text-slate-900">
+                                        {slide.emphasis}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Clean 2-Column Side-by-Side Projects (Zero Overlap) */}
+                        <div className="grid grid-cols-[1.1fr_1fr] gap-4 items-center">
+                            <a
+                                href="https://www.instagram.com/reel/DJfRa7MyZuE/"
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Ver cobertura Vivenda Scapini no Instagram"
+                                className="group animate-in fade-in zoom-in-75 duration-700 delay-100 animate-float-slow block overflow-hidden rounded-2xl border-[8px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105"
+                            >
+                                <div className="relative aspect-[9/16] max-h-[340px] w-full overflow-hidden bg-black">
+                                    <img
+                                        src="/apresentacao/2025-scapini.jpg"
+                                        alt="Cliente Scapini - Vivenda Scapini Colheita Mecanizada"
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                                    <div className="absolute left-3 right-3 top-3 flex items-center justify-between gap-2">
+                                        <span className="rounded-full bg-[#2f7fde] px-2.5 py-1 text-[10px] font-normal uppercase tracking-[0.2em] text-white shadow">
+                                            Cliente Scapini
+                                        </span>
+                                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur">
+                                            <Play size={12} fill="currentColor" />
+                                        </span>
+                                    </div>
+                                    <div className="absolute bottom-3 left-3 right-3 text-left">
+                                        <p className="text-xs font-medium text-white uppercase tracking-[0.25em]">Vivenda Scapini</p>
+                                        <p className="text-xs font-normal text-white/90 line-clamp-2">Colheita mecanizada de oliveiras</p>
+                                        <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-slate-300">
+                                            Ver Reel ↗
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-250 animate-float-reverse overflow-hidden rounded-2xl border-[8px] border-white bg-white p-3 shadow-2xl transition-all hover:scale-105">
+                                <img
+                                    src="/apresentacao/2024-viamao.jpg"
+                                    alt="Câmara de Vereadores - Continuidade em 2025"
+                                    className="h-44 sm:h-48 w-full rounded-lg object-cover"
+                                />
+                                <div className="mt-2 text-center">
+                                    <span className="inline-block rounded bg-black px-2 py-0.5 text-[10px] font-normal uppercase tracking-[0.2em] text-white">
+                                        Câmara de Viamão
+                                    </span>
+                                    <p className="mt-1 text-[11px] font-medium text-slate-900">
+                                        Liderança em Comunicação Pública
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {slide.year === "2026" && (
+                <div className={common}>
+                    <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
+                    <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_1.2fr] items-center">
+                        <div className="space-y-4">
+                            <div className="rounded-3xl bg-white p-6 sm:p-7 shadow-2xl text-slate-900 space-y-4">
+                                <p className="text-base sm:text-lg font-normal leading-relaxed text-slate-800">
+                                    {slide.body}
+                                </p>
+                                <div className="rounded-2xl border-l-4 border-[#2f7fde] bg-slate-50 p-4">
+                                    <p className="text-sm sm:text-base font-medium leading-snug text-slate-900">
+                                        {slide.emphasis}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Clean 2-Column Side-by-Side Dual Hero (Zero Overlap) */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-100 animate-float-slow overflow-hidden rounded-2xl border-[10px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105">
+                                <img
+                                    src="/apresentacao/2026-2.jpg"
+                                    alt="Fundadores &CONTI - Vivendo do nosso negócio"
+                                    className="h-64 sm:h-76 w-full object-cover object-top rounded-lg"
+                                />
+                            </div>
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-250 animate-float-reverse overflow-hidden rounded-2xl border-[10px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105">
+                                <img
+                                    src="/apresentacao/2026-1.jpg"
+                                    alt="Produção audiovisual e equipamentos &CONTI"
+                                    className="h-64 sm:h-76 w-full object-cover object-top rounded-lg"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </article>
     );
 }
 
@@ -429,19 +808,271 @@ export default function AdminPresentationPage() {
     const [started, setStarted] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState<"next" | "previous">("next");
+    const [showControls, setShowControls] = useState(true);
     const stageRef = useRef<HTMLDivElement>(null);
     const currentSlide = slides[currentIndex];
     const progress = useMemo(() => ((currentIndex + 1) / slides.length) * 100, [currentIndex]);
-    const goNext = useCallback(() => { setDirection("next"); setCurrentIndex((index) => Math.min(index + 1, slides.length - 1)); }, []);
-    const goPrevious = useCallback(() => { setDirection("previous"); setCurrentIndex((index) => Math.max(index - 1, 0)); }, []);
-    const closePresentation = useCallback(() => { setStarted(false); if (document.fullscreenElement) void document.exitFullscreen?.().catch(() => undefined); }, []);
-    const requestFullscreen = useCallback(() => { void (stageRef.current ?? document.documentElement).requestFullscreen?.(); }, []);
-    const startPresentation = () => { flushSync(() => { setCurrentIndex(0); setStarted(true); }); requestFullscreen(); };
 
-    useEffect(() => { if (!started) return; document.body.style.overflow = "hidden"; const handleKeyDown = (event: KeyboardEvent) => { if (event.key === "ArrowRight" || event.key === " ") { event.preventDefault(); goNext(); } if (event.key === "ArrowLeft") { event.preventDefault(); goPrevious(); } if (event.key === "Escape") closePresentation(); }; window.addEventListener("keydown", handleKeyDown); return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", handleKeyDown); }; }, [closePresentation, goNext, goPrevious, started]);
+    const goNext = useCallback(() => {
+        setDirection("next");
+        setCurrentIndex((index) => Math.min(index + 1, slides.length - 1));
+    }, []);
 
-    return <div className="admin-page-stack pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700"><section className="admin-card overflow-hidden p-5 md:p-7"><div className="min-w-0"><span className="admin-kicker">Portfólio</span><h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-none tracking-[-0.055em] text-white md:text-6xl">Apresentação Comercial</h1><p className="mt-5 max-w-2xl text-base leading-7 text-slate-400">Utilize este material interativo para apresentar a &amp; CONTI a parceiros e potenciais clientes. Ative o botão tela cheia para uma experiência imersiva e navegue facilmente pelos slides.</p><div className="mt-8 flex flex-col gap-3 sm:flex-row"><button type="button" onClick={startPresentation} className="admin-primary-button"><Play size={17} fill="currentColor" />Iniciar apresentação</button></div></div></section>
-        {started && typeof document !== "undefined" && createPortal(<div ref={stageRef} className="fixed inset-0 z-[9999] flex flex-col bg-[#030303] text-white" role="dialog" aria-modal="true" aria-label="Apresentação em andamento"><div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-black/90 px-3 backdrop-blur-xl md:px-5"><div className="min-w-0"><p className="truncate text-sm font-semibold">Apresentação comercial</p><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-500">{currentIndex + 1} de {slides.length}</p></div><div className="flex items-center gap-2"><button type="button" onClick={requestFullscreen} className="admin-icon-button h-9 w-9" title="Tela cheia" aria-label="Tela cheia"><Expand size={16} /></button><button type="button" onClick={closePresentation} className="admin-icon-button h-9 w-9" title="Fechar" aria-label="Fechar apresentação"><X size={16} /></button></div></div><div className="h-1 shrink-0 bg-white/10"><div className="h-full bg-white transition-all duration-300" style={{ width: `${progress}%` }} /></div><div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-black"><div key={currentIndex} className={`flex h-full w-full min-h-0 ${direction === "next" ? "animate-in fade-in slide-in-from-right-8 duration-500" : "animate-in fade-in slide-in-from-left-8 duration-500"}`}>{currentSlide.kind === "image" ? <img src={currentSlide.src} alt={currentSlide.title} className="h-full w-full object-contain" /> : currentSlide.kind === "intro" ? <IntroTimelineSlide slide={currentSlide} /> : currentSlide.kind === "case" ? <CaseStudySlide slide={currentSlide} /> : currentSlide.kind === "pair" ? <PairSlideContent slide={currentSlide} /> : <FormSlideContent />}</div></div><div className="flex shrink-0 items-center justify-between gap-3 border-t border-white/10 bg-black/90 px-3 py-3 backdrop-blur-xl md:px-5"><button type="button" onClick={goPrevious} disabled={currentIndex === 0} className="admin-secondary-button disabled:cursor-not-allowed disabled:opacity-35"><ArrowLeft size={16} />Anterior</button><div className="flex max-w-[24vw] items-center gap-1 overflow-x-auto py-1 sm:max-w-[38vw] md:gap-2" aria-label="Indicadores de slides">{slides.map((slide, index) => <button key={`${slide.kind}-${index}`} type="button" onClick={() => { setDirection(index > currentIndex ? "next" : "previous"); setCurrentIndex(index); }} className={`h-2.5 w-3 shrink-0 rounded-full transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:w-8 ${index === currentIndex ? "bg-white" : "bg-white/20 hover:bg-white/40"}`} aria-label={`Ir para slide ${index + 1}`} aria-current={index === currentIndex ? "step" : undefined} />)}</div><div className="flex items-center gap-2"><button type="button" onClick={() => { setDirection("previous"); setCurrentIndex(0); }} className="admin-icon-button h-10 w-10" title="Reiniciar" aria-label="Reiniciar apresentação"><RotateCcw size={16} /></button>{currentIndex === slides.length - 1 ? <button type="button" onClick={closePresentation} className="admin-primary-button"><Pause size={16} />Encerrar</button> : <button type="button" onClick={goNext} className="admin-primary-button">Próximo<ArrowRight size={16} /></button>}</div></div></div>, document.body)}</div>;
+    const goPrevious = useCallback(() => {
+        setDirection("previous");
+        setCurrentIndex((index) => Math.max(index - 1, 0));
+    }, []);
+
+    const closePresentation = useCallback(() => {
+        setStarted(false);
+        if (document.fullscreenElement) {
+            void document.exitFullscreen?.().catch(() => undefined);
+        }
+    }, []);
+
+    const requestFullscreen = useCallback(() => {
+        if (document.fullscreenElement) {
+            void document.exitFullscreen?.().catch(() => undefined);
+        } else {
+            void (stageRef.current ?? document.documentElement).requestFullscreen?.();
+        }
+    }, []);
+
+    const startPresentation = () => {
+        flushSync(() => {
+            setCurrentIndex(0);
+            setStarted(true);
+            setShowControls(true);
+        });
+        requestFullscreen();
+    };
+
+    // Auto-hide controls when user is not moving the mouse
+    useEffect(() => {
+        if (!started) return;
+        let timer: ReturnType<typeof setTimeout>;
+
+        const handleMouseMove = () => {
+            setShowControls(true);
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                setShowControls(false);
+            }, 2500);
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener("mousemove", handleMouseMove);
+        };
+    }, [started]);
+
+    // Keyboard navigation
+    useEffect(() => {
+        if (!started) return;
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "ArrowRight" || event.key === " " || event.key === "PageDown") {
+                event.preventDefault();
+                goNext();
+            }
+            if (event.key === "ArrowLeft" || event.key === "Backspace" || event.key === "PageUp") {
+                event.preventDefault();
+                goPrevious();
+            }
+            if (event.key === "Home") {
+                event.preventDefault();
+                setCurrentIndex(0);
+            }
+            if (event.key === "End") {
+                event.preventDefault();
+                setCurrentIndex(slides.length - 1);
+            }
+            if (event.key === "Escape") {
+                closePresentation();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.body.style.overflow = "";
+            document.documentElement.style.overflow = "";
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [closePresentation, goNext, goPrevious, started]);
+
+    return (
+        <div className="admin-page-stack pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <section className="admin-card overflow-hidden p-5 md:p-7">
+                <div className="min-w-0">
+                    <span className="admin-kicker">Portfólio</span>
+                    <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-none tracking-[-0.055em] text-white md:text-6xl">
+                        Apresentação Comercial
+                    </h1>
+                    <p className="mt-5 max-w-2xl text-base leading-7 text-slate-400">
+                    </p>
+                    <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                        <button type="button" onClick={startPresentation} className="admin-primary-button">
+                            <Play size={17} fill="currentColor" /> Iniciar apresentação
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {started && typeof document !== "undefined" && createPortal(
+                <div
+                    ref={stageRef}
+                    className={`fixed inset-0 z-[99999] w-full h-full min-h-[100dvh] overflow-hidden no-scrollbar text-white select-none transition-colors duration-300 ${
+                        currentSlide.kind === "intro" ? "bg-[#2f7fde]" : currentSlide.kind === "case" ? "bg-white" : "bg-black"
+                    }`}
+                    style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", minHeight: "100vh", zIndex: 99999 }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Apresentação em andamento"
+                >
+                    {/* 100% FULLSCREEN SLIDE CONTENT (NO BARS SQUEEZING THE CONTENT) */}
+                    <div className="absolute inset-0 h-full w-full overflow-hidden no-scrollbar">
+                        <div
+                            key={currentIndex}
+                            className={`h-full w-full ${
+                                direction === "next"
+                                    ? "animate-in fade-in slide-in-from-right-8 duration-500"
+                                    : "animate-in fade-in slide-in-from-left-8 duration-500"
+                            }`}
+                        >
+                            {currentSlide.kind === "image" ? (
+                                <img src={currentSlide.src} alt={currentSlide.title} className="h-full w-full object-contain" />
+                            ) : currentSlide.kind === "intro" ? (
+                                <IntroTimelineSlide slide={currentSlide} />
+                            ) : currentSlide.kind === "case" ? (
+                                <CaseStudySlide slide={currentSlide} />
+                            ) : currentSlide.kind === "pair" ? (
+                                <PairSlideContent slide={currentSlide} />
+                            ) : (
+                                <FormSlideContent />
+                            )}
+                        </div>
+                    </div>
+
+                    {/* CLICKABLE LEFT/RIGHT EDGE NAVIGATION */}
+                    <button
+                        type="button"
+                        onClick={goPrevious}
+                        disabled={currentIndex === 0}
+                        className="group absolute left-0 top-0 bottom-0 z-40 w-16 sm:w-24 flex items-center justify-start pl-4 opacity-0 hover:opacity-100 transition-opacity disabled:pointer-events-none"
+                        aria-label="Slide anterior"
+                    >
+                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white/80 backdrop-blur-md shadow-2xl border border-white/10 group-hover:scale-110 transition-transform">
+                            <ArrowLeft size={22} />
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={goNext}
+                        disabled={currentIndex === slides.length - 1}
+                        className="group absolute right-0 top-0 bottom-0 z-40 w-16 sm:w-24 flex items-center justify-end pr-4 opacity-0 hover:opacity-100 transition-opacity disabled:pointer-events-none"
+                        aria-label="Próximo slide"
+                    >
+                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white/80 backdrop-blur-md shadow-2xl border border-white/10 group-hover:scale-110 transition-transform">
+                            <ArrowRight size={22} />
+                        </span>
+                    </button>
+
+                    {/* TOP FLOATING HUD (AUTOHIDE) */}
+                    <div
+                        className={`pointer-events-none absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 transition-opacity duration-300 ${
+                            showControls ? "opacity-100" : "opacity-0"
+                        }`}
+                    >
+                        <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/50 px-3.5 py-1.5 backdrop-blur-md border border-white/10 shadow-lg text-xs font-medium text-white/80">
+                            <span>{currentIndex + 1} / {slides.length}</span>
+                            <span className="opacity-40">•</span>
+                            <span className="truncate max-w-[200px] sm:max-w-md text-white/90">{currentSlide.title}</span>
+                        </div>
+
+                        <div className="pointer-events-auto flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={requestFullscreen}
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur-md border border-white/10 shadow-lg hover:bg-black/80 hover:text-white transition-all"
+                                title="Alternar tela cheia"
+                            >
+                                <Expand size={16} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={closePresentation}
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur-md border border-white/10 shadow-lg hover:bg-red-500 hover:text-white transition-all"
+                                title="Fechar apresentação (Esc)"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* BOTTOM FLOATING CONTROLS (AUTOHIDE) */}
+                    <div
+                        className={`pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-full bg-black/60 px-4 py-2 backdrop-blur-xl border border-white/15 shadow-2xl transition-opacity duration-300 ${
+                            showControls ? "opacity-100" : "opacity-0"
+                        }`}
+                    >
+                        <button
+                            type="button"
+                            onClick={goPrevious}
+                            disabled={currentIndex === 0}
+                            className="pointer-events-auto flex items-center gap-1.5 text-xs font-semibold text-white/90 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                        >
+                            <ArrowLeft size={14} /> Anterior
+                        </button>
+
+                        <div className="flex items-center gap-1 px-2">
+                            {slides.map((slide, index) => (
+                                <button
+                                    key={`${slide.kind}-${index}`}
+                                    type="button"
+                                    onClick={() => {
+                                        setDirection(index > currentIndex ? "next" : "previous");
+                                        setCurrentIndex(index);
+                                    }}
+                                    className={`pointer-events-auto h-1.5 rounded-full transition-all ${
+                                        index === currentIndex ? "w-6 bg-[#00aeea]" : "w-1.5 bg-white/30 hover:bg-white/60"
+                                    }`}
+                                    aria-label={`Ir para slide ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+
+                        {currentIndex === slides.length - 1 ? (
+                            <button
+                                type="button"
+                                onClick={closePresentation}
+                                className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-[#00aeea] px-3 py-1 text-xs font-bold text-black hover:bg-[#38c4f5] transition-colors"
+                            >
+                                <Pause size={12} fill="currentColor" /> Encerrar
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={goNext}
+                                className="pointer-events-auto flex items-center gap-1.5 text-xs font-semibold text-white/90 hover:text-white transition-colors"
+                            >
+                                Próximo <ArrowRight size={14} />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* TOP THIN ACCENT PROGRESS LINE */}
+                    <div className="absolute top-0 left-0 right-0 h-0.5 z-50 bg-white/10">
+                        <div className="h-full bg-[#00aeea] transition-all duration-300" style={{ width: `${progress}%` }} />
+                    </div>
+                </div>,
+                document.body
+            )}
+        </div>
+    );
 }
 
 function FormSlideContent() {
