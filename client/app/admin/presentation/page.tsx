@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { ArrowLeft, ArrowRight, Expand, Megaphone, Monitor, Pause, Play, RotateCcw, X } from "lucide-react";
+import { motion } from "framer-motion";
 
 const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfAkyeXUOrtnlk0QTrBMGkleWwEryJTlIRLEKcya1_e53d2bQ/viewform";
 
@@ -104,18 +105,18 @@ const introSlides: IntroSlide[] = [
         kind: "intro",
         chapter: "CAPÍTULO 08 • CONSOLIDAÇÃO",
         year: "2024",
-        title: "O Nosso Hoje: +70 Empresas",
-        subtitle: "Presença consolidada ao lado de grandes nomes do mercado",
-        body: "A &CONTI alcançou a marca de mais de 70 empresas atendidas, participando de projetos marcantes para gigantes como Mercado Livre e Stock Car Pro Series.",
+        title: "+70 Empresas Atendidas no Ano",
+        subtitle: "Crescimento acelerado e impacto em múltiplos segmentos",
+        body: "Durante este ano, a &CONTI consolidou sua operação e atingiu a marca histórica de mais de 70 empresas atendidas, transformando o posicionamento digital de marcas no comércio, serviços, gastronomia e indústrias.",
         quote: "Se você deseja algo, vá até o final com determinação e paixão."
     },
     {
         kind: "intro",
         chapter: "CAPÍTULO 09 • EXPANSÃO E LIDERANÇA",
         year: "2024",
-        title: "Produções de Alto Impacto & Direção Institucional",
-        subtitle: "Grandes marcas no circuito nacional e liderança na comunicação pública",
-        body: "Um salto de nível técnico com equipamentos de padrão de cinema e produções dinâmicas para gigantes do mercado, como Mercado Livre e Stock Car Pro Series.",
+        title: "Grandes Marcas & Direção Institucional",
+        subtitle: "Produções de padrão cinema e liderança na comunicação pública",
+        body: "Atingimos um novo patamar técnico com produções dinâmicas e coberturas para marcas de expressão nacional como Mercado Livre e Stock Car Pro Series.",
         emphasis: "Consolidando a maturidade na gestão estratégica, Duda assumiu como Diretora de Comunicação da Câmara de Viamão, comandando a comunicação pública institucional."
     },
     {
@@ -124,8 +125,8 @@ const introSlides: IntroSlide[] = [
         year: "2025",
         title: "+CLIENTES & Produções",
         subtitle: "Coberturas de grande escala e evolução contínua",
-        body: "Em 2025, mantivemos a liderança na Câmara de Vereadores e aceleramos o volume de produções de alto calibre.",
-        emphasis: "Destaque para a cobertura completa da colheita mecanizada de oliveiras para o cliente Scapini (Vivenda Scapini), unindo inovação e estética cinematográfica."
+        body: "Em 2025, mantivemos a liderança na Câmara de Vereadores e aceleramos o volume de produções.",
+        emphasis: "Consolidação da autoridade em comunicação institucional e execução de projetos audiovisuais e estratégicos de grande porte."
     },
     {
         kind: "intro",
@@ -237,28 +238,110 @@ function QuoteGraphic() {
     );
 }
 
-function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
+const CONTI_LETTERS = ["&", "C", "O", "N", "T", "I"] as const;
+
+const CONTI_ANIMATION_KEYFRAMES = CONTI_LETTERS.map((_, index) => {
+    const totalSteps = 10;
+    const t1 = index / totalSteps;
+    const t2 = (totalSteps - index) / totalSteps;
+    const halfWidth = 0.085;
+    const sampleCount = 45;
+
+    const y: number[] = [];
+    const scale: number[] = [];
+    const times: number[] = [];
+
+    for (let k = 0; k < sampleCount; k++) {
+        const t = k / (sampleCount - 1);
+        times.push(t);
+
+        const d1 = Math.min(Math.abs(t - t1), 1 - Math.abs(t - t1));
+        const d2 = Math.min(Math.abs(t - t2), 1 - Math.abs(t - t2));
+        const d = Math.min(d1, d2);
+
+        let factor = 0;
+        if (d < halfWidth) {
+            const angle = (d / halfWidth) * (Math.PI / 2);
+            factor = Math.pow(Math.cos(angle), 2);
+        }
+
+        y.push(Number((-26 * factor).toFixed(2)));
+        scale.push(Number((1 + 0.07 * factor).toFixed(3)));
+    }
+
+    return { y, scale, times };
+});
+
+function IntroTimelineSlide({ slide, onNext }: { slide: IntroSlide; onNext?: () => void }) {
     if (!slide.year) {
         return (
             <article className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#2f7fde] text-white px-6 py-12 select-none font-sans" aria-label="Conheça mais - &CONTI">
                 <div className="relative z-10 flex h-full w-full max-w-6xl flex-col items-center justify-between py-6 text-center">
                     <div className="h-4 sm:h-8" />
 
-                    {/* Full Seamless Center Logo */}
+                    {/* Full Seamless Center Logo with letter-by-letter wave jumping animation */}
                     <div className="flex flex-col items-center justify-center my-auto">
-                        <h1 className="text-6xl font-medium tracking-tight text-white sm:text-8xl md:text-9xl lg:text-[11rem] leading-none font-sans">
-                            &amp;CONTI
+                        <h1 className="flex items-center justify-center text-6xl font-medium tracking-tight text-white sm:text-8xl md:text-9xl lg:text-[11rem] leading-none font-sans select-none">
+                            {CONTI_LETTERS.map((char, index) => {
+                                const { y, scale, times } = CONTI_ANIMATION_KEYFRAMES[index];
+                                return (
+                                    <motion.span
+                                        key={index}
+                                        className="inline-block origin-bottom will-change-transform"
+                                        animate={{
+                                            y,
+                                            scale,
+                                        }}
+                                        transition={{
+                                            duration: 4.8,
+                                            repeat: Infinity,
+                                            ease: "linear",
+                                            times,
+                                        }}
+                                    >
+                                        {char}
+                                    </motion.span>
+                                );
+                            })}
                         </h1>
-                        <p className="mt-3 sm:mt-5 text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal uppercase tracking-[0.45em] text-black font-sans">
+                        <p className="mt-3 sm:mt-5 text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold uppercase tracking-[0.45em] text-black font-sans">
                             MARKETING DIGITAL
                         </p>
                     </div>
 
-                    {/* "Conheça mais" */}
+                    {/* "Conheça mais" with animated right arrow */}
                     <div className="pt-6 pb-2">
-                        <p className="text-xl sm:text-2xl md:text-3xl font-semibold uppercase tracking-[0.25em] text-white/95 transition-transform duration-300 hover:scale-105 font-sans">
-                            CONHEÇA MAIS
-                        </p>
+                        <motion.button
+                            type="button"
+                            onClick={onNext}
+                            className="group inline-flex items-center gap-3 sm:gap-4 rounded-full px-6 py-2.5 sm:px-8 sm:py-3 text-xl sm:text-2xl md:text-3xl font-semibold uppercase tracking-[0.25em] text-white/95 transition-all duration-300 hover:text-white hover:bg-white/10 hover:shadow-lg focus:outline-hidden cursor-pointer"
+                            aria-label="Conheça mais - Avançar"
+                            animate={{
+                                scale: [1, 1.025, 1],
+                            }}
+                            transition={{
+                                repeat: Infinity,
+                                duration: 2,
+                                ease: "easeInOut",
+                            }}
+                            whileHover={{ scale: 1.06 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <span>CONHEÇA MAIS</span>
+                            <motion.span
+                                className="inline-flex items-center justify-center text-white"
+                                animate={{
+                                    x: [0, 8, 0],
+                                }}
+                                transition={{
+                                    repeat: Infinity,
+                                    duration: 1.2,
+                                    ease: "easeInOut",
+                                }}
+                            >
+                                <ArrowRight className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 transition-transform group-hover:translate-x-1.5" strokeWidth={2.8} />
+                            </motion.span>
+                        </motion.button>
                     </div>
                 </div>
             </article>
@@ -292,20 +375,20 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Photo 1 */}
-                                <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
                                     <Tape className="-top-3 left-6" />
-                                    <img src="/apresentacao/2018-1.jpg" alt="Eduarda Conti em 2018" className="h-48 sm:h-52 w-full object-cover rounded-lg" />
+                                    <img src="/apresentacao/2018-1.jpg" alt="Eduarda Conti em 2018" className="h-56 sm:h-64 w-full object-cover" style={{ objectPosition: "left top" }} />
                                 </div>
 
                                 {/* Photo 2 */}
-                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse relative overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
                                     <Tape className="-top-3 right-6" />
-                                    <img src="/apresentacao/2018-2.jpg" alt="Início das produções de conteúdo" className="h-48 sm:h-52 w-full object-cover rounded-lg" />
+                                    <img src="/apresentacao/2018-2.jpg" alt="Início das produções de conteúdo" className="h-56 sm:h-64 w-full object-cover object-top" />
                                 </div>
                             </div>
 
                             {/* First Consultant Logo Card */}
-                            <div className="animate-in fade-in zoom-in-90 duration-700 delay-300 animate-float-gentle rounded-2xl border-4 border-white bg-white p-3 text-center shadow-2xl transition-transform hover:scale-102 flex items-center justify-center gap-4">
+                            <div className="animate-in fade-in zoom-in-90 duration-700 delay-300 animate-float-gentle rounded-2xl border border-white/30 bg-white p-3 text-center shadow-2xl transition-transform hover:scale-102 flex items-center justify-center gap-4">
                                 <img src="/apresentacao/2018-logo.png" alt="Primeira logo consultora Eduarda Conti" className="h-20 sm:h-24 w-auto object-contain" />
                                 <div className="text-left">
                                     <span className="block text-[11px] font-normal uppercase tracking-[0.25em] text-black">
@@ -338,17 +421,17 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
 
                         {/* Clean 3-Column Side-by-Side Gallery */}
                         <div className="grid grid-cols-3 gap-3.5">
-                            <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
                                 <Tape className="-top-3 left-4" />
-                                <img src="/apresentacao/2019-1.jpg" alt="Gestão de marketing 2019" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                                <img src="/apresentacao/2019-1.jpg" alt="Gestão de marketing 2019" className="h-60 sm:h-64 w-full object-cover object-top" />
                             </div>
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse relative overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
                                 <Tape className="-top-3 left-4" />
-                                <img src="/apresentacao/2019-2.jpg" alt="Crescimento profissional 2019" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                                <img src="/apresentacao/2019-2.jpg" alt="Crescimento profissional 2019" className="h-60 sm:h-64 w-full object-cover object-top" />
                             </div>
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-gentle relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-gentle relative overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
                                 <Tape className="-top-3 right-4" />
-                                <img src="/apresentacao/2019-3.jpg" alt="Apresentação de resultados 2019" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                                <img src="/apresentacao/2019-3.jpg" alt="Apresentação de resultados 2019" className="h-60 sm:h-64 w-full object-cover object-top" />
                             </div>
                         </div>
                     </div>
@@ -374,13 +457,13 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
 
                         {/* Clean 2-Column Side-by-Side Gallery */}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-[10px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
                                 <Tape className="-top-3 left-6" />
-                                <img src="/apresentacao/2020-1.jpg" alt="Campanha Política 2020" className="h-64 sm:h-72 w-full object-cover rounded-lg" />
+                                <img src="/apresentacao/2020-1.jpg" alt="Campanha Política 2020" className="h-64 sm:h-72 w-full object-cover object-top" />
                             </div>
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-200 animate-float-reverse relative overflow-hidden rounded-2xl border-[10px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-200 animate-float-reverse relative overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
                                 <Tape className="-top-3 right-6" />
-                                <img src="/apresentacao/2020-2.jpg" alt="Materiais de Identidade Visual 2020" className="h-64 sm:h-72 w-full object-cover rounded-lg" />
+                                <img src="/apresentacao/2020-2.jpg" alt="Materiais de Identidade Visual 2020" className="h-64 sm:h-72 w-full object-cover object-top" />
                             </div>
                         </div>
                     </div>
@@ -405,19 +488,19 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-75 animate-float-slow flex flex-col items-center justify-center rounded-2xl border-4 border-white bg-white p-4 shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-75 animate-float-slow flex flex-col items-center justify-center rounded-2xl border border-white/30 bg-white p-3.5 shadow-xl transition-all hover:scale-105">
                                 <img src="/apresentacao/2021-donnavall.jpg" alt="Cliente Donna Vall" className="h-20 w-auto object-contain" />
                                 <span className="mt-2 text-[11px] font-normal uppercase tracking-[0.2em] text-black">DONNA VALL</span>
                             </div>
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse flex flex-col items-center justify-center rounded-2xl border-4 border-white bg-white p-4 shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse flex flex-col items-center justify-center rounded-2xl border border-white/30 bg-white p-3.5 shadow-xl transition-all hover:scale-105">
                                 <img src="/apresentacao/2021-tuttipromo.jpg" alt="Cliente Tuttipromo" className="h-20 w-auto object-cover rounded-lg" />
                                 <span className="mt-2 text-[11px] font-normal uppercase tracking-[0.2em] text-black">tuttipromo</span>
                             </div>
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-225 animate-float-slow flex flex-col items-center justify-center rounded-2xl border-4 border-white bg-[#251e1a] p-4 shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-225 animate-float-slow flex flex-col items-center justify-center rounded-2xl border border-white/30 bg-[#251e1a] p-3.5 shadow-xl transition-all hover:scale-105">
                                 <img src="/apresentacao/2021-barbearia.jpg" alt="Barbearia Enéias Bittencourt" className="h-20 w-auto object-contain" />
                                 <span className="mt-2 text-[11px] font-normal uppercase tracking-[0.2em] text-amber-200">BARBEARIA ENÉIAS</span>
                             </div>
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-reverse flex flex-col items-center justify-center rounded-2xl border-4 border-white bg-white p-4 shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-reverse flex flex-col items-center justify-center rounded-2xl border border-white/30 bg-white p-3.5 shadow-xl transition-all hover:scale-105">
                                 <img src="/apresentacao/2021-crefisa.jpg" alt="Crefisa Experiência Financeira" className="h-20 w-auto object-cover rounded-lg" />
                                 <span className="mt-2 text-[11px] font-normal uppercase tracking-[0.2em] text-black">CREFISA</span>
                             </div>
@@ -446,22 +529,22 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
                         {/* Clean 5-Photo Mosaic Gallery (3 top + 2 bottom, Zero Overlap) */}
                         <div className="space-y-3">
                             <div className="grid grid-cols-3 gap-3">
-                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-75 animate-float-slow overflow-hidden rounded-2xl border-[6px] border-white bg-white shadow-2xl transition-all hover:scale-105">
-                                    <img src="/apresentacao/2022-1.jpg" alt="Equipe Macromac" className="h-36 sm:h-40 w-full object-cover rounded-lg" />
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-75 animate-float-slow overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
+                                    <img src="/apresentacao/2022-1.jpg" alt="Equipe Macromac" className="h-36 sm:h-40 w-full object-cover" style={{ objectPosition: "center center" }} />
                                 </div>
-                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse overflow-hidden rounded-2xl border-[6px] border-white bg-white shadow-2xl transition-all hover:scale-105">
-                                    <img src="/apresentacao/2022-2.jpg" alt="Apresentações Corporativas" className="h-36 sm:h-40 w-full object-cover rounded-lg" />
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
+                                    <img src="/apresentacao/2022-2.jpg" alt="Apresentações Corporativas" className="h-36 sm:h-40 w-full object-cover" style={{ objectPosition: "center 75%" }} />
                                 </div>
-                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-225 animate-float-slow overflow-hidden rounded-2xl border-[6px] border-white bg-white shadow-2xl transition-all hover:scale-105">
-                                    <img src="/apresentacao/2022-3.jpg" alt="Eventos e Ações" className="h-36 sm:h-40 w-full object-cover rounded-lg" />
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-225 animate-float-slow overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
+                                    <img src="/apresentacao/2022-3.jpg" alt="Eventos e Ações" className="h-36 sm:h-40 w-full object-cover" style={{ objectPosition: "center 30%" }} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-reverse overflow-hidden rounded-2xl border-[6px] border-white bg-white shadow-2xl transition-all hover:scale-105">
-                                    <img src="/apresentacao/2022-4.jpg" alt="Treinamentos e Slides" className="h-36 sm:h-40 w-full object-cover rounded-lg" />
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-reverse overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
+                                    <img src="/apresentacao/2022-4.jpg" alt="Treinamentos e Slides" className="h-36 sm:h-40 w-full object-cover" style={{ objectPosition: "center 80%" }} />
                                 </div>
-                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-375 animate-float-gentle overflow-hidden rounded-2xl border-[6px] border-white bg-white shadow-2xl transition-all hover:scale-105">
-                                    <img src="/apresentacao/2022-5.jpg" alt="Projetos Especiais" className="h-36 sm:h-40 w-full object-cover rounded-lg" />
+                                <div className="animate-in fade-in zoom-in-75 duration-700 delay-375 animate-float-gentle overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
+                                    <img src="/apresentacao/2022-5.jpg" alt="Projetos Especiais" className="h-36 sm:h-40 w-full object-cover" style={{ objectPosition: "center center" }} />
                                 </div>
                             </div>
                         </div>
@@ -488,17 +571,17 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
 
                         {/* Clean 3-Column Side-by-Side Gallery */}
                         <div className="grid grid-cols-3 gap-3.5">
-                            <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 animate-float-slow relative overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
                                 <Tape className="-top-3 left-4" />
-                                <img src="/apresentacao/2022-grad-1.jpg" alt="Dia do Profissional de Marketing" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                                <img src="/apresentacao/2022-grad-1.jpg" alt="Dia do Profissional de Marketing" className="h-60 sm:h-64 w-full object-cover object-top" />
                             </div>
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-reverse relative overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
                                 <Tape className="-top-3 left-4" />
-                                <img src="/apresentacao/2022-grad-2.jpg" alt="Formatura em Marketing" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                                <img src="/apresentacao/2022-grad-2.jpg" alt="Formatura em Marketing" className="h-60 sm:h-64 w-full object-cover object-top" />
                             </div>
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-gentle relative overflow-hidden rounded-2xl border-[8px] border-white bg-white shadow-2xl transition-all hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-300 animate-float-gentle relative overflow-hidden rounded-2xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
                                 <Tape className="-top-3 right-4" />
-                                <img src="/apresentacao/2022-grad-3.jpg" alt="Diplomação" className="h-60 sm:h-64 w-full object-cover rounded-lg" />
+                                <img src="/apresentacao/2022-grad-3.jpg" alt="Diplomação" className="h-60 sm:h-64 w-full object-cover object-top" />
                             </div>
                         </div>
                     </div>
@@ -524,8 +607,8 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
 
                         <div className="grid grid-cols-2 gap-4">
                             {[1, 2, 3, 4].map((num, i) => (
-                                <div key={num} className={`animate-in fade-in zoom-in-90 duration-500 delay-[${(i + 1) * 100}ms] animate-float-gentle overflow-hidden rounded-2xl border-4 border-white bg-white p-2.5 shadow-2xl transition-all hover:scale-105 flex items-center justify-center`}>
-                                    <img src={`/apresentacao/2023-logo-${num}.jpg`} alt={`Conceito de logo &Conti ${num}`} className="aspect-square h-full w-full rounded-xl object-contain" />
+                                <div key={num} className={`animate-in fade-in zoom-in-90 duration-500 delay-[${(i + 1) * 100}ms] animate-float-gentle overflow-hidden rounded-2xl border border-white/30 bg-white/10 backdrop-blur-xs p-1 shadow-xl transition-all hover:scale-105 flex items-center justify-center`}>
+                                    <img src={`/apresentacao/2023-logo-${num}.jpg`} alt={`Conceito de logo &Conti ${num}`} className="aspect-square h-full w-full rounded-xl object-contain bg-white" />
                                 </div>
                             ))}
                         </div>
@@ -533,7 +616,7 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
                 </div>
             )}
 
-            {slide.year === "2024" && slide.title.includes("+70") && (
+            {slide.year === "2024" && (slide.chapter?.includes("08") || slide.title.includes("70")) && (
                 <div className={common}>
                     <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
                     <div className="mt-4 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] items-center">
@@ -557,15 +640,15 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
                         </div>
 
                         <div className="mx-auto w-full max-w-sm">
-                            <div className="animate-in fade-in zoom-in-90 duration-700 delay-150 animate-float-gentle overflow-hidden rounded-3xl border-[12px] border-white bg-white shadow-2xl transition-all hover:scale-105">
-                                <img src="/apresentacao/2024.jpg" alt="Eduarda Conti em 2024" className="h-full w-full object-cover rounded-xl" />
+                            <div className="animate-in fade-in zoom-in-90 duration-700 delay-150 animate-float-gentle overflow-hidden rounded-3xl border-2 border-white/90 shadow-2xl transition-all hover:scale-105">
+                                <img src="/apresentacao/2024.jpg" alt="Eduarda Conti em 2024" className="h-full w-full object-cover object-top rounded-2xl" />
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            {slide.year === "2024" && (slide.chapter?.includes("09") || slide.title.includes("Impacto") || slide.title.includes("Cinema")) && (
+            {slide.year === "2024" && (slide.chapter?.includes("09") || slide.title.includes("Marcas") || slide.title.includes("Direção") || slide.title.includes("Impacto")) && (
                 <div className={common}>
                     <EditorialHeader chapter={slide.chapter} year={slide.year} title={slide.title} subtitle={slide.subtitle} />
                     <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_1.2fr] items-center">
@@ -589,7 +672,7 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
                                 target="_blank"
                                 rel="noreferrer"
                                 title="Ver projeto Mercado Livre no Instagram"
-                                className="group animate-in fade-in zoom-in-75 duration-700 delay-100 animate-float-slow block overflow-hidden rounded-2xl border-[8px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105"
+                                className="group animate-in fade-in zoom-in-75 duration-700 delay-100 animate-float-slow block overflow-hidden rounded-2xl border-2 border-white/90 bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105"
                             >
                                 <div className="relative h-56 sm:h-64 w-full overflow-hidden">
                                     <img src="/apresentacao/2024-mercadolivre.jpg" alt="Mercado Livre - Reels &CONTI" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -605,7 +688,7 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
                                 target="_blank"
                                 rel="noreferrer"
                                 title="Ver projeto Stock Car no Instagram"
-                                className="group animate-in fade-in zoom-in-75 duration-700 delay-250 animate-float-reverse block overflow-hidden rounded-2xl border-[8px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105"
+                                className="group animate-in fade-in zoom-in-75 duration-700 delay-250 animate-float-reverse block overflow-hidden rounded-2xl border-2 border-white/90 bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105"
                             >
                                 <div className="relative h-56 sm:h-64 w-full overflow-hidden">
                                     <img src="/apresentacao/2024-stockcar.jpg" alt="Stock Car Pro Series - Reels &CONTI" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -637,52 +720,22 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
                             </div>
                         </div>
 
-                        {/* Clean 2-Column Side-by-Side Projects (Zero Overlap) */}
-                        <div className="grid grid-cols-[1.1fr_1fr] gap-4 items-center">
-                            <a
-                                href="https://www.instagram.com/reel/DJfRa7MyZuE/"
-                                target="_blank"
-                                rel="noreferrer"
-                                title="Ver cobertura Vivenda Scapini no Instagram"
-                                className="group animate-in fade-in zoom-in-75 duration-700 delay-100 animate-float-slow block overflow-hidden rounded-2xl border-[8px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105"
-                            >
-                                <div className="relative aspect-[9/16] max-h-[340px] w-full overflow-hidden bg-black">
-                                    <img
-                                        src="/apresentacao/2025-scapini.jpg"
-                                        alt="Cliente Scapini - Vivenda Scapini Colheita Mecanizada"
-                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                                    <div className="absolute left-3 right-3 top-3 flex items-center justify-between gap-2">
-                                        <span className="rounded-full bg-[#2f7fde] px-2.5 py-1 text-[10px] font-normal uppercase tracking-[0.2em] text-white shadow">
-                                            Cliente Scapini
-                                        </span>
-                                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur">
-                                            <Play size={12} fill="currentColor" />
-                                        </span>
-                                    </div>
-                                    <div className="absolute bottom-3 left-3 right-3 text-left">
-                                        <p className="text-xs font-medium text-white uppercase tracking-[0.25em]">Vivenda Scapini</p>
-                                        <p className="text-xs font-normal text-white/90 line-clamp-2">Colheita mecanizada de oliveiras</p>
-                                        <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-slate-300">
-                                            Ver Reel ↗
-                                        </span>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-250 animate-float-reverse overflow-hidden rounded-2xl border-[8px] border-white bg-white p-3 shadow-2xl transition-all hover:scale-105">
+                        {/* Featured Project Card (Câmara de Viamão) */}
+                        <div className="mx-auto w-full max-w-sm sm:max-w-md">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-150 animate-float-gentle relative overflow-hidden rounded-3xl border-2 border-white/90 bg-white p-2 shadow-2xl transition-all hover:scale-105">
+                                <Tape className="-top-3 right-6" />
                                 <img
                                     src="/apresentacao/2024-viamao.jpg"
-                                    alt="Câmara de Vereadores - Continuidade em 2025"
-                                    className="h-44 sm:h-48 w-full rounded-lg object-cover"
+                                    alt="Câmara de Vereadores de Viamão - Continuidade e Liderança"
+                                    className="h-72 sm:h-80 md:h-96 w-full rounded-2xl object-cover"
+                                    style={{ objectPosition: "center 75%" }}
                                 />
-                                <div className="mt-2 text-center">
-                                    <span className="inline-block rounded bg-black px-2 py-0.5 text-[10px] font-normal uppercase tracking-[0.2em] text-white">
+                                <div className="mt-3 text-center pb-1">
+                                    <span className="inline-block rounded-full bg-black px-3 py-1 text-[11px] font-normal uppercase tracking-[0.2em] text-white">
                                         Câmara de Viamão
                                     </span>
-                                    <p className="mt-1 text-[11px] font-medium text-slate-900">
-                                        Liderança em Comunicação Pública
+                                    <p className="mt-1.5 text-xs sm:text-sm font-medium text-slate-900">
+                                        Liderança em Comunicação Pública Institucional
                                     </p>
                                 </div>
                             </div>
@@ -708,20 +761,21 @@ function IntroTimelineSlide({ slide }: { slide: IntroSlide }) {
                             </div>
                         </div>
 
-                        {/* Clean 2-Column Side-by-Side Dual Hero (Zero Overlap) */}
+                        {}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-100 animate-float-slow overflow-hidden rounded-2xl border-[10px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-100 animate-float-slow overflow-hidden rounded-2xl border-2 border-white/90 bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105">
                                 <img
                                     src="/apresentacao/2026-2.jpg"
                                     alt="Fundadores &CONTI - Vivendo do nosso negócio"
-                                    className="h-64 sm:h-76 w-full object-cover object-top rounded-lg"
+                                    className="h-64 sm:h-76 md:h-84 w-full object-cover object-top"
                                 />
                             </div>
-                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-250 animate-float-reverse overflow-hidden rounded-2xl border-[10px] border-white bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105">
+                            <div className="animate-in fade-in zoom-in-75 duration-700 delay-250 animate-float-reverse overflow-hidden rounded-2xl border-2 border-white/90 bg-slate-900 shadow-2xl transition-all duration-300 hover:scale-105">
                                 <img
                                     src="/apresentacao/2026-1.jpg"
                                     alt="Produção audiovisual e equipamentos &CONTI"
-                                    className="h-64 sm:h-76 w-full object-cover object-top rounded-lg"
+                                    className="h-64 sm:h-76 md:h-84 w-full object-cover"
+                                    style={{ objectPosition: "center 85%" }}
                                 />
                             </div>
                         </div>
@@ -945,7 +999,7 @@ export default function AdminPresentationPage() {
                             {currentSlide.kind === "image" ? (
                                 <img src={currentSlide.src} alt={currentSlide.title} className="h-full w-full object-contain" />
                             ) : currentSlide.kind === "intro" ? (
-                                <IntroTimelineSlide slide={currentSlide} />
+                                <IntroTimelineSlide slide={currentSlide} onNext={goNext} />
                             ) : currentSlide.kind === "case" ? (
                                 <CaseStudySlide slide={currentSlide} />
                             ) : currentSlide.kind === "pair" ? (
@@ -1062,11 +1116,6 @@ export default function AdminPresentationPage() {
                                 Próximo <ArrowRight size={14} />
                             </button>
                         )}
-                    </div>
-
-                    {/* TOP THIN ACCENT PROGRESS LINE */}
-                    <div className="absolute top-0 left-0 right-0 h-0.5 z-50 bg-white/10">
-                        <div className="h-full bg-[#00aeea] transition-all duration-300" style={{ width: `${progress}%` }} />
                     </div>
                 </div>,
                 document.body
