@@ -1302,6 +1302,70 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     color: #e11d48 !important;
                 }
 
+                /* Legacy dark-theme text utilities need an explicit light-theme
+                   contrast scale. This keeps labels and empty states readable. */
+                .admin-shell main .text-slate-200,
+                .admin-shell main .text-zinc-100 {
+                    color: #292c31 !important;
+                }
+
+                .admin-shell main .text-slate-300,
+                .admin-shell main .text-zinc-300 {
+                    color: #3f4247 !important;
+                }
+
+                .admin-shell main .text-slate-400,
+                .admin-shell main .text-zinc-400 {
+                    color: #55595f !important;
+                }
+
+                .admin-shell main .text-slate-500,
+                .admin-shell main .text-zinc-500 {
+                    color: #666a70 !important;
+                }
+
+                .admin-shell main .text-slate-600,
+                .admin-shell main .text-zinc-600 {
+                    color: #4d5055 !important;
+                }
+
+                .admin-shell main .text-slate-700 {
+                    color: #34373b !important;
+                }
+
+                .admin-shell main .text-slate-800,
+                .admin-shell main .text-zinc-900 {
+                    color: #24262a !important;
+                }
+
+                .admin-shell main .text-slate-900,
+                .admin-shell main .text-slate-950,
+                .admin-shell main .text-zinc-950 {
+                    color: #15171a !important;
+                }
+
+                .admin-shell main .text-white\/20 {
+                    color: #74777c !important;
+                }
+
+                .admin-shell main .text-white\/70,
+                .admin-shell main .text-white\/80,
+                .admin-shell main .text-white\/90,
+                .admin-shell main .text-white\/95 {
+                    color: #2f3237 !important;
+                }
+
+                .admin-shell main a[class*="bg-blue-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+                .admin-shell main button[class*="bg-blue-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+                .admin-shell main a[class*="from-blue-"] *,
+                .admin-shell main button[class*="from-blue-"] *,
+                .admin-shell main button[class*="bg-green-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+                .admin-shell main button[class*="bg-emerald-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+                .admin-shell main button[class*="bg-red-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
+                .admin-shell main button[class*="bg-rose-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) * {
+                    color: #ffffff !important;
+                }
+
                 .admin-shell main .admin-primary-button,
                 .admin-shell main a[class*="bg-blue-"],
                 .admin-shell main button[class*="bg-blue-"],
