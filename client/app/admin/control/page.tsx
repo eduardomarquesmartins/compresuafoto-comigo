@@ -242,7 +242,7 @@ export default function AdminControlPage() {
                             Central operacional.
                         </h1>
                         <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
-                            Financeiro, dívidas e demandas em uma visão única para priorizar a rotina administrativa.
+                            O que precisa de decisão hoje: caixa, compromissos financeiros e entregas da equipe.
                         </p>
                     </div>
 
