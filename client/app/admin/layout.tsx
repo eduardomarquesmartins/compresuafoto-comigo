@@ -1355,6 +1355,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     color: #2f3237 !important;
                 }
 
+                .admin-shell main th,
+                .admin-shell main th[class*="text-"],
+                .admin-shell main th * {
+                    color: #ffffff !important;
+                }
+
                 .admin-shell main a[class*="bg-blue-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
                 .admin-shell main button[class*="bg-blue-"]:not([class*="/10"]):not([class*="/15"]):not([class*="/20"]) *,
                 .admin-shell main a[class*="from-blue-"] *,
