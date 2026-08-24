@@ -35,7 +35,7 @@ export default function Navbar() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
-        window.location.href = '/';
+        window.location.href = '/compresuafoto';
     };
 
     return (
@@ -47,7 +47,7 @@ export default function Navbar() {
             `}>
                 {/* Logo Section */}
                 <div className="flex-1 flex justify-start">
-                    <Link href="https://www.econticomigo.com.br/" className="flex items-center group">
+                    <Link href="/" className="flex items-center group">
                         <img
                             src="/logo.png"
                             alt="Logo"
@@ -58,8 +58,8 @@ export default function Navbar() {
 
                 {/* Desktop Menu - Centered */}
                 <div className="hidden lg:flex items-center gap-8 font-normal text-slate-600 absolute left-1/2 -translate-x-1/2">
-                    <Link href="/events" className="hover:text-brand transition-colors whitespace-nowrap">Eventos</Link>
-                    <Link href="/" className="hover:text-brand transition-colors whitespace-nowrap">Como Funciona</Link>
+                    <Link href="/compresuafoto/events" className="hover:text-brand transition-colors whitespace-nowrap">Eventos</Link>
+                    <Link href="/compresuafoto" className="hover:text-brand transition-colors whitespace-nowrap">Como Funciona</Link>
                 </div>
 
                 {/* Desktop User/Login Section */}
@@ -75,16 +75,16 @@ export default function Navbar() {
 
                             <div className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right border border-gray-100">
                                 {user.role === 'ADMIN' && (
-                                    <Link href="/admin/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-brand">
+                                    <Link href="/compresuafoto/admin/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-brand">
                                         Painel Admin
                                     </Link>
                                 )}
                                 {user.role !== 'ADMIN' && (
-                                    <Link href="/my-orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-brand">
+                                    <Link href="/compresuafoto/my-orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-brand">
                                         Meus Pedidos
                                     </Link>
                                 )}
-                                <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-brand">
+                                <Link href="/compresuafoto/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-brand">
                                     Configurações
                                 </Link>
                                 <div className="border-t border-gray-100 my-1"></div>
@@ -94,7 +94,7 @@ export default function Navbar() {
                             </div>
                         </div>
                     ) : (
-                        <Link href="/login" className="bg-black text-white px-8 py-2 rounded-full font-normal uppercase tracking-wider hover:bg-brand transition-all shadow-md active:scale-95">
+                        <Link href="/compresuafoto/login" className="bg-black text-white px-8 py-2 rounded-full font-normal uppercase tracking-wider hover:bg-brand transition-all shadow-md active:scale-95">
                             ENTRAR
                         </Link>
                     )}
@@ -117,22 +117,22 @@ export default function Navbar() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="fixed top-24 left-4 right-4 bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl z-[150] flex flex-col items-center py-10 gap-6 lg:hidden border border-white/50"
                         >
-                            <Link href="/events" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand">Eventos</Link>
-                            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand">Como Funciona</Link>
+                            <Link href="/compresuafoto/events" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand">Eventos</Link>
+                            <Link href="/compresuafoto" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand">Como Funciona</Link>
 
                             {!isMounted ? null : user ? (
                                 <>
                                     <div className="h-px w-10 bg-gray-200"></div>
                                     <span className="text-lg font-normal text-brand uppercase tracking-tight">Olá, {user.name}</span>
                                     {user.role === 'ADMIN' && (
-                                        <Link href="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand uppercase tracking-tight">Painel Admin</Link>
+                                        <Link href="/compresuafoto/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand uppercase tracking-tight">Painel Admin</Link>
                                     )}
-                                    <Link href="/my-orders" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand uppercase tracking-tight">Meus Pedidos</Link>
-                                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand uppercase tracking-tight">Configurações</Link>
+                                    <Link href="/compresuafoto/my-orders" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand uppercase tracking-tight">Meus Pedidos</Link>
+                                    <Link href="/compresuafoto/profile" onClick={() => setMobileMenuOpen(false)} className="text-xl font-normal text-foreground hover:text-brand uppercase tracking-tight">Configurações</Link>
                                     <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-xl font-normal text-red-500 pt-4 uppercase tracking-tight">Sair</button>
                                 </>
                             ) : (
-                                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="bg-black text-white px-10 py-3 rounded-full font-normal uppercase tracking-wider">ENTRAR</Link>
+                                <Link href="/compresuafoto/login" onClick={() => setMobileMenuOpen(false)} className="bg-black text-white px-10 py-3 rounded-full font-normal uppercase tracking-wider">ENTRAR</Link>
                             )}
                         </motion.div>
                     )}

@@ -2,11 +2,13 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { usePublicAppPath } from '@/lib/publicAppPath';
 import api from '@/lib/api';
 import { KeyRound, Mail, ArrowLeft, CheckCircle, ShieldAlert, Loader2 } from 'lucide-react';
 
 function ForgotPasswordContent() {
     const router = useRouter();
+    const appPath = usePublicAppPath();
     const searchParams = useSearchParams();
     const token = searchParams.get('token');
 
@@ -53,7 +55,7 @@ function ForgotPasswordContent() {
         try {
             await api.post('/auth/reset-with-token', { token, newPassword });
             setSuccess('Senha redefinida com sucesso!');
-            setTimeout(() => router.push('/login'), 2000);
+            setTimeout(() => router.push(appPath('login')), 2000);
         } catch (err: any) {
             setError(err.response?.data?.error || 'Link inválido ou expirado. Peça uma nova recuperação.');
             if (err.response?.status === 401) {
@@ -71,7 +73,7 @@ function ForgotPasswordContent() {
 
             <div className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative z-10 border border-black/5">
                 <div className="text-center mb-10 flex flex-col items-center">
-                    <Link href="/">
+                    <Link href={appPath()}>
                         <img
                             src="/logo.png"
                             alt="Logo"
@@ -109,7 +111,7 @@ function ForgotPasswordContent() {
                             {loading ? 'Enviando e-mail...' : 'Enviar Link'}
                         </button>
                         <div className="text-center mt-6">
-                            <Link href="/login" className="text-sm text-brand font-bold hover:underline">Voltar para o Login</Link>
+                            <Link href={appPath('login')} className="text-sm text-brand font-bold hover:underline">Voltar para o Login</Link>
                         </div>
                     </form>
                 )}

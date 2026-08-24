@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { getEvents, deleteEvent, updateEvent } from '@/lib/api';
 import Link from 'next/link';
 import { Plus, Image as ImageIcon, Trash2, Edit, Archive, Filter, Calendar } from 'lucide-react';
+import { adminPath } from '@/lib/adminPath';
 
 interface Event {
     id: number;
@@ -78,7 +79,7 @@ export default function AdminEventsPage() {
                     </div>
                     <h1 className="text-4xl font-light text-white tracking-tight">Gerenciar Eventos</h1>
                 </div>
-                <Link href="/admin/events/create" className="group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] border border-white/10 active:scale-95">
+                <Link href={adminPath("events/create")} className="group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] border border-white/10 active:scale-95">
                     <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" />
                     Novo Evento
                 </Link>
@@ -164,7 +165,7 @@ export default function AdminEventsPage() {
                                     <td className="px-8 py-6">
                                         <div className="flex justify-end gap-2 items-center">
                                             <Link
-                                                href={`/admin/events/edit/${event.id}`}
+                                                href={adminPath(`events/edit/${event.id}`)}
                                                 className="text-slate-400 hover:text-white p-2 hover:bg-white/10 border border-transparent hover:border-white/10 rounded-lg transition-all"
                                                 title="Editar Detalhes"
                                             >
@@ -178,7 +179,7 @@ export default function AdminEventsPage() {
                                                 <Archive size={16} />
                                             </button>
                                             <Link
-                                                href={`/admin/events/${event.id}/upload`}
+                                                href={adminPath(`events/${event.id}/upload`)}
                                                 className="text-slate-400 hover:text-purple-400 p-2 hover:bg-purple-500/10 border border-transparent hover:border-purple-500/20 rounded-lg transition-all"
                                                 title="Gerenciar Fotos"
                                             >

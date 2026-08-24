@@ -11,6 +11,7 @@ import { useCartStore } from "@/store/useCartStore";
 import PhotoSkeleton from "@/components/PhotoSkeleton";
 import PhotoGridItem from "@/components/PhotoGridItem";
 import { getPublicAppUrl } from "@/lib/publicAppUrl";
+import { usePublicAppPath } from "@/lib/publicAppPath";
 
 interface Photo {
     id: number;
@@ -32,6 +33,7 @@ interface Event {
 export default function EventDetailsPage() {
     const { id } = useParams();
     const router = useRouter();
+    const appPath = usePublicAppPath();
     const [event, setEvent] = useState<Event | null>(null);
     const [loading, setLoading] = useState(true);
     const [searching, setSearching] = useState(false);
@@ -244,7 +246,7 @@ export default function EventDetailsPage() {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         if (!token) {
             persistSearchForRedirect();
-            router.push(`/login?redirectTo=${encodeURIComponent(pathname)}`);
+            router.push(appPath(`login?redirectTo=${encodeURIComponent(pathname)}`));
             return;
         }
 
@@ -255,7 +257,7 @@ export default function EventDetailsPage() {
             if (!user.cpf || !user.cpf.trim()) {
                 persistSearchForRedirect();
                 alert('Para finalizar sua compra, complete seu cadastro com o CPF.');
-                router.push(`/profile?incomplete=true&redirectTo=${encodeURIComponent(pathname)}`);
+                router.push(appPath(`profile?incomplete=true&redirectTo=${encodeURIComponent(pathname)}`));
                 return;
             }
         }
@@ -273,7 +275,7 @@ export default function EventDetailsPage() {
 
             if (res.data.status === 'PAID') {
                 clearCart();
-                router.push('/my-orders');
+                router.push(appPath('my-orders'));
             } else if (res.data.init_point || res.data.sandbox_init_point) {
                 window.location.href = res.data.init_point || res.data.sandbox_init_point;
             } else {

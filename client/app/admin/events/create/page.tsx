@@ -6,6 +6,7 @@ import { Upload, Image as ImageIcon, CheckCircle2, AlertCircle, Loader2 } from '
 import axios from 'axios';
 import api from '@/lib/api';
 import { uploadPhotosDirectToS3 } from '@/lib/directPhotoUpload';
+import { adminPath } from '@/lib/adminPath';
 
 export default function CreateEventPage() {
     const router = useRouter();
@@ -88,7 +89,7 @@ export default function CreateEventPage() {
                     O evento e as fotos foram enviados com sucesso. A marca d&apos;agua foi gerada localmente e a IA continuara em segundo plano.
                 </p>
                 <button
-                    onClick={() => router.push('/admin/dashboard')}
+                    onClick={() => router.push(adminPath('dashboard'))}
                     className="w-full bg-brand hover:bg-blue-600 text-white p-4 rounded-xl font-bold transition-all"
                 >
                     VOLTAR AO PAINEL

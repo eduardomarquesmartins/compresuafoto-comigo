@@ -1,4 +1,11 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Este é o projeto web unificado da Econti.
+
+- `/` — site institucional da Econti
+- `/admin` — painel administrativo da Econti
+- `/compresuafoto` — Compre sua Foto
+- `/compresuafoto/admin` — painel administrativo do Compre sua Foto
+
+O site institucional está em `public/econti`; seus links para o Compre sua Foto são internos e não dependem de outro domínio ou repositório.
 
 ## Getting Started
 

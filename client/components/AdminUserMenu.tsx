@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Settings, User } from "lucide-react";
+import { adminLoginPath, adminPath } from "@/lib/adminPath";
 
 export default function AdminUserMenu() {
     const [isOpen, setIsOpen] = useState(false);
@@ -25,7 +26,7 @@ export default function AdminUserMenu() {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         setIsOpen(false);
-        router.push("/admin/login");
+        router.push(adminLoginPath());
     };
 
     return (
@@ -49,7 +50,7 @@ export default function AdminUserMenu() {
 
                     <div className="space-y-1 p-2">
                         <Link
-                            href="/admin/profile"
+                            href={adminPath("profile")}
                             className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
                             onClick={() => setIsOpen(false)}
                         >
@@ -57,7 +58,7 @@ export default function AdminUserMenu() {
                             Meu perfil
                         </Link>
                         <Link
-                            href="/admin/settings"
+                            href={adminPath("settings")}
                             className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
                             onClick={() => setIsOpen(false)}
                         >

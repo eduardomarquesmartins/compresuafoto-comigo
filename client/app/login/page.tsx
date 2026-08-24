@@ -6,8 +6,21 @@ import api from '@/lib/api';
 import { getSafeRedirectPath } from '@/lib/safeRedirect';
 import { GoogleLogin } from '@react-oauth/google';
 import { ArrowLeft } from 'lucide-react';
-function LoginContent() {
+import { adminDashboardPath } from '@/lib/adminPath';
+import { usePublicAppPath } from '@/lib/publicAppPath';
+type LoginPageProps = {
+    publicBase?: string;
+};
+
+function LoginContent({ publicBase = "" }: LoginPageProps) {
+    const isPhotoLogin = publicBase === "/compresuafoto";
     const router = useRouter();
+    const currentAppPath = usePublicAppPath();
+    const appPath = (path = "") => {
+        if (!publicBase) return currentAppPath(path);
+        const normalizedPath = path ? `/${path.replace(/^\/+/, "")}` : "";
+        return `${publicBase}${normalizedPath}`;
+    };
     const searchParams = useSearchParams();
     const redirectTo = getSafeRedirectPath(searchParams.get('redirectTo'));
 
@@ -18,8 +31,8 @@ function LoginContent() {
     const [googleReady, setGoogleReady] = useState(false);
 
     useEffect(() => {
-        setGoogleReady(true);
-    }, []);
+        if (isPhotoLogin) setGoogleReady(true);
+    }, [isPhotoLogin]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,7 +50,7 @@ function LoginContent() {
                 if (redirectTo) {
                     router.push(redirectTo);
                 } else if (res.data.user.role === 'ADMIN') {
-                    router.push('/admin/dashboard');
+                    router.push(adminDashboardPath());
                 } else if (res.data.user.role === 'DESIGNER') {
                     router.push('/designer');
                 } else if (res.data.user.role === 'DEMANDAS') {
@@ -45,7 +58,7 @@ function LoginContent() {
                 } else if (res.data.user.role === 'COLLABORATOR') {
                     router.push(res.data.user.collaboratorProfile === 'DESIGNER' ? '/designer' : '/demandas');
                 } else {
-                    router.push('/my-orders');
+                    router.push(appPath('my-orders'));
                 }
             }
         } catch (err: any) {
@@ -69,12 +82,14 @@ function LoginContent() {
                 localStorage.setItem('user', JSON.stringify(res.data.user));
 
                 if (res.data.incompleteProfile) {
-                    const redirectUrl = redirectTo ? `/profile?incomplete=true&redirectTo=${encodeURIComponent(redirectTo)}` : '/profile?incomplete=true';
+                    const redirectUrl = redirectTo
+                        ? appPath(`profile?incomplete=true&redirectTo=${encodeURIComponent(redirectTo)}`)
+                        : appPath('profile?incomplete=true');
                     router.push(redirectUrl);
                 } else if (redirectTo) {
                     router.push(redirectTo);
                 } else {
-                    router.push(res.data.user.role === 'ADMIN' ? '/admin/dashboard' : res.data.user.role === 'DESIGNER' || (res.data.user.role === 'COLLABORATOR' && res.data.user.collaboratorProfile === 'DESIGNER') ? '/designer' : res.data.user.role === 'DEMANDAS' || res.data.user.role === 'COLLABORATOR' ? '/demandas' : '/my-orders');
+                    router.push(res.data.user.role === 'ADMIN' ? adminDashboardPath() : res.data.user.role === 'DESIGNER' || (res.data.user.role === 'COLLABORATOR' && res.data.user.collaboratorProfile === 'DESIGNER') ? '/designer' : res.data.user.role === 'DEMANDAS' || res.data.user.role === 'COLLABORATOR' ? '/demandas' : appPath('my-orders'));
                 }
             }
         } catch (err: any) {
@@ -91,7 +106,7 @@ function LoginContent() {
 
             <div className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative z-10 border border-black/5">
                 <div className="text-center mb-10 flex justify-center">
-                    <Link href="/">
+                    <Link href={appPath()}>
                         <img
                             src="/logo.png"
                             alt="Logo"
@@ -116,7 +131,7 @@ function LoginContent() {
                     <div>
                         <div className="flex justify-between items-center mb-2">
                             <label className="block text-xs font-medium uppercase tracking-widest text-slate-500">Senha</label>
-                            <Link href="/forgot-password" title="Esqueci minha senha" className="text-xs text-brand font-bold hover:underline">Esqueci minha senha</Link>
+                            <Link href={appPath('forgot-password')} title="Esqueci minha senha" className="text-xs text-brand font-bold hover:underline">Esqueci minha senha</Link>
                         </div>
                         <input
                             type="password"
@@ -134,30 +149,33 @@ function LoginContent() {
                         {loading ? 'Verificando...' : 'Entrar'}
                     </button>
 
-                    <div className="relative my-8">
-                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-                        <div className="relative flex justify-center text-[10px] uppercase font-semibold tracking-[0.2em]">
-                            <span className="bg-white px-4 text-slate-400">Ou entre com</span>
+                    {isPhotoLogin && <>
+                        <div className="relative my-8">
+                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
+                            <div className="relative flex justify-center text-[10px] uppercase font-semibold tracking-[0.2em]">
+                                <span className="bg-white px-4 text-slate-400">Ou entre com</span>
+                            </div>
                         </div>
-                    </div>
-
-                    {googleReady && (
-                        <div className="flex justify-center">
-                            <GoogleLogin
-                                onSuccess={handleGoogleSuccess}
-                                onError={() => setError('Erro no Google Login')}
-                                theme="outline"
-                                shape="pill"
-                                width="250px"
-                            />
-                        </div>
-                    )}
+                        {googleReady && (
+                            <div className="flex justify-center">
+                                <GoogleLogin
+                                    onSuccess={handleGoogleSuccess}
+                                    onError={() => setError('Erro no Google Login')}
+                                    theme="outline"
+                                    shape="pill"
+                                    width="250px"
+                                />
+                            </div>
+                        )}
+                    </>}
 
                     <div className="mt-10 text-center text-sm text-slate-500 flex flex-col gap-4">
-                        <p>
-                            Não tem uma conta? <Link href={`/register${redirectTo ? `?redirectTo=${redirectTo}` : ''}`} className="text-brand font-bold hover:underline">Cadastre-se</Link>
-                        </p>
-                        <Link href="/" className="inline-flex items-center justify-center gap-2 text-slate-400 hover:text-slate-700 transition-colors mt-2">
+                        {isPhotoLogin && (
+                            <p>
+                                Não tem uma conta? <Link href={appPath(`register${redirectTo ? `?redirectTo=${redirectTo}` : ''}`)} className="text-brand font-bold hover:underline">Cadastre-se</Link>
+                            </p>
+                        )}
+                        <Link href={appPath()} className="inline-flex items-center justify-center gap-2 text-slate-400 hover:text-slate-700 transition-colors mt-2">
                             <ArrowLeft className="w-4 h-4" />
                             <span>Voltar ao site</span>
                         </Link>
@@ -168,14 +186,14 @@ function LoginContent() {
     );
 }
 
-export default function LoginPage() {
+export default function LoginPage({ publicBase }: LoginPageProps) {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-brand"></div>
             </div>
         }>
-            <LoginContent />
+            <LoginContent publicBase={publicBase} />
         </Suspense>
     );
 }

@@ -19,7 +19,7 @@ const sendEmailOrFail = async (payload) => {
  */
 exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) => {
     try {
-        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://compresuafoto.econticomigo.com.br';
+        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://econti.com.br/compresuafoto';
         if (!finalClientUrl.startsWith('http')) {
             finalClientUrl = `https://${finalClientUrl}`;
         }
@@ -27,7 +27,7 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
         const currentYear = new Date().getFullYear();
 
         const { data, error } = await sendEmailOrFail({
-            from: 'contato@compresuafoto.econticomigo.com.br',
+            from: process.env.EMAIL_FROM || 'Compre Sua Foto <contato@econti.com.br>',
             to: [email],
             subject: `Pedido #${orderId} - Suas fotos estão prontas para download`,
             html: `
@@ -106,7 +106,7 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
 
 exports.sendPasswordResetEmail = async (email, resetToken, clientUrl) => {
     try {
-        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://compresuafoto.econticomigo.com.br';
+        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://econti.com.br/compresuafoto';
         if (!finalClientUrl.startsWith('http')) {
             finalClientUrl = `https://${finalClientUrl}`;
         }
@@ -115,7 +115,7 @@ exports.sendPasswordResetEmail = async (email, resetToken, clientUrl) => {
         const currentYear = new Date().getFullYear();
 
         const { data, error } = await sendEmailOrFail({
-            from: 'contato@compresuafoto.econticomigo.com.br',
+            from: process.env.EMAIL_FROM || 'Compre Sua Foto <contato@econti.com.br>',
             to: [email],
             subject: 'Recuperacao de senha - Compre Sua Foto',
             html: `
@@ -194,7 +194,7 @@ exports.sendProposalEmail = async (email, clientName, selectedServices, total, p
         const pdfBuffer = await pdfService.generatePDFBuffer(clientName, selectedServices, total, proposalType);
 
         const { data, error } = await sendEmailOrFail({
-            from: 'contato@compresuafoto.econticomigo.com.br',
+            from: process.env.EMAIL_FROM || 'Compre Sua Foto <contato@econti.com.br>',
             to: [email],
             subject: `Proposta Comercial - ${clientName || 'CONTI Marketing Digital'} 🚀`,
             attachments: [
@@ -245,7 +245,7 @@ exports.sendContractEmail = async (email, clientName, pdfBuffer) => {
         const currentYear = new Date().getFullYear();
 
         const { data, error } = await sendEmailOrFail({
-            from: 'contato@compresuafoto.econticomigo.com.br',
+            from: process.env.EMAIL_FROM || 'Compre Sua Foto <contato@econti.com.br>',
             to: [email],
             subject: `Contrato de Prestação de Serviços Renovado - ${clientName || 'CONTI Marketing Digital'} ✍️`,
             attachments: [
@@ -288,7 +288,7 @@ exports.sendContractSignatureLinkEmail = async (email, clientName, pdfBuffer, co
         const currentYear = new Date().getFullYear();
 
         const { data, error } = await sendEmailOrFail({
-            from: 'contato@compresuafoto.econticomigo.com.br',
+            from: process.env.EMAIL_FROM || 'Compre Sua Foto <contato@econti.com.br>',
             to: [email],
             subject: `Assine seu contrato - ${clientName || 'CONTI Marketing Digital'}`,
             attachments: [
@@ -336,7 +336,7 @@ exports.sendSignedContractEmail = async (email, clientName, pdfBuffer) => {
         const currentYear = new Date().getFullYear();
 
         const { data, error } = await sendEmailOrFail({
-            from: 'contato@compresuafoto.econticomigo.com.br',
+            from: process.env.EMAIL_FROM || 'Compre Sua Foto <contato@econti.com.br>',
             to: [email],
             subject: `Contrato assinado - ${clientName || 'CONTI Marketing Digital'}`,
             attachments: [
@@ -416,7 +416,7 @@ exports.sendClientBroadcastEmail = async ({ clients, subject, preheader, body, c
 
         try {
             const { data, error } = await resend.emails.send({
-                from: 'Compre Sua Foto <contato@compresuafoto.econticomigo.com.br>',
+                from: process.env.EMAIL_FROM || 'Compre Sua Foto <contato@econti.com.br>',
                 to: [client.email],
                 subject: finalSubject,
                 ...(replyTo ? { replyTo } : {}),

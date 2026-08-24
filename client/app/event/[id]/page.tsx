@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 
-export default function LegacyEventPage({
+export default async function LegacyEventPage({
     params,
 }: {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }) {
-    const { id } = params;
-    redirect(`/events/${id}`);
+    const { id } = await params;
+    redirect(`/compresuafoto/events/${id}`);
 }

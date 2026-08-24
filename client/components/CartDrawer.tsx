@@ -6,6 +6,7 @@ import { useCartStore } from "@/store/useCartStore";
 import api from "@/lib/api";
 import { useRouter, usePathname } from "next/navigation";
 import { getPublicAppUrl } from "@/lib/publicAppUrl";
+import { usePublicAppPath } from "@/lib/publicAppPath";
 
 export default function CartDrawer() {
     const {
@@ -21,6 +22,7 @@ export default function CartDrawer() {
     } = useCartStore();
     const router = useRouter();
     const pathname = usePathname();
+    const appPath = usePublicAppPath();
     const [isCheckingOut, setIsCheckingOut] = React.useState(false);
     const [couponCode, setCouponCode] = React.useState("");
     const [isValidatingCoupon, setIsValidatingCoupon] = React.useState(false);
@@ -82,7 +84,7 @@ export default function CartDrawer() {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         if (!token) {
             setDrawerOpen(false);
-            router.push(`/login?redirectTo=${encodeURIComponent(pathname)}`);
+            router.push(appPath(`login?redirectTo=${encodeURIComponent(pathname)}`));
             return;
         }
 
@@ -93,7 +95,7 @@ export default function CartDrawer() {
             if (!user.cpf || !user.cpf.trim()) {
                 setDrawerOpen(false);
                 alert('Para finalizar sua compra, complete seu cadastro com o CPF.');
-                router.push(`/profile?incomplete=true&redirectTo=${encodeURIComponent(pathname)}`);
+                router.push(appPath(`profile?incomplete=true&redirectTo=${encodeURIComponent(pathname)}`));
                 return;
             }
         }
@@ -110,7 +112,7 @@ export default function CartDrawer() {
             if (res.data.status === 'PAID') {
                 clearCart();
                 setDrawerOpen(false);
-                router.push('/my-orders');
+                router.push(appPath('my-orders'));
             } else if (res.data.init_point || res.data.sandbox_init_point) {
                 window.location.href = res.data.init_point || res.data.sandbox_init_point;
             } else {

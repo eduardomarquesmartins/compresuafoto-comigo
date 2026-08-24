@@ -3,8 +3,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Clock, CheckCircle2, ArrowRight } from "lucide-react";
+import { usePublicAppPath } from "@/lib/publicAppPath";
 
 function OrderPendingContent() {
+    const appPath = usePublicAppPath();
     return (
         <div className="min-h-screen bg-background text-foreground font-sans p-6 flex flex-col items-center justify-center">
             <div className="max-w-md w-full bg-white p-12 rounded-[3.5rem] border border-black/5 shadow-2xl flex flex-col items-center text-center">
@@ -19,7 +21,7 @@ function OrderPendingContent() {
 
                 <div className="flex flex-col w-full gap-4">
                     <Link
-                        href="/my-orders"
+                        href={appPath("my-orders")}
                         className="bg-slate-900 text-white px-8 py-4 rounded-full font-bold flex items-center justify-center gap-2 hover:bg-brand transition-all shadow-xl shadow-black/5"
                     >
                         Ver Meus Pedidos

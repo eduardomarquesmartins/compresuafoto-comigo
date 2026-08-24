@@ -4,7 +4,8 @@
     "AllowedMethods": ["GET", "PUT"],
     "AllowedOrigins": [
       "https://compresuafoto-comigo.vercel.app",
-      "https://compresuafoto.econticomigo.com.br",
+      "https://econti.com.br",
+      "https://www.econti.com.br",
       "http://localhost:3000",
       "http://localhost:3001"
     ],

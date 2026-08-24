@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { getEvent, updateEvent } from '@/lib/api'; // Ensure getEvent is exported correctly
 import { useParams } from 'next/navigation';
 import { Save, ArrowLeft, Archive, RefreshCw } from 'lucide-react';
+import { adminPath } from '@/lib/adminPath';
 
 export default function EditEventPage() {
     const params = useParams();
@@ -29,7 +30,7 @@ export default function EditEventPage() {
             const event = await getEvent(id);
             if (!event) {
                 alert('Evento indisponível no momento');
-                router.push('/admin/events');
+                router.push(adminPath('events'));
                 return;
             }
             setFormData({
@@ -40,7 +41,7 @@ export default function EditEventPage() {
             });
         } catch (error) {
             alert('Falha ao carregar evento');
-            router.push('/admin/events');
+            router.push(adminPath('events'));
         } finally {
             setLoading(false);
         }
@@ -52,7 +53,7 @@ export default function EditEventPage() {
         try {
             await updateEvent(Number(params?.id), formData);
             alert('Evento atualizado com sucesso!');
-            router.push('/admin/events');
+            router.push(adminPath('events'));
         } catch (error) {
             alert('Erro ao atualizar evento');
         } finally {

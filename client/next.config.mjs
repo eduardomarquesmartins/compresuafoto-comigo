@@ -1,5 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    async redirects() {
+        return [
+            { source: '/events/:path*', destination: '/compresuafoto/events/:path*', permanent: true },
+            { source: '/event/:path*', destination: '/compresuafoto/events/:path*', permanent: true },
+            { source: '/register', destination: '/compresuafoto/register', permanent: true },
+            { source: '/forgot-password', destination: '/compresuafoto/forgot-password', permanent: true },
+            { source: '/my-orders', destination: '/compresuafoto/my-orders', permanent: true },
+            { source: '/profile', destination: '/compresuafoto/profile', permanent: true },
+            { source: '/orders/:path*', destination: '/compresuafoto/orders/:path*', permanent: true },
+        ];
+    },
     turbopack: {
         root: new URL('.', import.meta.url).pathname,
     },

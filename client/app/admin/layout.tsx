@@ -43,50 +43,57 @@ type NavSection = {
     items: NavItem[];
 };
 
-const navSections: NavSection[] = [
+const econtiNavSections: NavSection[] = [
     {
-        label: "Painel",
+        label: "Operação",
         items: [
-            { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-            { href: "/admin/events", label: "Eventos", icon: Calendar },
-            { href: "/admin/events/create", label: "Criar evento", icon: CalendarPlus },
-            { href: "/admin/users", label: "Usuários", icon: Users }
-        ]
-    },
-    {
-        label: "Comercial",
-        items: [
-            { href: "/admin/coupons", label: "Cupons", icon: Tag },
-            { href: "/admin/orders", label: "Pedidos", icon: ShoppingBag },
-            { href: "/admin/proposals", label: "Propostas", icon: FileText },
-            { href: "/admin/contracts", label: "Contratos", icon: ScrollText },
+            { href: "/admin/control", label: "Visão geral", icon: LayoutDashboard },
             { href: "/admin/clients", label: "Clientes", icon: Users },
+            { href: "/admin/proposals", label: "Propostas", icon: FileText },
+            { href: "/admin/contracts", label: "Contratos e assinaturas", icon: ScrollText },
             { href: "/admin/emails", label: "E-mails", icon: Mail },
             { href: "/admin/presentation", label: "Apresentação", icon: MonitorPlay }
         ]
     },
     {
-        label: "Equipe",
+        label: "Gestão",
         items: [
-            { href: "/admin/collaborators", label: "Colaboradores", icon: ClipboardCheck }
+            { href: "/admin/finance", label: "Financeiro", icon: DollarSign },
+            { href: "/admin/debts", label: "Dívidas", icon: ShieldAlert },
+            { href: "/admin/demands", label: "Demandas", icon: ClipboardCheck },
+            { href: "/admin/collaborators", label: "Colaboradores", icon: Users },
+            { href: "/admin/imports", label: "Importações", icon: FileSpreadsheet }
         ]
     }
 ];
 
-const isCurrentRoute = (pathname: string, href: string) => {
-    if (href === "/admin/dashboard") {
-        return pathname === href || pathname === "/admin";
+const photoNavSections: NavSection[] = [
+    {
+        label: "Painel",
+        items: [
+            { href: "/compresuafoto/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+            { href: "/compresuafoto/admin/events", label: "Eventos", icon: Calendar },
+            { href: "/compresuafoto/admin/events/create", label: "Criar evento", icon: CalendarPlus },
+            { href: "/compresuafoto/admin/users", label: "Usuários", icon: Users }
+        ]
+    },
+    {
+        label: "Vendas de fotos",
+        items: [
+            { href: "/compresuafoto/admin/coupons", label: "Cupons", icon: Tag },
+            { href: "/compresuafoto/admin/orders", label: "Pedidos", icon: ShoppingBag }
+        ]
     }
+];
 
-    return pathname === href || pathname.startsWith(`${href}/`);
-};
+const isCurrentRoute = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
 const clearAdminSession = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 };
 
-const getRouteMeta = (pathname: string) => {
+const getRouteMeta = (pathname: string, navSections: NavSection[]) => {
     const currentItem = navSections
         .flatMap(section => section.items.map(item => ({ ...item, section: section.label })))
         .find(item => isCurrentRoute(pathname, item.href));
@@ -102,10 +109,16 @@ const getRouteMeta = (pathname: string) => {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const [isAuthorized, setIsAuthorized] = useState(pathname === "/admin/login");
+    const isPhotoAdmin = pathname.startsWith("/compresuafoto/admin");
+    const adminBasePath = isPhotoAdmin ? "/compresuafoto/admin" : "/admin";
+    const loginPath = `${adminBasePath}/login`;
+    const dashboardPath = isPhotoAdmin ? "/compresuafoto/admin/dashboard" : "/admin/control";
+    const publicSitePath = isPhotoAdmin ? "/compresuafoto" : "/";
+    const navSections = isPhotoAdmin ? photoNavSections : econtiNavSections;
+    const [isAuthorized, setIsAuthorized] = useState(pathname === loginPath);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [activeRequests, setActiveRequests] = useState(0);
-    const routeMeta = useMemo(() => getRouteMeta(pathname), [pathname]);
+    const routeMeta = useMemo(() => getRouteMeta(pathname, navSections), [pathname, navSections]);
     const RouteIcon = routeMeta.icon;
 
     useEffect(() => {
@@ -125,7 +138,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         let cancelled = false;
 
         const validateAdminSession = async () => {
-            if (pathname === "/admin/login") {
+            if (pathname === loginPath) {
                 setIsAuthorized(true);
                 return;
             }
@@ -134,7 +147,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             if (!token) {
                 clearAdminSession();
                 if (!cancelled) setIsAuthorized(false);
-                router.push("/admin/login");
+                router.push(loginPath);
                 return;
             }
 
@@ -145,7 +158,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 if (user?.role !== "ADMIN") {
                     clearAdminSession();
                     if (!cancelled) setIsAuthorized(false);
-                    router.push("/admin/login");
+                    router.push(loginPath);
                     return;
                 }
 
@@ -157,7 +170,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             } catch {
                 clearAdminSession();
                 if (!cancelled) setIsAuthorized(false);
-                router.push("/admin/login");
+                router.push(loginPath);
             }
         };
 
@@ -166,11 +179,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return () => {
             cancelled = true;
         };
-    }, [pathname, router]);
+    }, [pathname, router, loginPath]);
 
     const handleLogout = () => {
         clearAdminSession();
-        router.push("/login");
+        router.push(isPhotoAdmin ? "/compresuafoto/login" : "/login");
     };
 
     if (!isAuthorized) {
@@ -192,8 +205,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             <header className="xl:hidden sticky top-0 z-40 border-b border-zinc-200 bg-white/92 px-4 py-3 backdrop-blur-xl">
                 <div className="flex items-center justify-between relative h-12">
-                    <Link href="/admin/dashboard" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-12 w-48 flex items-center justify-center overflow-hidden">
-                        <Image src={logoAdmin} alt="Compre Sua Foto admin" className="h-28 w-auto object-contain" />
+                    <Link href={dashboardPath} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-12 w-48 flex items-center justify-center overflow-hidden">
+                        <Image src={logoAdmin} alt={isPhotoAdmin ? "Compre Sua Foto admin" : "Econti admin"} className="h-28 w-auto object-contain" />
                     </Link>
 
                     <button
@@ -228,8 +241,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     `}
                 >
                     <div className="border-b border-zinc-200 h-20 flex justify-center items-center overflow-hidden">
-                        <Link href="/admin/dashboard" className="relative w-full h-full flex justify-center items-center">
-                            <Image src={logoAdmin} alt="Compre Sua Foto" className="absolute h-48 w-auto object-contain transition-transform hover:scale-105 duration-200" />
+                        <Link href={dashboardPath} className="relative w-full h-full flex justify-center items-center">
+                            <Image src={logoAdmin} alt={isPhotoAdmin ? "Compre Sua Foto" : "Econti"} className="absolute h-48 w-auto object-contain transition-transform hover:scale-105 duration-200" />
                         </Link>
                     </div>
 
@@ -267,7 +280,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <LogOut size={16} />
                             <span>Sair do Admin</span>
                         </button>
-                        <Link href="/" className="admin-nav-link">
+                        <Link href={publicSitePath} className="admin-nav-link">
                             <Home size={16} />
                             <span>Voltar ao site</span>
                         </Link>                    </div>

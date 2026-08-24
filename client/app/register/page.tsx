@@ -2,11 +2,13 @@
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { usePublicAppPath } from '@/lib/publicAppPath';
 import api from '@/lib/api';
 import { getSafeRedirectPath } from '@/lib/safeRedirect';
 
 function RegisterContent() {
     const router = useRouter();
+    const appPath = usePublicAppPath();
     const searchParams = useSearchParams();
     const redirectTo = getSafeRedirectPath(searchParams.get('redirectTo'));
     const [fullName, setFullName] = useState('');
@@ -44,7 +46,7 @@ function RegisterContent() {
                 if (redirectTo) {
                     router.push(redirectTo);
                 } else {
-                    router.push('/');
+                    router.push(appPath());
                 }
             }
         } catch (err: any) {
@@ -66,7 +68,7 @@ function RegisterContent() {
 
             <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] border border-black/5 shadow-2xl relative z-10">
                 <div className="text-center mb-10 flex flex-col items-center">
-                    <Link href="/">
+                    <Link href={appPath()}>
                         <img
                             src="/logo.png"
                             alt="Logo"
@@ -171,10 +173,10 @@ function RegisterContent() {
                 </form>
 
                 <div className="mt-6 text-center text-sm text-slate-500">
-                    Já tem uma conta? <Link href={`/login${redirectTo ? `?redirectTo=${redirectTo}` : ''}`} className="text-brand font-bold hover:underline">Entrar</Link>
+                    Já tem uma conta? <Link href={appPath(`login${redirectTo ? `?redirectTo=${redirectTo}` : ''}`)} className="text-brand font-bold hover:underline">Entrar</Link>
                 </div>
                 <div className="mt-4 text-center text-sm">
-                    <Link href="/" className="text-slate-400 hover:text-slate-600 transition-colors">Voltar para Home</Link>
+                    <Link href={appPath()} className="text-slate-400 hover:text-slate-600 transition-colors">Voltar para Home</Link>
                 </div>
             </div>
         </div>

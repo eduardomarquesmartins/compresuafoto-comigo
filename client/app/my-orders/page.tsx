@@ -7,6 +7,7 @@ import { Download, Package, Calendar, Clock, CheckCircle, XCircle, AlertCircle, 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { getPublicAppUrl } from '@/lib/publicAppUrl';
+import { usePublicAppPath } from '@/lib/publicAppPath';
 
 interface Order {
     id: number;
@@ -19,6 +20,7 @@ interface Order {
 
 export default function MyOrdersPage() {
     const router = useRouter();
+    const appPath = usePublicAppPath();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -28,7 +30,7 @@ export default function MyOrdersPage() {
         const userData = localStorage.getItem('user');
 
         if (!token || !userData) {
-            router.push('/login');
+            router.push(appPath('login'));
             return;
         }
         fetchOrders();
@@ -113,7 +115,7 @@ export default function MyOrdersPage() {
                             <p className="text-slate-500 font-light mb-8 max-w-md mx-auto">
                                 Participe dos eventos parceiros da & Conti e encontre suas fotos usando nossa tecnologia de IA.
                             </p>
-                            <Link href="/events" className="inline-flex items-center gap-2 bg-brand text-white px-8 py-3 rounded-full font-medium shadow-lg shadow-brand/20 hover:bg-slate-900 transition-all hover:scale-105 active:scale-95">
+                            <Link href={appPath('events')} className="inline-flex items-center gap-2 bg-brand text-white px-8 py-3 rounded-full font-medium shadow-lg shadow-brand/20 hover:bg-slate-900 transition-all hover:scale-105 active:scale-95">
                                 Ver Eventos Disponíveis <ArrowRight size={18} />
                             </Link>
                         </motion.div>

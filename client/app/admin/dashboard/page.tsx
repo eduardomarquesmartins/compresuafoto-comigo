@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
+import { adminPath } from "@/lib/adminPath";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import {
     ArrowUpRight,
@@ -265,29 +266,29 @@ export default function AdminDashboard() {
                     <p className="mt-3 text-sm leading-6 text-slate-500">Acesse os fluxos principais sem perder o contexto operacional do painel.</p>
 
                     <div className="mt-8 space-y-3">
-                        <Link href="/admin/events" className="admin-action-link">
+                        <Link href={adminPath("events")} className="admin-action-link">
                             <span>
                                 <strong>Gerenciar eventos</strong>
                                 <small>Atualize disponibilidade e acervos</small>
                             </span>
                             <ArrowUpRight size={16} />
                         </Link>
-                        <Link href="/admin/orders" className="admin-action-link">
+                        <Link href={adminPath("orders")} className="admin-action-link">
                             <span>
                                 <strong>Últimos pedidos</strong>
                                 <small>Veja compras e confirmações</small>
                             </span>
                             <ArrowUpRight size={16} />
                         </Link>
-                        <Link href="/admin/presentation" className="admin-action-link">
+                        <Link href={adminPath("coupons")} className="admin-action-link">
                             <span>
-                                <strong>Apresentação</strong>
-                                <small>Inicie os slides comerciais</small>
+                                <strong>Cupons</strong>
+                                <small>Crie e acompanhe descontos</small>
                             </span>
-                            <MonitorPlay size={16} />
+                            <ArrowUpRight size={16} />
                         </Link>
-                        <Link href="/admin/proposals/new" className="admin-primary-button w-full justify-center">
-                            Nova proposta
+                        <Link href={adminPath("events/create")} className="admin-primary-button w-full justify-center">
+                            Criar evento
                             <ArrowUpRight size={16} />
                         </Link>
                     </div>

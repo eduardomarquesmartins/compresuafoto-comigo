@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { adminLoginPath } from './adminPath';
 
 const isLocalhost = typeof window !== 'undefined' 
     ? (window.location.hostname === 'localhost' || 
@@ -97,7 +98,7 @@ api.interceptors.response.use(
 
                 // Only redirect if not already on the login page to avoid loops
                 if (!window.location.pathname.includes('/login')) {
-                    window.location.href = `/login?expired=true`;
+                    window.location.href = `${adminLoginPath()}?expired=true`;
                 }
             }
         }

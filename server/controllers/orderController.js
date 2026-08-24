@@ -58,13 +58,14 @@ const buildOrderResponse = async (order) => {
     };
 };
 
-const resolveClientUrl = (req, fallback = 'https://compresuafoto-comigo.vercel.app') => {
+const resolveClientUrl = (req, fallback = 'https://econti.com.br/compresuafoto') => {
     let clientUrl = process.env.CLIENT_URL || fallback;
     const referer = req.headers.referer || req.headers.origin;
     if (referer) {
         try {
             const urlObj = new URL(referer);
-            clientUrl = `${urlObj.protocol}//${urlObj.host}`;
+            const photoPath = urlObj.pathname.startsWith('/compresuafoto') ? '/compresuafoto' : '';
+            clientUrl = `${urlObj.protocol}//${urlObj.host}${photoPath}`;
         } catch (e) {
             // ignore invalid referer
         }
@@ -277,12 +278,7 @@ exports.createOrder = async (req, res) => {
         const preference = new Preference(client);
 
         // Dynamically determine Client URL (handle localhost vs production)
-        let CLIENT_URL = process.env.CLIENT_URL || 'https://compresuafoto-comigo.vercel.app';
-        const referer = req.headers.referer;
-        if (referer && referer.includes('localhost')) {
-            const urlObj = new URL(referer);
-            CLIENT_URL = `${urlObj.protocol}//${urlObj.host}`;
-        }
+        const CLIENT_URL = resolveClientUrl(req);
 
         // Dynamically determine Backend URL for Webhooks
         let SERVER_URL = process.env.SERVER_URL || 'https://compresuafoto-comigo.onrender.com';

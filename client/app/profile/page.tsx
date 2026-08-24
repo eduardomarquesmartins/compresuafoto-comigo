@@ -5,9 +5,11 @@ import api from '@/lib/api';
 import { getSafeRedirectPath } from '@/lib/safeRedirect';
 import { User, Phone, Lock, Save, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { usePublicAppPath } from '@/lib/publicAppPath';
 
 function ProfileContent() {
     const router = useRouter();
+    const appPath = usePublicAppPath();
     const searchParams = useSearchParams();
     const isIncomplete = searchParams.get('incomplete') === 'true';
 
@@ -29,7 +31,7 @@ function ProfileContent() {
         const userData = localStorage.getItem('user');
 
         if (!token || !userData) {
-            router.push('/login');
+            router.push(appPath('login'));
             return;
         }
 
@@ -83,7 +85,7 @@ function ProfileContent() {
                 if (redirectTo) {
                     router.push(redirectTo);
                 } else {
-                    router.push('/my-orders');
+                    router.push(appPath('my-orders'));
                 }
             }, 1500);
 
@@ -105,7 +107,7 @@ function ProfileContent() {
     return (
         <div className="min-h-screen bg-background text-foreground pt-24 pb-12 px-4 font-sans">
             <div className="container mx-auto max-w-2xl">
-                <Link href="/my-orders" className="flex items-center gap-2 text-slate-500 hover:text-brand transition-all mb-8 w-fit group">
+                <Link href={appPath('my-orders')} className="flex items-center gap-2 text-slate-500 hover:text-brand transition-all mb-8 w-fit group">
                     <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
                     Voltar para Meus Pedidos
                 </Link>

@@ -6,6 +6,7 @@ import api from "@/lib/api";
 import DiscountCard from "@/components/DiscountCard";
 import Navbar from "@/components/Navbar";
 import { getPublicAppUrl } from "@/lib/publicAppUrl";
+import { usePublicAppPath } from "@/lib/publicAppPath";
 
 // Define Event Interface based on Backend Data
 interface Event {
@@ -17,6 +18,7 @@ interface Event {
 }
 
 export default function AllEventsPage() {
+    const appPath = usePublicAppPath();
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -76,7 +78,7 @@ export default function AllEventsPage() {
                             transition={{ duration: 0.5 }}
                         >
                             {events.map((event) => (
-                                <Link href={`/events/${event.id}`} key={event.id} className="block group cursor-pointer">
+                                <Link href={appPath(`events/${event.id}`)} key={event.id} className="block group cursor-pointer">
                                     <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}

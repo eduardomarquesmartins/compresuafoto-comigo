@@ -23,8 +23,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Compre sua Foto",
-  description: "Registre seus melhores momentos",
+  title: "Econti",
+  description: "Econti Marketing Digital",
   icons: {
     icon: "/favicon.ico",
   },

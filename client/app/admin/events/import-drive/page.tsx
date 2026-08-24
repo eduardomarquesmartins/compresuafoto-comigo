@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { CheckCircle2, AlertCircle, Loader2, ChevronRight, HardDrive } from 'lucide-react';
+import { adminPath } from '@/lib/adminPath';
 
 export default function ImportDrivePage() {
     const router = useRouter();
@@ -249,7 +250,7 @@ export default function ImportDrivePage() {
                                 Importar Outro
                             </button>
                             <button
-                                onClick={() => router.push('/admin/dashboard')}
+                                onClick={() => router.push(adminPath('dashboard'))}
                                 className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 text-sm"
                             >
                                 Ver no Dashboard
