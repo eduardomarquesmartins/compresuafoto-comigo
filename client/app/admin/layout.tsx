@@ -1140,10 +1140,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     --workspace-muted: #6c6b66;
                     --workspace-line: #d5d2c9;
                     --workspace-blue: #0648ff;
-                    background:
-                        linear-gradient(rgba(21, 23, 26, 0.035) 1px, transparent 1px),
-                        var(--workspace-paper) !important;
-                    background-size: 100% 32px !important;
+                    background: var(--workspace-paper) !important;
+                    background-image: none !important;
                     padding-bottom: 5rem !important;
                 }
 
@@ -1155,7 +1153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 .admin-shell main h1 {
                     max-width: 22ch;
                     color: var(--workspace-ink) !important;
-                    font-size: clamp(2.25rem, 4vw, 4.75rem) !important;
+                    font-size: clamp(2.25rem, 3.4vw, 3.75rem) !important;
                     font-weight: 720 !important;
                     line-height: 0.94 !important;
                     letter-spacing: -0.07em !important;
@@ -1179,8 +1177,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }
 
                 .admin-shell main .admin-kicker,
-                .admin-shell main .admin-overline,
-                .admin-shell main [class*="uppercase"][class*="tracking-"]:not(button):not(a) {
+                .admin-shell main .admin-overline {
                     color: var(--workspace-blue) !important;
                     font-size: 10px !important;
                     font-weight: 800 !important;
@@ -1254,6 +1251,55 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 .admin-shell main [class*="bg-gradient-to-"] {
                     background-image: none !important;
+                }
+
+                .admin-shell main [class*="bg-[#12141d]"],
+                .admin-shell main [class*="bg-[#251e1a]"] {
+                    border-color: var(--workspace-line) !important;
+                    background: var(--workspace-panel) !important;
+                    background-image: none !important;
+                    box-shadow: none !important;
+                }
+
+                .admin-shell main [class*="bg-[#12141d]"]:hover,
+                .admin-shell main [class*="bg-[#251e1a]"]:hover {
+                    border-color: #aaa79e !important;
+                }
+
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-emerald-400) {
+                    border-top: 3px solid #059669 !important;
+                }
+
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-red-400),
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-rose-400) {
+                    border-top: 3px solid #dc2626 !important;
+                }
+
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-blue-400) {
+                    border-top: 3px solid var(--workspace-blue) !important;
+                }
+
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-indigo-300),
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-indigo-400) {
+                    border-top: 3px solid #4f46e5 !important;
+                }
+
+                .admin-shell main .text-indigo-300,
+                .admin-shell main .text-indigo-400 {
+                    color: #4338ca !important;
+                }
+
+                .admin-shell main .text-cyan-400 {
+                    color: #087985 !important;
+                }
+
+                .admin-shell main .text-pink-400 {
+                    color: #c026d3 !important;
+                }
+
+                .admin-shell main .text-rose-300,
+                .admin-shell main .text-rose-400 {
+                    color: #e11d48 !important;
                 }
 
                 .admin-shell main .admin-primary-button,
@@ -1379,8 +1425,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }
 
                 .admin-shell main .admin-pill,
-                .admin-shell main .admin-segmented-status,
-                .admin-shell main [class*="rounded-full"] {
+                .admin-shell main .admin-segmented-status {
                     border-radius: 2px !important;
                 }
 
@@ -1411,6 +1456,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     box-shadow: 6px 6px 0 rgba(21, 23, 26, 0.12) !important;
                 }
 
+                .admin-shell main div.fixed.inset-0 {
+                    background: rgba(18, 19, 22, 0.72) !important;
+                    backdrop-filter: blur(5px) !important;
+                }
+
+                .admin-shell main div.fixed.inset-0 > div {
+                    border: 1px solid #bcb9b0 !important;
+                    background: var(--workspace-panel) !important;
+                    box-shadow: 10px 12px 0 rgba(18, 19, 22, 0.18) !important;
+                }
+
+                .admin-shell main [class*="py-24"][class*="justify-center"],
+                .admin-shell main [class*="py-28"][class*="justify-center"] {
+                    min-height: 300px;
+                    background: #f8f7f2 !important;
+                }
+
+                .admin-shell main [class*="divide-y"] > *:last-child,
+                .admin-shell main tbody tr:last-child td {
+                    border-bottom: 0 !important;
+                }
+
                 @media (min-width: 1280px) {
                     .admin-shell main {
                         padding: 2.25rem 2.75rem 5rem !important;
@@ -1418,10 +1485,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }
 
                 @media (max-width: 767px) {
-                    .admin-shell main {
-                        background-size: 100% 28px !important;
-                    }
-
                     .admin-shell main h1 {
                         font-size: 2.25rem !important;
                         line-height: 0.98 !important;
