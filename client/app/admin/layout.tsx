@@ -1126,6 +1126,308 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     background-color: #0033cc !important;
                 }
 
+                /* ────────────────────────────────────────────────────────
+                   ECONTI OPERATIONS SYSTEM
+                   The navigation rail remains untouched. Everything below
+                   is scoped to the working canvas so every admin module has
+                   one deliberate, editorial visual language.
+                   ──────────────────────────────────────────────────────── */
+
+                .admin-shell main {
+                    --workspace-paper: #f1f0eb;
+                    --workspace-panel: #fffefa;
+                    --workspace-ink: #15171a;
+                    --workspace-muted: #6c6b66;
+                    --workspace-line: #d5d2c9;
+                    --workspace-blue: #0648ff;
+                    background:
+                        linear-gradient(rgba(21, 23, 26, 0.035) 1px, transparent 1px),
+                        var(--workspace-paper) !important;
+                    background-size: 100% 32px !important;
+                    padding-bottom: 5rem !important;
+                }
+
+                .admin-shell main > div {
+                    max-width: 1580px !important;
+                    margin-inline: auto;
+                }
+
+                .admin-shell main h1 {
+                    max-width: 22ch;
+                    color: var(--workspace-ink) !important;
+                    font-size: clamp(2.25rem, 4vw, 4.75rem) !important;
+                    font-weight: 720 !important;
+                    line-height: 0.94 !important;
+                    letter-spacing: -0.07em !important;
+                }
+
+                .admin-shell main h2 {
+                    color: var(--workspace-ink) !important;
+                    font-weight: 700 !important;
+                    letter-spacing: -0.04em !important;
+                }
+
+                .admin-shell main h3,
+                .admin-shell main h4 {
+                    color: var(--workspace-ink) !important;
+                    font-weight: 650 !important;
+                    letter-spacing: -0.025em !important;
+                }
+
+                .admin-shell main p {
+                    text-wrap: pretty;
+                }
+
+                .admin-shell main .admin-kicker,
+                .admin-shell main .admin-overline,
+                .admin-shell main [class*="uppercase"][class*="tracking-"]:not(button):not(a) {
+                    color: var(--workspace-blue) !important;
+                    font-size: 10px !important;
+                    font-weight: 800 !important;
+                    letter-spacing: 0.19em !important;
+                }
+
+                .admin-shell main .admin-page-stack {
+                    gap: 1.5rem;
+                }
+
+                .admin-shell main .admin-card,
+                .admin-shell main .admin-hero-card,
+                .admin-shell main .admin-metric-card,
+                .admin-shell main .admin-command-panel,
+                .admin-shell main .admin-loading-card,
+                .admin-shell main section {
+                    border: 1px solid var(--workspace-line) !important;
+                    border-radius: 3px !important;
+                    background: var(--workspace-panel) !important;
+                    box-shadow: none !important;
+                }
+
+                .admin-shell main .admin-card::before,
+                .admin-shell main .admin-hero-card::before,
+                .admin-shell main .admin-metric-card::before {
+                    right: auto;
+                    width: 52px;
+                    height: 4px;
+                    background: var(--workspace-blue) !important;
+                    opacity: 1;
+                }
+
+                .admin-shell main .admin-metric-card {
+                    min-height: 158px;
+                    padding: 1.25rem !important;
+                }
+
+                .admin-shell main .admin-metric-card:hover {
+                    transform: none;
+                    border-color: var(--workspace-ink) !important;
+                    box-shadow: inset 0 -3px 0 var(--workspace-blue) !important;
+                }
+
+                .admin-shell main .admin-metric-icon,
+                .admin-shell main .admin-warning-icon,
+                .admin-shell main .admin-icon-button {
+                    border-color: var(--workspace-line) !important;
+                    border-radius: 2px !important;
+                    background: transparent !important;
+                    box-shadow: none !important;
+                }
+
+                .admin-shell main .admin-metric-icon {
+                    color: var(--workspace-blue) !important;
+                }
+
+                .admin-shell main [class*="rounded-[32px]"],
+                .admin-shell main [class*="rounded-[24px]"],
+                .admin-shell main [class*="rounded-3xl"],
+                .admin-shell main [class*="rounded-2xl"],
+                .admin-shell main [class*="rounded-xl"] {
+                    border-radius: 3px !important;
+                }
+
+                .admin-shell main [class*="shadow-2xl"],
+                .admin-shell main [class*="shadow-xl"],
+                .admin-shell main [class*="shadow-lg"],
+                .admin-shell main [class*="shadow-["] {
+                    box-shadow: none !important;
+                }
+
+                .admin-shell main [class*="bg-gradient-to-"] {
+                    background-image: none !important;
+                }
+
+                .admin-shell main .admin-primary-button,
+                .admin-shell main a[class*="bg-blue-"],
+                .admin-shell main button[class*="bg-blue-"],
+                .admin-shell main a[class*="from-blue-"],
+                .admin-shell main button[class*="from-blue-"] {
+                    min-height: 42px;
+                    border: 1px solid var(--workspace-blue) !important;
+                    border-radius: 2px !important;
+                    background: var(--workspace-blue) !important;
+                    box-shadow: none !important;
+                    color: #ffffff !important;
+                    font-size: 11px !important;
+                    font-weight: 800 !important;
+                    letter-spacing: 0.12em !important;
+                    text-transform: uppercase;
+                }
+
+                .admin-shell main .admin-primary-button:hover,
+                .admin-shell main a[class*="bg-blue-"]:hover,
+                .admin-shell main button[class*="bg-blue-"]:hover,
+                .admin-shell main a[class*="from-blue-"]:hover,
+                .admin-shell main button[class*="from-blue-"]:hover {
+                    transform: none !important;
+                    border-color: var(--workspace-ink) !important;
+                    background: var(--workspace-ink) !important;
+                }
+
+                .admin-shell main .admin-secondary-button,
+                .admin-shell main button[class*="bg-transparent"] {
+                    min-height: 42px;
+                    border: 1px solid var(--workspace-ink) !important;
+                    border-radius: 2px !important;
+                    background: transparent !important;
+                    box-shadow: none !important;
+                    color: var(--workspace-ink) !important;
+                    font-size: 11px !important;
+                    font-weight: 750 !important;
+                    letter-spacing: 0.1em;
+                    text-transform: uppercase;
+                }
+
+                .admin-shell main .admin-secondary-button:hover,
+                .admin-shell main button[class*="bg-transparent"]:hover {
+                    background: var(--workspace-ink) !important;
+                    color: #ffffff !important;
+                }
+
+                .admin-shell main .admin-action-link {
+                    border-color: var(--workspace-line) !important;
+                    border-radius: 2px !important;
+                    background: transparent !important;
+                    box-shadow: none !important;
+                }
+
+                .admin-shell main .admin-action-link:hover {
+                    border-color: var(--workspace-blue) !important;
+                    background: #f7f8ff !important;
+                }
+
+                .admin-shell main input,
+                .admin-shell main textarea,
+                .admin-shell main select {
+                    min-height: 44px;
+                    border: 1px solid #c8c5bc !important;
+                    border-radius: 2px !important;
+                    background: #faf9f5 !important;
+                    box-shadow: none !important;
+                    color: var(--workspace-ink) !important;
+                }
+
+                .admin-shell main input::placeholder,
+                .admin-shell main textarea::placeholder {
+                    color: #96938a !important;
+                }
+
+                .admin-shell main input:focus,
+                .admin-shell main textarea:focus,
+                .admin-shell main select:focus {
+                    border-color: var(--workspace-blue) !important;
+                    box-shadow: inset 4px 0 0 var(--workspace-blue) !important;
+                }
+
+                .admin-shell main div:has(> table) {
+                    border: 1px solid var(--workspace-line);
+                    border-radius: 2px !important;
+                    background: var(--workspace-panel) !important;
+                    box-shadow: none !important;
+                }
+
+                .admin-shell main table {
+                    background: var(--workspace-panel) !important;
+                    font-variant-numeric: tabular-nums;
+                }
+
+                .admin-shell main thead {
+                    top: 0;
+                }
+
+                .admin-shell main th {
+                    height: 48px;
+                    border-bottom: 0 !important;
+                    background: var(--workspace-ink) !important;
+                    color: #ffffff !important;
+                    font-size: 9px !important;
+                    font-weight: 750 !important;
+                    letter-spacing: 0.17em !important;
+                }
+
+                .admin-shell main td {
+                    border-bottom: 1px solid #dedbd2 !important;
+                    background: transparent !important;
+                    color: #313236 !important;
+                }
+
+                .admin-shell main tbody tr:nth-child(even) {
+                    background: #f8f7f2 !important;
+                }
+
+                .admin-shell main tbody tr:hover {
+                    background: #eef2ff !important;
+                }
+
+                .admin-shell main .admin-pill,
+                .admin-shell main .admin-segmented-status,
+                .admin-shell main [class*="rounded-full"] {
+                    border-radius: 2px !important;
+                }
+
+                .admin-shell main .admin-empty-state {
+                    border: 1px dashed #aaa69b !important;
+                    border-radius: 2px !important;
+                    background: transparent !important;
+                    box-shadow: none !important;
+                }
+
+                .admin-shell main .admin-warning-banner {
+                    border: 1px solid #d77d38 !important;
+                    border-left-width: 5px !important;
+                    border-radius: 2px !important;
+                    background: #fff9ec !important;
+                }
+
+                .admin-shell main .recharts-cartesian-grid-horizontal line,
+                .admin-shell main .recharts-cartesian-grid-vertical line {
+                    stroke: #cfccc2 !important;
+                    stroke-dasharray: 2 4;
+                }
+
+                .admin-shell main .recharts-default-tooltip {
+                    border: 1px solid var(--workspace-ink) !important;
+                    border-radius: 2px !important;
+                    background: var(--workspace-panel) !important;
+                    box-shadow: 6px 6px 0 rgba(21, 23, 26, 0.12) !important;
+                }
+
+                @media (min-width: 1280px) {
+                    .admin-shell main {
+                        padding: 2.25rem 2.75rem 5rem !important;
+                    }
+                }
+
+                @media (max-width: 767px) {
+                    .admin-shell main {
+                        background-size: 100% 28px !important;
+                    }
+
+                    .admin-shell main h1 {
+                        font-size: 2.25rem !important;
+                        line-height: 0.98 !important;
+                    }
+                }
+
 
                 @media (min-width: 768px) {
                     .admin-warning-banner {
