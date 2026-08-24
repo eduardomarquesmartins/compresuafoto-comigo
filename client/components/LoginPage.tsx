@@ -23,6 +23,7 @@ export function LoginContent({ publicBase = "" }: LoginPageProps) {
     };
     const searchParams = useSearchParams();
     const redirectTo = getSafeRedirectPath(searchParams.get('redirectTo'));
+    const adminDestination = isPhotoLogin ? '/compresuafoto/admin/dashboard' : adminDashboardPath();
 
     const [loginInput, setLoginInput] = useState('');
     const [password, setPassword] = useState('');
@@ -50,7 +51,7 @@ export function LoginContent({ publicBase = "" }: LoginPageProps) {
                 if (redirectTo) {
                     router.push(redirectTo);
                 } else if (res.data.user.role === 'ADMIN') {
-                    router.push(adminDashboardPath());
+                    router.push(adminDestination);
                 } else if (res.data.user.role === 'DESIGNER') {
                     router.push('/designer');
                 } else if (res.data.user.role === 'DEMANDAS') {
@@ -89,7 +90,7 @@ export function LoginContent({ publicBase = "" }: LoginPageProps) {
                 } else if (redirectTo) {
                     router.push(redirectTo);
                 } else {
-                    router.push(res.data.user.role === 'ADMIN' ? adminDashboardPath() : res.data.user.role === 'DESIGNER' || (res.data.user.role === 'COLLABORATOR' && res.data.user.collaboratorProfile === 'DESIGNER') ? '/designer' : res.data.user.role === 'DEMANDAS' || res.data.user.role === 'COLLABORATOR' ? '/demandas' : appPath('my-orders'));
+                    router.push(res.data.user.role === 'ADMIN' ? adminDestination : res.data.user.role === 'DESIGNER' || (res.data.user.role === 'COLLABORATOR' && res.data.user.collaboratorProfile === 'DESIGNER') ? '/designer' : res.data.user.role === 'DEMANDAS' || res.data.user.role === 'COLLABORATOR' ? '/demandas' : appPath('my-orders'));
                 }
             }
         } catch (err: any) {
