@@ -58,7 +58,7 @@ const buildOrderResponse = async (order) => {
     };
 };
 
-const resolveClientUrl = (req, fallback = 'https://econti.com.br/compresuafoto') => {
+const resolveClientUrl = (req, fallback = 'https://econticomigo.com.br/compresuafoto') => {
     let clientUrl = process.env.CLIENT_URL || fallback;
     const referer = req.headers.referer || req.headers.origin;
     if (referer) {

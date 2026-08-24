@@ -13,7 +13,7 @@ const sanitizeFileName = (value) => {
 };
 
 const getClientBaseUrl = () => {
-    const raw = process.env.ECONTI_PUBLIC_URL || process.env.CLIENT_URL || 'http://localhost:3000';
+const raw = process.env.ECONTI_PUBLIC_URL || process.env.CLIENT_URL || 'https://econticomigo.com.br';
     return raw.replace(/\/+$/, '');
 };
 

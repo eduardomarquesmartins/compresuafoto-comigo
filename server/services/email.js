@@ -19,7 +19,7 @@ const sendEmailOrFail = async (payload) => {
  */
 exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) => {
     try {
-        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://econti.com.br/compresuafoto';
+        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://econticomigo.com.br/compresuafoto';
         if (!finalClientUrl.startsWith('http')) {
             finalClientUrl = `https://${finalClientUrl}`;
         }
@@ -106,7 +106,7 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
 
 exports.sendPasswordResetEmail = async (email, resetToken, clientUrl) => {
     try {
-        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://econti.com.br/compresuafoto';
+        let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://econticomigo.com.br/compresuafoto';
         if (!finalClientUrl.startsWith('http')) {
             finalClientUrl = `https://${finalClientUrl}`;
         }

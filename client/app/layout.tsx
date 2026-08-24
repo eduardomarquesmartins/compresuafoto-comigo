@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Montserrat } from "next/font/google";
 import "./globals.css";
 import CartDrawer from "@/components/CartDrawer";
-import GoogleWrapper from "@/components/GoogleWrapper";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -49,15 +48,13 @@ export default function RootLayout({
     <html lang="pt-BR" dir="ltr" suppressHydrationWarning>
       <body suppressHydrationWarning className={`${montserrat.variable} ${geist.variable} ${geistMono.variable} font-sans antialiased text-foreground bg-background`}>
         <SecurityWrapper>
-          <GoogleWrapper>
-            <BackgroundWrapper>
-              <div className="flex-grow">
-                {children}
-              </div>
-              <Footer />
-            </BackgroundWrapper>
-            <CartDrawer />
-          </GoogleWrapper>
+          <BackgroundWrapper>
+            <div className="flex-grow">
+              {children}
+            </div>
+            <Footer />
+          </BackgroundWrapper>
+          <CartDrawer />
         </SecurityWrapper>
       </body>
     </html>
