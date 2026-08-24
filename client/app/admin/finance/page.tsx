@@ -232,35 +232,34 @@ export default function AdminFinancePage() {
     };
 
     return (
-        <div className="pb-20 max-w-[1400px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="pb-20 max-w-[1400px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <span className="text-blue-500 font-semibold tracking-widest uppercase text-xs">Administração Financeira</span>
-                    <h1 className="text-4xl font-extralight text-white tracking-tight flex items-center gap-4 mt-2">
-                        Fluxo de Caixa
-                    </h1>
+                    <span className="text-blue-400 font-bold tracking-[0.18em] uppercase text-[10px]">Financeiro</span>
+                    <h1 className="text-3xl font-semibold text-white tracking-tight mt-2">Gestão financeira</h1>
+                    <p className="mt-2 text-sm text-slate-400">Lançamentos, resultado do período e previsibilidade de caixa.</p>
                 </div>
                 <div className="flex flex-wrap gap-4 items-center">
                     <button
                         onClick={handleOpenNoteModal}
-                        className="group flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all border border-white/10 active:scale-95 cursor-pointer"
+                        className="flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 text-slate-200 px-4 py-3 rounded-lg font-bold uppercase tracking-widest text-[10px] transition-colors border border-white/15 cursor-pointer"
                     >
                         <FileUp size={14} />
                         Subir Nota
                     </button>
                     <button
                         onClick={() => handleOpenModal("INCOME")}
-                        className="group flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] border border-white/5 active:scale-95 cursor-pointer"
+                        className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-3 rounded-lg font-bold uppercase tracking-widest text-[10px] transition-colors cursor-pointer"
                     >
-                        <Plus size={14} className="group-hover:rotate-90 transition-transform duration-300" />
+                        <Plus size={14} />
                         Nova Receita
                     </button>
                     <button
                         onClick={() => handleOpenModal("EXPENSE")}
-                        className="group flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] border border-white/5 active:scale-95 cursor-pointer"
+                        className="flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-400 text-white px-4 py-3 rounded-lg font-bold uppercase tracking-widest text-[10px] transition-colors cursor-pointer"
                     >
-                        <Plus size={14} className="group-hover:rotate-90 transition-transform duration-300" />
+                        <Plus size={14} />
                         Nova Despesa
                     </button>
                 </div>
@@ -269,7 +268,7 @@ export default function AdminFinancePage() {
             {/* Quick Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Entradas */}
-                <div className="group bg-[#161825]/90 border border-white/10 hover:border-emerald-500/30 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500 hover:-translate-y-1">
+                <div className="bg-[#12141d] border border-white/10 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[136px]">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.04] rounded-full blur-2xl group-hover:bg-emerald-500/[0.08] transition-all duration-500"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-emerald-400 transition-colors">Entradas</span>
@@ -286,7 +285,7 @@ export default function AdminFinancePage() {
                 </div>
 
                 {/* Saídas */}
-                <div className="group bg-[#161825]/90 border border-white/10 hover:border-red-500/30 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500 hover:-translate-y-1">
+                <div className="bg-[#12141d] border border-white/10 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[136px]">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/[0.04] rounded-full blur-2xl group-hover:bg-red-500/[0.08] transition-all duration-500"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-red-400 transition-colors">Saídas</span>
@@ -303,7 +302,7 @@ export default function AdminFinancePage() {
                 </div>
 
                 {/* Saldo Líquido */}
-                <div className="group bg-[#161825]/90 border border-white/10 hover:border-blue-500/30 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500 hover:-translate-y-1">
+                <div className="bg-[#12141d] border border-white/10 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[136px]">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/[0.04] rounded-full blur-2xl group-hover:bg-blue-500/[0.08] transition-all duration-500"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-blue-400 transition-colors">Saldo Atual</span>
@@ -320,7 +319,7 @@ export default function AdminFinancePage() {
                 </div>
 
                 {/* Previsão Contratos Ativos */}
-                <div className="group bg-[#161825]/90 border border-white/10 hover:border-indigo-500/30 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500 hover:-translate-y-1">
+                <div className="bg-[#12141d] border border-white/10 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[136px]">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/[0.04] rounded-full blur-2xl group-hover:bg-indigo-500/[0.08] transition-all duration-500"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-indigo-400 transition-colors">Previsão Contratos</span>
@@ -338,8 +337,7 @@ export default function AdminFinancePage() {
             </div>
 
             {/* Filter Bar */}
-            <div className="bg-[#161827] border border-white/10 rounded-3xl p-6 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
+            <div className="bg-[#12141d] border border-white/10 rounded-2xl px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                 
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-blue-400">

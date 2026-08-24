@@ -160,18 +160,17 @@ export default function AdminDemandsPage() {
     };
 
     return (
-        <div className="pb-20 max-w-[1400px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="pb-20 max-w-[1400px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <span className="text-blue-500 font-semibold tracking-widest uppercase text-xs">Acompanhamento de Metas</span>
-                    <h1 className="text-4xl font-extralight text-white tracking-tight flex items-center gap-4 mt-2">
-                        Demandas Mentoria Financeira
-                    </h1>
+                    <span className="text-blue-400 font-bold tracking-[0.18em] uppercase text-[10px]">Operação</span>
+                    <h1 className="text-3xl font-semibold text-white tracking-tight mt-2">Tarefas e acompanhamento</h1>
+                    <p className="mt-2 text-sm text-slate-400">Prioridades da equipe, responsáveis e próximos prazos.</p>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] border border-white/5 active:scale-95 cursor-pointer"
+                    className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-slate-950 px-4 py-3 rounded-lg font-bold uppercase tracking-widest text-[10px] transition-colors cursor-pointer"
                 >
                     <Plus size={16} />
                     Nova Demanda
@@ -179,16 +178,16 @@ export default function AdminDemandsPage() {
             </div>
 
             {/* Quick Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="group bg-[#161825]/90 border border-white/10 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[120px]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-[#12141d] border border-white/10 rounded-2xl p-5 flex flex-col justify-between min-h-[120px]">
                     <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Total de Demandas</span>
                     <div className="space-y-1 mt-4">
                         <span className="text-3xl font-light text-white tracking-tight">{demands.length}</span>
-                        <p className="text-[10px] text-slate-400 font-semibold">Ações mapeadas na mentoria 2026</p>
+                        <p className="text-[10px] text-slate-400 font-semibold">Itens registrados na operação</p>
                     </div>
                 </div>
 
-                <div className="group bg-[#161825]/90 border border-white/10 hover:border-amber-500/20 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[120px]">
+                <div className="bg-[#12141d] border border-white/10 rounded-2xl p-5 flex flex-col justify-between min-h-[120px]">
                     <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-amber-400 transition-colors">Pendentes / Monitorar</span>
                     <div className="space-y-1 mt-4">
                         <span className="text-3xl font-semibold text-amber-400 tracking-tight">{pendingCount}</span>
@@ -196,7 +195,7 @@ export default function AdminDemandsPage() {
                     </div>
                 </div>
 
-                <div className="group bg-[#161825]/90 border border-white/10 hover:border-emerald-500/20 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[120px]">
+                <div className="bg-[#12141d] border border-white/10 rounded-2xl p-5 flex flex-col justify-between min-h-[120px]">
                     <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-emerald-400 transition-colors">Concluídas</span>
                     <div className="space-y-1 mt-4">
                         <span className="text-3xl font-semibold text-emerald-400 tracking-tight">{completedCount}</span>
@@ -206,8 +205,7 @@ export default function AdminDemandsPage() {
             </div>
 
             {/* Filter Bar */}
-            <div className="bg-[#161827] border border-white/10 rounded-3xl p-6 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
+            <div className="bg-[#12141d] border border-white/10 rounded-2xl px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                 
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-blue-400">
@@ -359,7 +357,7 @@ export default function AdminDemandsPage() {
                         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
                         <div className="bg-black/30 px-8 py-5 border-b border-white/10 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-white">
-                                {editingDemand ? "Editar Demanda" : "Nova Demanda Mentoria"}
+                                {editingDemand ? "Editar tarefa" : "Nova tarefa"}
                             </h3>
                             <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white text-2xl font-light cursor-pointer">&times;</button>
                         </div>

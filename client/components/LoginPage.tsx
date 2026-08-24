@@ -12,7 +12,7 @@ type LoginPageProps = {
     publicBase?: string;
 };
 
-function LoginContent({ publicBase = "" }: LoginPageProps) {
+export function LoginContent({ publicBase = "" }: LoginPageProps) {
     const isPhotoLogin = publicBase === "/compresuafoto";
     const router = useRouter();
     const currentAppPath = usePublicAppPath();
@@ -186,14 +186,14 @@ function LoginContent({ publicBase = "" }: LoginPageProps) {
     );
 }
 
-export default function LoginPage({ publicBase }: LoginPageProps) {
+export default function LoginPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-brand"></div>
             </div>
         }>
-            <LoginContent publicBase={publicBase} />
+            <LoginContent />
         </Suspense>
     );
 }

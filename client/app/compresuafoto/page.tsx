@@ -1,1 +1,1 @@
-export { PhotoLandingPage as default } from "@/app/page";
+export { default } from "@/components/PhotoLandingPage";
