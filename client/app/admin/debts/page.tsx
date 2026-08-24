@@ -175,18 +175,17 @@ export default function AdminDebtsPage() {
     };
 
     return (
-        <div className="pb-20 max-w-[1400px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="pb-20 max-w-[1400px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <span className="text-blue-500 font-semibold tracking-widest uppercase text-xs">Gestão de Passivos</span>
-                    <h1 className="text-4xl font-extralight text-white tracking-tight flex items-center gap-4 mt-2">
-                        Controle de Dívidas
-                    </h1>
+                    <span className="text-blue-500 font-bold tracking-[0.18em] uppercase text-[10px]">Financeiro</span>
+                    <h1 className="text-3xl font-semibold text-white tracking-tight mt-2">Dívidas e acordos</h1>
+                    <p className="mt-2 text-sm text-slate-400">Priorize negociações, acompanhe propostas e registre cada etapa da quitação.</p>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] border border-white/5 active:scale-95 cursor-pointer"
+                    className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-lg font-bold uppercase tracking-widest text-[10px] transition-colors cursor-pointer"
                 >
                     <Plus size={16} />
                     Adicionar Débito
@@ -194,24 +193,24 @@ export default function AdminDebtsPage() {
             </div>
 
             {/* View Mode Select */}
-            <div className="flex bg-[#121320] border border-slate-800 p-1.5 rounded-2xl w-fit shadow-inner">
+            <div className="flex bg-[#121320] border border-slate-700 p-1 rounded-lg w-fit">
                 <button
                     onClick={() => setViewMode("CPF")}
-                    className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 cursor-pointer ${viewMode === 'CPF' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                    className={`px-4 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer ${viewMode === 'CPF' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
                 >
-                    💛 Dívidas CPF (Eduarda & Fernando)
+                    Pessoas
                 </button>
                 <button
                     onClick={() => setViewMode("CNPJ")}
-                    className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 cursor-pointer ${viewMode === 'CNPJ' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                    className={`px-4 py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer ${viewMode === 'CNPJ' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
                 >
-                    🏢 Dívidas CNPJ (&Conti e Outros)
+                    Empresas
                 </button>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="group bg-[#161825]/90 border border-white/10 hover:border-slate-700 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10">
+                <div className="bg-[#12141d] p-5 flex flex-col justify-between min-h-[128px]">
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Total Acumulado</span>
                         <div className="w-10 h-10 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center border border-red-500/25">
@@ -226,7 +225,7 @@ export default function AdminDebtsPage() {
                     </div>
                 </div>
 
-                <div className="group bg-[#161825]/90 border border-white/10 hover:border-slate-700 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500">
+                <div className="bg-[#12141d] p-5 flex flex-col justify-between min-h-[128px]">
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Valor para Quitação</span>
                         <div className="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center border border-blue-500/25">
@@ -241,7 +240,7 @@ export default function AdminDebtsPage() {
                     </div>
                 </div>
 
-                <div className="group bg-[#161825]/90 border border-white/10 hover:border-emerald-500/30 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500">
+                <div className="bg-[#12141d] p-5 relative overflow-hidden flex flex-col justify-between min-h-[128px]">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.04] rounded-full blur-2xl"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-emerald-400 transition-colors">Economia Potencial</span>
@@ -257,7 +256,7 @@ export default function AdminDebtsPage() {
                     </div>
                 </div>
 
-                <div className="group bg-[#161825]/90 border border-white/10 hover:border-emerald-500/30 rounded-[28px] p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[150px] transition-all duration-500">
+                <div className="bg-[#12141d] p-5 relative overflow-hidden flex flex-col justify-between min-h-[128px]">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.04] rounded-full blur-2xl"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-emerald-400 transition-colors">Desconto Médio</span>
@@ -275,8 +274,7 @@ export default function AdminDebtsPage() {
             </div>
 
             {/* Debts Table */}
-            <div className="bg-[#161826]/95 border border-white/10 rounded-[32px] shadow-xl overflow-hidden relative">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
+            <div className="bg-[#12141d] border border-white/10 rounded-2xl overflow-hidden">
                 {loading ? (
                     <div className="py-24 flex justify-center items-center">
                         <Loader2 className="animate-spin text-blue-500 w-10 h-10" />
