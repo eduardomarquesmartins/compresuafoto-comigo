@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Compre sua Foto",
+    title: "& CONTI - Compre sua Foto",
     description: "Registre seus melhores momentos",
 };
 

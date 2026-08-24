@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Econti",
+  title: "& CONTI - Marketing Digital",
   description: "Econti Marketing Digital",
   icons: {
     icon: "/favicon.ico",
