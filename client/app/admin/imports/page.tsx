@@ -88,9 +88,7 @@ export default function AdminImportsPage() {
             <div className="max-w-3xl">
                 <section className="admin-card p-5 md:p-6">
                     <div className="mb-7 flex items-center gap-3">
-                        <div className="admin-metric-icon text-[#9ecbff]">
-                            <FileSpreadsheet size={18} />
-                        </div>
+                        <FileSpreadsheet className="text-[#0044ff]" size={22} aria-hidden="true" />
                         <div>
                             <span className="admin-kicker">Arquivo Excel</span>
                             <h2 className="mt-1 text-2xl font-semibold tracking-[-0.045em] text-white">Enviar planilha</h2>
