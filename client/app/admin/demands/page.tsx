@@ -273,7 +273,7 @@ export default function AdminDemandsPage() {
                                     <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 w-[140px]">Responsável</th>
                                     <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 w-[120px]">Tipo</th>
                                     <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 w-[150px]">Status</th>
-                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right">Ações</th>
+                                    <th className="px-3 py-5 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 text-right whitespace-nowrap">Ações</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5 text-slate-300">
@@ -320,11 +320,11 @@ export default function AdminDemandsPage() {
                                                     {demand.status}
                                                 </button>
                                             </td>
-                                            <td className="px-6 py-5 text-right">
+                                            <td className="px-3 py-5 text-right whitespace-nowrap">
                                                 <div className="flex items-center justify-end gap-1">
                                                     <button
                                                         onClick={() => handleOpenModal(demand)}
-                                                        className="inline-flex w-24 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-2 text-[10px] font-bold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 cursor-pointer"
+                                                        className="inline-flex w-20 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2 py-2 text-[10px] font-bold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 cursor-pointer"
                                                         title="Editar Demanda"
                                                         aria-label="Editar demanda"
                                                     >
@@ -334,7 +334,7 @@ export default function AdminDemandsPage() {
                                                     <button
                                                         onClick={() => handleDeleteDemand(demand.id)}
                                                         disabled={actionLoading === `delete-${demand.id}`}
-                                                        className="admin-danger-button inline-flex w-24 items-center justify-center gap-1.5 px-2.5 py-2 text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-50"
+                                                        className="admin-danger-button inline-flex w-20 items-center justify-center gap-1.5 px-2 py-2 text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-50"
                                                         title="Excluir Demanda"
                                                         aria-label="Excluir demanda"
                                                     >
