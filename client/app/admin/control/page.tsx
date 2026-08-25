@@ -16,7 +16,6 @@ import {
     Wallet
 } from "lucide-react";
 import { getDebts, getDemands, getFinancials, getFinancialStats } from "@/lib/api";
-import { Span } from "next/dist/trace";
 
 type FinancialStats = {
     incomes: number;
@@ -235,7 +234,7 @@ export default function AdminControlPage() {
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>
                         <h1 className="mt-3 max-w-4xl text-4xl font-semibold leading-none tracking-[-0.055em] text-white md:text-6xl">
-                            GESTÃO & <span style={{ color: "#00b7ff" }}>CONTI</span>
+                            Gestão & <span style={{ color: "#00b7ff" }}>CONTI</span>
                         </h1>
                         <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
                             O que precisa de decisão hoje: caixa, compromissos financeiros e entregas da equipe.
