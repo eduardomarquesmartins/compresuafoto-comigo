@@ -335,18 +335,22 @@ export default function AdminDebtsPage() {
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <button
                                                     onClick={() => handleOpenModal(debt)}
-                                                    className="text-slate-500 hover:text-white p-2 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-lg transition-all cursor-pointer"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-2 text-[10px] font-bold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 cursor-pointer"
                                                     title="Editar Débito"
+                                                    aria-label="Editar débito"
                                                 >
-                                                    <Edit2 size={12} />
+                                                    <Edit2 size={13} />
+                                                    Editar
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteDebt(debt.id)}
                                                     disabled={actionLoading === `delete-${debt.id}`}
-                                                    className="text-slate-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-[10px] font-bold text-red-700 transition-colors hover:border-red-300 hover:bg-red-100 cursor-pointer disabled:opacity-50"
                                                     title="Excluir Débito"
+                                                    aria-label="Excluir débito"
                                                 >
-                                                    {actionLoading === `delete-${debt.id}` ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                                                    {actionLoading === `delete-${debt.id}` ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                                                    Excluir
                                                 </button>
                                             </div>
                                         </td>
