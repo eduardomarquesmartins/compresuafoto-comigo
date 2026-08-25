@@ -272,9 +272,7 @@ export default function AdminFinancePage() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.04] rounded-full blur-2xl group-hover:bg-emerald-500/[0.08] transition-all duration-500"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-emerald-400 transition-colors">Entradas</span>
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/25 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-                            <TrendingUp size={18} />
-                        </div>
+                        <TrendingUp size={21} className="text-emerald-500" aria-hidden="true" />
                     </div>
                     <div className="space-y-1 mt-6 z-10">
                         <span className="text-3xl font-light text-white tracking-tight">
@@ -289,9 +287,7 @@ export default function AdminFinancePage() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/[0.04] rounded-full blur-2xl group-hover:bg-red-500/[0.08] transition-all duration-500"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-red-400 transition-colors">Saídas</span>
-                        <div className="w-10 h-10 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center border border-red-500/25 shadow-[0_0_15px_rgba(239,68,68,0.15)]">
-                            <TrendingDown size={18} />
-                        </div>
+                        <TrendingDown size={21} className="text-red-500" aria-hidden="true" />
                     </div>
                     <div className="space-y-1 mt-6 z-10">
                         <span className="text-3xl font-light text-white tracking-tight">
@@ -306,9 +302,7 @@ export default function AdminFinancePage() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/[0.04] rounded-full blur-2xl group-hover:bg-blue-500/[0.08] transition-all duration-500"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-blue-400 transition-colors">Saldo Atual</span>
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${stats.balance >= 0 ? 'bg-blue-500/15 text-blue-400 border-blue-500/25 shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'bg-amber-500/15 text-amber-400 border-amber-500/25 shadow-[0_0_15px_rgba(245,158,11,0.15)]'}`}>
-                            <DollarSign size={18} />
-                        </div>
+                        <DollarSign size={21} className={stats.balance >= 0 ? "text-blue-500" : "text-amber-500"} aria-hidden="true" />
                     </div>
                     <div className="space-y-1 mt-6 z-10">
                         <span className={`text-3xl font-bold tracking-tight ${stats.balance >= 0 ? 'text-blue-400' : 'text-amber-400'}`}>
@@ -323,9 +317,7 @@ export default function AdminFinancePage() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/[0.04] rounded-full blur-2xl group-hover:bg-indigo-500/[0.08] transition-all duration-500"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-indigo-400 transition-colors">Previsão Contratos</span>
-                        <div className="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center border border-indigo-500/25 shadow-[0_0_15px_rgba(99,102,241,0.15)]">
-                            <TrendingUp size={18} className="rotate-45" />
-                        </div>
+                        <TrendingUp size={21} className="rotate-45 text-indigo-500" aria-hidden="true" />
                     </div>
                     <div className="space-y-1 mt-6 z-10">
                         <span className="text-3xl font-light text-indigo-300 tracking-tight">
