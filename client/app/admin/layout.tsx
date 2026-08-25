@@ -36,12 +36,15 @@ type NavItem = {
     href: string;
     label: string;
     icon: LucideIcon;
+    external?: boolean;
 };
 
 type NavSection = {
     label: string;
     items: NavItem[];
 };
+
+const kontiUrl = process.env.NEXT_PUBLIC_KONTI_URL || "https://konti.econticomigo.com.br";
 
 const econtiNavSections: NavSection[] = [
     {
@@ -63,6 +66,12 @@ const econtiNavSections: NavSection[] = [
             { href: "/admin/demands", label: "Demandas", icon: ClipboardCheck },
             { href: "/admin/collaborators", label: "Colaboradores", icon: Users },
             { href: "/admin/imports", label: "Importações", icon: FileSpreadsheet }
+        ]
+    },
+    {
+        label: "Ferramentas",
+        items: [
+            { href: kontiUrl, label: "KONTI", icon: Activity, external: true }
         ]
     }
 ];
@@ -256,6 +265,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                         {section.items.map(item => {
                                             const active = isCurrentRoute(pathname, item.href);
                                             const Icon = item.icon;
+
+                                            if (item.external) {
+                                                return (
+                                                    <a
+                                                        key={item.href}
+                                                        href={item.href}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="admin-nav-link"
+                                                        title="Abrir KONTI em uma nova guia"
+                                                    >
+                                                        <Icon size={16} />
+                                                        <span className="truncate">{item.label}</span>
+                                                        <ArrowUpRight size={14} className="ml-auto opacity-60" />
+                                                    </a>
+                                                );
+                                            }
 
                                             return (
                                                 <Link
