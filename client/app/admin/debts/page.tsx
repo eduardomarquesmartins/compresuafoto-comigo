@@ -213,9 +213,7 @@ export default function AdminDebtsPage() {
                 <div className="bg-[#12141d] p-5 flex flex-col justify-between min-h-[128px]">
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Total Acumulado</span>
-                        <div className="w-10 h-10 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center border border-red-500/25">
-                            <TrendingDown size={18} />
-                        </div>
+                        <TrendingDown size={21} className="text-red-500" aria-hidden="true" />
                     </div>
                     <div className="space-y-1 mt-6">
                         <span className="text-3xl font-light text-white tracking-tight">
@@ -228,9 +226,7 @@ export default function AdminDebtsPage() {
                 <div className="bg-[#12141d] p-5 flex flex-col justify-between min-h-[128px]">
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Valor para Quitação</span>
-                        <div className="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center border border-blue-500/25">
-                            <DollarSign size={18} />
-                        </div>
+                        <DollarSign size={21} className="text-blue-500" aria-hidden="true" />
                     </div>
                     <div className="space-y-1 mt-6">
                         <span className="text-3xl font-light text-white tracking-tight">
@@ -244,9 +240,7 @@ export default function AdminDebtsPage() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.04] rounded-full blur-2xl"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-emerald-400 transition-colors">Economia Potencial</span>
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/25 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-                            <TrendingDown size={18} className="rotate-180" />
-                        </div>
+                        <TrendingDown size={21} className="rotate-180 text-emerald-500" aria-hidden="true" />
                     </div>
                     <div className="space-y-1 mt-6 z-10">
                         <span className="text-3xl font-semibold text-emerald-400 tracking-tight">
@@ -260,9 +254,7 @@ export default function AdminDebtsPage() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.04] rounded-full blur-2xl"></div>
                     <div className="flex items-center justify-between z-10">
                         <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 group-hover:text-emerald-400 transition-colors">Desconto Médio</span>
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/25 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-                            <Award size={18} />
-                        </div>
+                        <Award size={21} className="text-emerald-500" aria-hidden="true" />
                     </div>
                     <div className="space-y-1 mt-6 z-10">
                         <span className="text-3xl font-bold text-emerald-400 tracking-tight">
