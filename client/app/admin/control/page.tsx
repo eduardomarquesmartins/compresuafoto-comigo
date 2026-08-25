@@ -16,6 +16,7 @@ import {
     Wallet
 } from "lucide-react";
 import { getDebts, getDemands, getFinancials, getFinancialStats } from "@/lib/api";
+import { Span } from "next/dist/trace";
 
 type FinancialStats = {
     incomes: number;
@@ -230,13 +231,11 @@ export default function AdminControlPage() {
                     </div>
                 </div>
             )}
-
             <section className="border-b border-zinc-200 px-6 py-7 md:px-8 md:py-8">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <span className="admin-kicker">Controle</span>
                         <h1 className="mt-3 max-w-4xl text-4xl font-semibold leading-none tracking-[-0.055em] text-white md:text-6xl">
-                            Central operacional.
+                            GESTÃO & <span style={{ color: "#00b7ff" }}>CONTI</span>
                         </h1>
                         <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
                             O que precisa de decisão hoje: caixa, compromissos financeiros e entregas da equipe.
