@@ -244,24 +244,27 @@ export default function AdminEmailsPage() {
     };
 
     return (
-        <div className="mx-auto max-w-[1500px] space-y-8 pb-20">
-            <header className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mx-auto max-w-[1540px] space-y-7 pb-20">
+            <header className="flex flex-col gap-6 border-b border-black/10 pb-7 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <span className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">Comunicação</span>
-                    <h1 className="mt-2 text-4xl font-light tracking-tight text-white">E-mails para clientes</h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-                        Envie comunicados, propostas e avisos para clientes cadastrados com preview e relatório de entrega.
+                    <span className="admin-overline">Comunicação com clientes</span>
+                    <h1 className="mt-3 text-4xl font-light tracking-tight text-white">Central de e-mails</h1>
+                    <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
+                        Prepare a mensagem, escolha os destinatários e confira exatamente como ela será recebida.
                     </p>
                 </div>
-                <button
-                    type="button"
-                    onClick={handleSend}
-                    disabled={sending}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                    {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                    {sending ? "Enviando" : `Enviar para ${recipientsCount}`}
-                </button>
+                <div className="flex items-center gap-3">
+                    <span className="hidden text-xs font-medium text-slate-500 sm:inline">{recipientsCount} destinatário{recipientsCount === 1 ? "" : "s"}</span>
+                    <button
+                        type="button"
+                        onClick={handleSend}
+                        disabled={sending}
+                        className="admin-primary-button inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                        {sending ? "Enviando" : "Enviar e-mail"}
+                    </button>
+                </div>
             </header>
 
             {error && (
@@ -292,17 +295,17 @@ export default function AdminEmailsPage() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[320px_1fr_420px]">
-                <section className="flex flex-col gap-4 rounded-lg border border-white/10 bg-[#10121a] p-4 xl:h-fit">
-                    <div className="flex items-center justify-between gap-3">
+            <div className="grid grid-cols-1 gap-7 xl:grid-cols-[280px_minmax(0,1fr)_360px]">
+                <div className="flex flex-col gap-4 border border-black/10 bg-[#fffefa] p-5 xl:sticky xl:top-6 xl:h-fit">
+                    <div className="flex items-start justify-between gap-3 border-b border-black/10 pb-4">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Destinatários</p>
-                            <h2 className="mt-1 text-lg font-semibold text-white">Clientes</h2>
+                            <p className="admin-overline">Destinatários</p>
+                            <h2 className="mt-2 text-xl font-semibold text-white">Quem recebe</h2>
                         </div>
                         <Users size={21} className="text-blue-500" aria-hidden="true" />
                     </div>
 
-                    <div className="grid grid-cols-3 rounded-lg border border-white/10 bg-black/20 p-1 text-xs font-semibold">
+                    <div className="grid grid-cols-3 border border-black/10 p-1 text-[11px] font-semibold">
                         {[
                             ["selected", "Selecionados"],
                             ["active", "Ativos"],
@@ -312,37 +315,37 @@ export default function AdminEmailsPage() {
                                 key={value}
                                 type="button"
                                 onClick={() => setMode(value as "selected" | "active" | "all")}
-                                className={`rounded-md px-3 py-2 transition ${mode === value ? "bg-white text-black" : "text-slate-400 hover:text-white"}`}
+                                className={`px-2 py-2 transition ${mode === value ? "bg-blue-600 text-white" : "text-slate-500 hover:bg-black/[0.04] hover:text-black"}`}
                             >
                                 {label}
                             </button>
                         ))}
                     </div>
 
-                    <div className="relative">
+                    <div className="relative border-b border-black/10 pb-4">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                         <input
                             value={search}
                             onChange={event => setSearch(event.target.value)}
-                            className="w-full rounded-lg border border-white/10 bg-black/30 py-3 pl-10 pr-3 text-sm text-white outline-none transition focus:border-blue-500"
+                            className="w-full border border-black/10 bg-white py-3 pl-10 pr-3 text-sm text-black outline-none transition focus:border-blue-500"
                             placeholder="Buscar cliente"
                         />
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-slate-500">
-                        <span>{selectedIds.length} selecionados</span>
-                        <button type="button" onClick={selectFiltered} className="font-semibold text-blue-400 hover:text-blue-300">
+                        <span><strong className="text-black">{selectedIds.length}</strong> marcados</span>
+                        <button type="button" onClick={selectFiltered} className="font-semibold text-blue-600 hover:text-blue-800">
                             {allFilteredSelected ? "Desmarcar lista" : "Selecionar lista"}
                         </button>
                     </div>
 
-                    <div className="h-[580px] space-y-2 overflow-y-auto pr-1 custom-scrollbar">
+                    <div className="max-h-[540px] space-y-1 overflow-y-auto pr-1 custom-scrollbar">
                         {loading ? (
                             <div className="flex h-40 items-center justify-center text-slate-500">
                                 <Loader2 className="animate-spin" />
                             </div>
                         ) : filteredClients.length === 0 ? (
-                            <div className="rounded-lg border border-dashed border-white/10 p-6 text-center text-sm text-slate-500">
+                            <div className="border border-dashed border-black/15 p-6 text-center text-sm text-slate-500">
                                 Nenhum cliente com e-mail encontrado.
                             </div>
                         ) : filteredClients.map(client => {
@@ -353,14 +356,14 @@ export default function AdminEmailsPage() {
                                     key={client.id}
                                     type="button"
                                     onClick={() => toggleClient(client.id)}
-                                    className={`block w-full rounded-lg border p-3 text-left transition ${selected ? "border-blue-500/45 bg-blue-500/10" : "border-white/10 bg-black/20 hover:border-white/20"}`}
+                                    className={`block w-full border-b border-black/10 px-2 py-3 text-left transition ${selected ? "bg-blue-50" : "hover:bg-black/[0.03]"}`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
                                             <p className="truncate text-sm font-semibold text-white">{client.name}</p>
                                             <p className="mt-1 truncate text-xs text-slate-500">{client.email}</p>
                                         </div>
-                                        <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border ${selected ? "border-blue-400 bg-blue-500 text-white" : "border-white/15 text-transparent"}`}>
+                                        <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border ${selected ? "border-blue-600 bg-blue-600 text-white" : "border-black/15 text-transparent"}`}>
                                             <Check size={12} />
                                         </span>
                                     </div>
@@ -368,89 +371,91 @@ export default function AdminEmailsPage() {
                             );
                         })}
                     </div>
-                </section>
+                </div>
 
-                <section className="space-y-5 rounded-lg border border-white/10 bg-[#10121a] p-5">
-                    <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Mensagem</p>
-                        <h2 className="mt-1 text-lg font-semibold text-white">Editor de envio</h2>
+                <div className="border border-black/10 bg-[#fffefa] p-6 md:p-7">
+                    <div className="flex flex-col gap-4 border-b border-black/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p className="admin-overline">Mensagem</p>
+                            <h2 className="mt-2 text-2xl font-semibold text-white">Editor de envio</h2>
+                            <p className="mt-1 text-sm text-slate-500">Use um modelo como ponto de partida ou escreva do zero.</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {templates.map(template => (
+                                <button
+                                    key={template.id}
+                                    type="button"
+                                    onClick={() => applyTemplate(template.id)}
+                                    className="border border-black/15 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-600 hover:text-blue-700"
+                                >
+                                    {template.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                        {templates.map(template => (
-                            <button
-                                key={template.id}
-                                type="button"
-                                onClick={() => applyTemplate(template.id)}
-                                className="rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-blue-500/40 hover:text-white"
-                            >
-                                {template.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="mt-6 grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
                         <label className="space-y-2 md:col-span-2">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Assunto</span>
+                            <span className="admin-overline">Assunto</span>
                             <input
                                 value={subject}
                                 onChange={event => setSubject(event.target.value)}
-                                className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
+                                className="w-full border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-blue-500"
                             />
                         </label>
                         <label className="space-y-2 md:col-span-2">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Preheader</span>
+                            <span className="admin-overline">Linha de apoio</span>
                             <input
                                 value={preheader}
                                 onChange={event => setPreheader(event.target.value)}
-                                className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
+                                className="w-full border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-blue-500"
                                 placeholder="Texto curto que aparece antes de abrir o e-mail"
                             />
                         </label>
                         <label className="space-y-2 md:col-span-2">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Mensagem</span>
+                            <span className="admin-overline">Mensagem</span>
                             <textarea
                                 value={body}
                                 onChange={event => setBody(event.target.value)}
                                 rows={12}
-                                className="w-full resize-none rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-white outline-none transition focus:border-blue-500"
+                                className="w-full resize-none border border-black/10 bg-white px-4 py-3 text-sm leading-7 text-black outline-none transition focus:border-blue-500"
                             />
                         </label>
                         <label className="space-y-2">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Texto do botão</span>
+                            <span className="admin-overline">Texto do botão</span>
                             <input
                                 value={ctaLabel}
                                 onChange={event => setCtaLabel(event.target.value)}
-                                className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
+                                className="w-full border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-blue-500"
                                 placeholder="Falar com a equipe"
                             />
                         </label>
                         <label className="space-y-2">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Link do botão</span>
+                            <span className="admin-overline">Link do botão</span>
                             <input
                                 value={ctaUrl}
                                 onChange={event => setCtaUrl(event.target.value)}
-                                className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
+                                className="w-full border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-blue-500"
                                 placeholder="https://..."
                             />
                         </label>
                         <label className="space-y-2 md:col-span-2">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Responder para</span>
+                            <span className="admin-overline">Responder para</span>
                             <input
                                 value={replyTo}
                                 onChange={event => setReplyTo(event.target.value)}
-                                className="w-full rounded-lg border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500"
+                                className="w-full border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-blue-500"
                                 placeholder="contato@seudominio.com"
                             />
                         </label>
                         <div className="space-y-3 md:col-span-2">
                             <div className="flex items-center justify-between gap-3">
-                                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Anexos</span>
+                                <span className="admin-overline">Anexos</span>
                                 <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
                                     {attachments.length}/{MAX_ATTACHMENTS} · {formatFileSize(attachmentsSize)}
                                 </span>
                             </div>
-                            <label className="flex cursor-pointer items-center justify-center gap-3 rounded-lg border border-dashed border-white/15 bg-black/20 px-4 py-5 text-sm font-semibold text-slate-300 transition hover:border-blue-500/45 hover:text-white">
+                            <label className="flex cursor-pointer items-center justify-center gap-3 border border-dashed border-black/20 bg-white px-4 py-5 text-sm font-semibold text-slate-700 transition hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700">
                                 <FileUp size={18} />
                                 Anexar arquivos
                                 <input
@@ -467,11 +472,11 @@ export default function AdminEmailsPage() {
                             {attachments.length > 0 && (
                                 <div className="space-y-2">
                                     {attachments.map((file, index) => (
-                                        <div key={`${file.name}-${file.size}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/25 px-3 py-2">
+                                        <div key={`${file.name}-${file.size}-${index}`} className="flex items-center justify-between gap-3 border border-black/10 bg-white px-3 py-2">
                                             <div className="flex min-w-0 items-center gap-3">
                                                 <Paperclip size={15} className="shrink-0 text-blue-400" />
                                                 <div className="min-w-0">
-                                                    <p className="truncate text-sm font-semibold text-white">{file.name}</p>
+                                                    <p className="truncate text-sm font-semibold text-black">{file.name}</p>
                                                     <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
                                                 </div>
                                             </div>
@@ -490,24 +495,24 @@ export default function AdminEmailsPage() {
                         </div>
                     </div>
 
-                    <div className="rounded-lg border border-white/10 bg-black/20 p-4 text-xs leading-6 text-slate-400">
-                        Placeholders: <span className="text-white">{"{nome}"}</span>, <span className="text-white">{"{cliente}"}</span>, <span className="text-white">{"{email}"}</span>, <span className="text-white">{"{cidade}"}</span>, <span className="text-white">{"{documento}"}</span>.
+                    <div className="mt-6 border-t border-black/10 pt-4 text-xs leading-6 text-slate-500">
+                        Personalize com: <span className="font-semibold text-black">{"{nome}"}</span>, <span className="font-semibold text-black">{"{cliente}"}</span>, <span className="font-semibold text-black">{"{email}"}</span>, <span className="font-semibold text-black">{"{cidade}"}</span> e <span className="font-semibold text-black">{"{documento}"}</span>.
                     </div>
-                </section>
+                </div>
 
-                <aside className="space-y-5 rounded-lg border border-white/10 bg-[#10121a] p-5 xl:sticky xl:top-6 xl:h-fit">
-                    <div className="flex items-center justify-between">
+                <aside className="h-fit border border-black/10 bg-[#fffefa] xl:sticky xl:top-6">
+                    <div className="flex items-start justify-between border-b border-black/10 p-5">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Preview</p>
-                            <h2 className="mt-1 text-lg font-semibold text-white">Como o cliente recebe</h2>
+                            <p className="admin-overline">Prévia em tempo real</p>
+                            <h2 className="mt-2 text-xl font-semibold text-white">Como chega ao cliente</h2>
                         </div>
                         <Eye className="text-blue-400" size={18} />
                     </div>
 
-                    <div className="rounded-lg border border-slate-200 bg-white text-slate-900 shadow-2xl">
+                    <div className="m-5 border border-slate-200 bg-white text-slate-900">
                         <div className="border-b border-slate-200 bg-slate-50 p-4">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-950 text-white">
+                                <div className="flex h-9 w-9 items-center justify-center bg-slate-950 text-white">
                                     <Mail size={16} />
                                 </div>
                                 <div className="min-w-0">
