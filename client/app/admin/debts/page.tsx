@@ -356,7 +356,7 @@ export default function AdminDebtsPage() {
 
             {/* Debt Modal */}
             {modalOpen && (
-                <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
                     <div className="bg-[#1c1e2e] border border-white/10 rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 relative">
                         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
                         <div className="bg-black/30 px-8 py-5 border-b border-white/10 flex items-center justify-between">
