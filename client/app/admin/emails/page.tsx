@@ -295,51 +295,54 @@ export default function AdminEmailsPage() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 gap-7 xl:grid-cols-[280px_minmax(0,1fr)_360px]">
-                <div className="flex flex-col gap-4 border border-black/10 bg-[#fffefa] p-5 xl:sticky xl:top-6 xl:h-fit">
-                    <div className="flex items-start justify-between gap-3 border-b border-black/10 pb-4">
+            <div className="space-y-7">
+                <div className="border border-black/10 bg-[#fffefa] p-6 md:p-7">
+                    <div className="flex flex-col gap-5 border-b border-black/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
                         <div>
                             <p className="admin-overline">Destinatários</p>
                             <h2 className="mt-2 text-xl font-semibold text-white">Quem recebe</h2>
+                            <p className="mt-1 text-sm text-slate-500">Selecione pessoas específicas, todos os clientes ativos ou toda a sua base.</p>
                         </div>
-                        <Users size={21} className="text-blue-500" aria-hidden="true" />
+                        <div className="flex items-center gap-4">
+                            <Users size={21} className="hidden text-blue-500 sm:block" aria-hidden="true" />
+                            <div className="grid grid-cols-3 border border-black/10 p-1 text-[11px] font-semibold">
+                                {[
+                                    ["selected", "Selecionados"],
+                                    ["active", "Ativos"],
+                                    ["all", "Todos"]
+                                ].map(([value, label]) => (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        onClick={() => setMode(value as "selected" | "active" | "all")}
+                                        className={`px-3 py-2 transition ${mode === value ? "bg-blue-600 text-white" : "text-slate-500 hover:bg-black/[0.04] hover:text-black"}`}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-3 border border-black/10 p-1 text-[11px] font-semibold">
-                        {[
-                            ["selected", "Selecionados"],
-                            ["active", "Ativos"],
-                            ["all", "Todos"]
-                        ].map(([value, label]) => (
-                            <button
-                                key={value}
-                                type="button"
-                                onClick={() => setMode(value as "selected" | "active" | "all")}
-                                className={`px-2 py-2 transition ${mode === value ? "bg-blue-600 text-white" : "text-slate-500 hover:bg-black/[0.04] hover:text-black"}`}
-                            >
-                                {label}
+                    <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="relative w-full md:max-w-md">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                            <input
+                                value={search}
+                                onChange={event => setSearch(event.target.value)}
+                                className="w-full border border-black/10 bg-white py-3 pl-10 pr-3 text-sm text-black outline-none transition focus:border-blue-500"
+                                placeholder="Buscar cliente por nome ou e-mail"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between gap-5 text-sm text-slate-500">
+                            <span><strong className="text-black">{selectedIds.length}</strong> marcados</span>
+                            <button type="button" onClick={selectFiltered} className="font-semibold text-blue-600 hover:text-blue-800">
+                                {allFilteredSelected ? "Desmarcar lista" : "Selecionar lista"}
                             </button>
-                        ))}
+                        </div>
                     </div>
 
-                    <div className="relative border-b border-black/10 pb-4">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                        <input
-                            value={search}
-                            onChange={event => setSearch(event.target.value)}
-                            className="w-full border border-black/10 bg-white py-3 pl-10 pr-3 text-sm text-black outline-none transition focus:border-blue-500"
-                            placeholder="Buscar cliente"
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                        <span><strong className="text-black">{selectedIds.length}</strong> marcados</span>
-                        <button type="button" onClick={selectFiltered} className="font-semibold text-blue-600 hover:text-blue-800">
-                            {allFilteredSelected ? "Desmarcar lista" : "Selecionar lista"}
-                        </button>
-                    </div>
-
-                    <div className="max-h-[540px] space-y-1 overflow-y-auto pr-1 custom-scrollbar">
+                    <div className="mt-5 grid max-h-[350px] grid-cols-1 gap-x-5 overflow-y-auto pr-1 custom-scrollbar md:grid-cols-2 xl:grid-cols-3">
                         {loading ? (
                             <div className="flex h-40 items-center justify-center text-slate-500">
                                 <Loader2 className="animate-spin" />
@@ -356,7 +359,7 @@ export default function AdminEmailsPage() {
                                     key={client.id}
                                     type="button"
                                     onClick={() => toggleClient(client.id)}
-                                    className={`block w-full border-b border-black/10 px-2 py-3 text-left transition ${selected ? "bg-blue-50" : "hover:bg-black/[0.03]"}`}
+                                    className={`block w-full border-b border-black/10 px-3 py-3 text-left transition ${selected ? "bg-blue-50" : "hover:bg-black/[0.03]"}`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
@@ -500,7 +503,7 @@ export default function AdminEmailsPage() {
                     </div>
                 </div>
 
-                <aside className="h-fit border border-black/10 bg-[#fffefa] xl:sticky xl:top-6">
+                <aside className="border border-black/10 bg-[#fffefa]">
                     <div className="flex items-start justify-between border-b border-black/10 p-5">
                         <div>
                             <p className="admin-overline">Prévia em tempo real</p>
@@ -509,7 +512,7 @@ export default function AdminEmailsPage() {
                         <Eye className="text-blue-400" size={18} />
                     </div>
 
-                    <div className="m-5 border border-slate-200 bg-white text-slate-900">
+                    <div className="mx-auto my-6 max-w-2xl border border-slate-200 bg-white text-slate-900">
                         <div className="border-b border-slate-200 bg-slate-50 p-4">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-9 w-9 items-center justify-center bg-slate-950 text-white">
