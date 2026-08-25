@@ -1292,21 +1292,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     border-color: #aaa79e !important;
                 }
 
-                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-emerald-400) {
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-emerald-400),
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-emerald-500) {
                     border-top: 3px solid #059669 !important;
                 }
 
                 .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-red-400),
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-red-500),
                 .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-rose-400) {
                     border-top: 3px solid #dc2626 !important;
                 }
 
-                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-blue-400) {
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-blue-400),
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-blue-500) {
                     border-top: 3px solid var(--workspace-blue) !important;
                 }
 
                 .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-indigo-300),
-                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-indigo-400) {
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-indigo-400),
+                .admin-shell main [class*="bg-[#12141d]"][class*="min-h-"]:has(.text-indigo-500) {
                     border-top: 3px solid #4f46e5 !important;
                 }
 
