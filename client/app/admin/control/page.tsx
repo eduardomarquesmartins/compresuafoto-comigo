@@ -231,7 +231,7 @@ export default function AdminControlPage() {
                 </div>
             )}
 
-            <section className="border-b border-zinc-200 pb-7 md:pb-9">
+            <section className="border-b border-zinc-200 px-6 py-7 md:px-8 md:py-8">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>
                         <span className="admin-kicker">Controle</span>
