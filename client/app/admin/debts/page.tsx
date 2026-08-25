@@ -345,7 +345,7 @@ export default function AdminDebtsPage() {
                                                 <button
                                                     onClick={() => handleDeleteDebt(debt.id)}
                                                     disabled={actionLoading === `delete-${debt.id}`}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#f2b8b5] bg-[#fff7f7] px-2.5 py-2 text-[10px] font-bold text-[#b42318] transition-colors hover:border-[#d92d20] hover:bg-[#ffe4e1] cursor-pointer disabled:opacity-50"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#d92d20] bg-[#d92d20] px-2.5 py-2 text-[10px] font-bold text-white transition-colors hover:border-[#b42318] hover:bg-[#b42318] cursor-pointer disabled:opacity-50"
                                                     title="Excluir Débito"
                                                     aria-label="Excluir débito"
                                                 >
