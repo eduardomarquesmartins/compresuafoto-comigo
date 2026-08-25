@@ -53,7 +53,7 @@ const econtiNavSections: NavSection[] = [
             { href: "/admin/control", label: "Visão geral", icon: LayoutDashboard },
             { href: "/admin/clients", label: "Clientes", icon: Users },
             { href: "/admin/proposals", label: "Propostas", icon: FileText },
-            { href: "/admin/contracts", label: "Contratos e assinaturas", icon: ScrollText },
+            { href: "/admin/contracts", label: "Contratos e Assinaturas", icon: ScrollText },
             { href: "/admin/emails", label: "E-mails", icon: Mail },
             { href: "/admin/presentation", label: "Apresentação", icon: MonitorPlay }
         ]
@@ -1259,6 +1259,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 .admin-shell main .admin-metric-icon {
                     color: var(--workspace-blue) !important;
                 }
+
+                .admin-shell main .metric-tone-green { border-top: 3px solid #059669 !important; }
+                .admin-shell main .metric-tone-red { border-top: 3px solid #dc2626 !important; }
+                .admin-shell main .metric-tone-blue { border-top: 3px solid #0648ff !important; }
+                .admin-shell main .metric-tone-amber { border-top-color: #d97706 !important; }
+                .admin-shell main .metric-tone-purple { border-top: 3px solid #7c3aed !important; }
+                .admin-shell main .metric-icon-green, .admin-shell main .metric-value-green { color: #059669 !important; }
+                .admin-shell main .metric-icon-red, .admin-shell main .metric-value-red { color: #dc2626 !important; }
+                .admin-shell main .metric-icon-blue, .admin-shell main .metric-value-blue { color: #0648ff !important; }
+                .admin-shell main .metric-icon-amber, .admin-shell main .metric-value-amber { color: #d97706 !important; }
+                .admin-shell main .metric-icon-purple, .admin-shell main .metric-value-purple { color: #7c3aed !important; }
 
                 .admin-shell main [class*="rounded-[32px]"],
                 .admin-shell main [class*="rounded-[24px]"],

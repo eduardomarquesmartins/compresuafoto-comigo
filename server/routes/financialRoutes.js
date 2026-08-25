@@ -39,6 +39,7 @@ router.use(authenticate, isAdmin);
 
 router.get('/', financialController.getFinancials);
 router.get('/stats', financialController.getFinancialStats);
+router.get('/:id/note', financialController.downloadFinancialNote);
 router.post('/note-upload', noteUpload.single('note'), financialController.createFinancialFromNote);
 router.post('/', financialController.createFinancial);
 router.put('/:id', financialController.updateFinancial);

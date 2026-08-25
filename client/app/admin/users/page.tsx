@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import { AlertTriangle, FileText, RefreshCw, Search, Shield, Trash2, UserPlus, X } from "lucide-react";
 
-type UserRole = "ADMIN" | "PHOTOGRAPHER" | "DESIGNER" | "DEMANDAS" | string;
+type UserRole = "ADMIN" | "DESIGNER" | "DEMANDAS" | string;
 
 interface User {
     id: number;
@@ -21,15 +21,15 @@ type NewUser = {
     name: string;
     email: string;
     password: string;
-    role: "ADMIN" | "PHOTOGRAPHER" | "DESIGNER" | "DEMANDAS";
+    role: "ADMIN" | "DESIGNER" | "DEMANDAS";
 };
 
-const emptyNewUser: NewUser = { name: "", email: "", password: "", role: "PHOTOGRAPHER" };
+const emptyNewUser: NewUser = { name: "", email: "", password: "", role: "ADMIN" };
 
 const roleLabel = (user: User) => {
     if (user.collaboratorProfile === "DESIGNER") return "Designer";
     if (user.collaboratorProfile === "COMPANY_DEMANDS") return "Demandas da empresa";
-    const labels: Record<string, string> = { ADMIN: "Administrador", CUSTOMER: "Cliente", COLLABORATOR: "Colaborador", PHOTOGRAPHER: "Fotógrafo" };
+    const labels: Record<string, string> = { ADMIN: "Administrador", CUSTOMER: "Cliente", COLLABORATOR: "Colaborador" };
     return labels[user.role] || user.role;
 };
 
@@ -343,7 +343,6 @@ export default function UsersPage() {
                                     <option value="ADMIN">Administrador</option>
                                     <option value="DESIGNER">Designer</option>
                                     <option value="DEMANDAS">Demandas da empresa</option>
-                                    <option value="PHOTOGRAPHER">Fotógrafo</option>
                                 </select>
                             </div>
 

@@ -57,6 +57,7 @@ exports.updateProfile = async (req, res) => {
                 return res.status(401).json({ error: 'Senha atual incorreta' });
             }
             dataToUpdate.password = await bcrypt.hash(newPassword, 10);
+            dataToUpdate.authVersion = { increment: 1 };
         }
 
         const updatedUser = await prisma.user.update({
@@ -138,10 +139,14 @@ exports.updateRole = async (req, res) => {
 exports.createUser = async (req, res) => {
     try {
         const { name, fullName, cpf, email, password, role } = req.body;
-        const allowedRoles = ['ADMIN', 'PHOTOGRAPHER', 'DESIGNER', 'DEMANDAS', 'COLLABORATOR'];
-        const selectedRole = allowedRoles.includes(role) ? role : 'PHOTOGRAPHER';
+        const allowedRoles = ['ADMIN', 'DESIGNER', 'DEMANDAS', 'COLLABORATOR'];
+        const selectedRole = allowedRoles.includes(role) ? role : 'ADMIN';
         const normalizedEmail = String(email || '').trim().toLowerCase();
         const normalizedCpf = cleanCpf(cpf);
+
+        if (!normalizedEmail.includes('@') || typeof password !== 'string' || password.length < 6) {
+            return res.status(400).json({ error: 'Informe um e-mail válido e uma senha de pelo menos 6 caracteres.' });
+        }
 
         const existing = await prisma.user.findFirst({
             where: {

@@ -69,13 +69,7 @@ export default function AdminImportsPage() {
             <section className="admin-card p-5 md:p-7">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <span className="admin-kicker">Importação</span>
-                        <h1 className="mt-3 max-w-4xl text-4xl font-semibold leading-none tracking-[-0.055em] text-white md:text-6xl">
-                            Importar histórico da planilha.
-                        </h1>
-                        <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
-                            Use esta área somente para trazer dados antigos ou migrar uma planilha oficial. Depois disso, o fluxo normal continua pelo próprio sistema.
-                        </p>
+                        <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Importar histórico da planilha</span>
                     </div>
 
                     <Link href={importedFinanceHref} className="admin-secondary-button">

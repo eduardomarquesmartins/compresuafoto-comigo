@@ -37,18 +37,29 @@ exports.importExcel = async (req, res) => {
         }
 
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+        const requiredSheets = ['💸 Gastos Mai 2026', '💛 Dívidas CPF', '🏢 Dívidas CNPJ', '📌 Demandas Mentoria'];
+        const missingSheets = requiredSheets.filter(sheetName => !workbook.Sheets[sheetName]);
+
+        if (missingSheets.length > 0) {
+            return res.status(422).json({
+                error: `Planilha incompatível. Aba(s) obrigatória(s) ausente(s): ${missingSheets.join(', ')}. Nenhum dado foi alterado.`
+            });
+        }
+
+        let summary;
+        await prisma.$transaction(async (tx) => {
 
         // 1. Limpar tabelas existentes de Dívidas e Demandas para evitar duplicidade
-        await prisma.debt.deleteMany();
-        await prisma.mentoriaDemand.deleteMany();
+        await tx.debt.deleteMany();
+        await tx.mentoriaDemand.deleteMany();
 
         // 2. Limpar contratos para importação limpa de parceiros (clientes são preservados para evitar perda de dados financeiros)
-        await prisma.contract.deleteMany();
+        await tx.contract.deleteMany();
 
         // 3. Limpar registros financeiros apenas do mês de Maio de 2026
         const startDate = new Date(2026, 4, 1); // 01/05/2026
         const endDate = new Date(2026, 4, 31, 23, 59, 59); // 31/05/2026
-        await prisma.financialRecord.deleteMany({
+        await tx.financialRecord.deleteMany({
             where: {
                 date: {
                     gte: startDate,
@@ -97,7 +108,9 @@ exports.importExcel = async (req, res) => {
                     .replace(/-+/g, '-')
                     .replace(/^-|-$/g, '');
                 
-                const email = emailSlug ? `${emailSlug}@econti.com.br` : `cliente-${idVal}@econti.com.br`;
+                // A planilha não contém e-mail dos parceiros. Use um endereço interno que
+                // não possa receber campanhas, em vez de inventar um e-mail real da empresa.
+                const email = emailSlug ? `${emailSlug}-${idVal}@sem-email.local` : `cliente-${idVal}@sem-email.local`;
 
                 // Status do cliente e do contrato (se obs contiver "CANCELOU", cancela)
                 const isCancelled = obs.toUpperCase().includes('CANCELOU');
@@ -105,10 +118,10 @@ exports.importExcel = async (req, res) => {
                 const contractStatus = isCancelled ? 'CANCELLED' : (statusStr.toUpperCase() === 'ATIVO' ? 'ACTIVE' : 'EXPIRED');
 
                 // Cadastrar/atualizar cliente
-                const existingClient = await prisma.client.findUnique({ where: { email } });
+                const existingClient = await tx.client.findUnique({ where: { email } });
                 let client;
                 if (existingClient) {
-                    client = await prisma.client.update({
+                    client = await tx.client.update({
                         where: { id: existingClient.id },
                         data: {
                             name: parceiroName,
@@ -117,7 +130,7 @@ exports.importExcel = async (req, res) => {
                         }
                     });
                 } else {
-                    client = await prisma.client.create({
+                    client = await tx.client.create({
                         data: {
                             name: parceiroName,
                             email: email,
@@ -156,7 +169,7 @@ exports.importExcel = async (req, res) => {
                 const startDate = parseExcelDate(inicioStr) || new Date();
                 const endDate = parseExcelDate(encerramentoStr);
 
-                await prisma.contract.create({
+                await tx.contract.create({
                     data: {
                         clientId: client.id,
                         scope: `Prestação de serviços de marketing digital e gestão de redes sociais para ${parceiroName}, conforme vigência de ${contratoTipo}.`,
@@ -300,7 +313,7 @@ exports.importExcel = async (req, res) => {
 
         // Inserir todos os lançamentos financeiros acumulados
         if (recordsToInsert.length > 0) {
-            await prisma.financialRecord.createMany({
+            await tx.financialRecord.createMany({
                 data: recordsToInsert
             });
             importedGastosCount = recordsToInsert.length;
@@ -342,7 +355,7 @@ exports.importExcel = async (req, res) => {
             }
 
             if (debtsToInsert.length > 0) {
-                await prisma.debt.createMany({
+                await tx.debt.createMany({
                     data: debtsToInsert
                 });
                 importedDebtsCount += debtsToInsert.length;
@@ -385,7 +398,7 @@ exports.importExcel = async (req, res) => {
             }
 
             if (debtsToInsert.length > 0) {
-                await prisma.debt.createMany({
+                await tx.debt.createMany({
                     data: debtsToInsert
                 });
                 importedDebtsCount += debtsToInsert.length;
@@ -426,22 +439,25 @@ exports.importExcel = async (req, res) => {
             }
 
             if (demandsToInsert.length > 0) {
-                await prisma.mentoriaDemand.createMany({
+                await tx.mentoriaDemand.createMany({
                     data: demandsToInsert
                 });
                 importedDemandsCount = demandsToInsert.length;
             }
         }
 
-        res.json({
-            message: 'Planilha importada com sucesso!',
-            summary: {
+        summary = {
                 clients: importedClientsCount,
                 contracts: importedContractsCount,
                 incomesAndExpenses: importedGastosCount,
                 debts: importedDebtsCount,
                 mentoriaDemands: importedDemandsCount
-            }
+        };
+        });
+
+        res.json({
+            message: 'Planilha importada com sucesso!',
+            summary
         });
 
     } catch (err) {

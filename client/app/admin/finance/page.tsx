@@ -5,7 +5,7 @@ import {
     Plus, DollarSign, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, 
     Calendar, Trash2, CheckCircle, Clock, Loader2, Filter, AlertCircle, FileUp, FileText
 } from "lucide-react";
-import { 
+import api, {
     getFinancials, getFinancialStats, createFinancial, updateFinancial, deleteFinancial, getClients, uploadFinancialNote
 } from "@/lib/api";
 
@@ -179,6 +179,17 @@ export default function AdminFinancePage() {
         }
     };
 
+    const handleDownloadNote = async (recordId: number) => {
+        try {
+            const response = await api.get(`/financials/${recordId}/note`, { responseType: "blob" });
+            const fileUrl = URL.createObjectURL(response.data);
+            window.open(fileUrl, "_blank", "noopener,noreferrer");
+            window.setTimeout(() => URL.revokeObjectURL(fileUrl), 60_000);
+        } catch {
+            alert("Não foi possível baixar esta nota.");
+        }
+    };
+
     const handleSaveRecord = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.description || !form.amount) {
@@ -236,9 +247,7 @@ export default function AdminFinancePage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <span className="text-blue-400 font-bold tracking-[0.18em] uppercase text-[10px]">Financeiro</span>
-                    <h1 className="text-3xl font-semibold text-white tracking-tight mt-2">Gestão financeira</h1>
-                    <p className="mt-2 text-sm text-slate-400">Lançamentos, resultado do período e previsibilidade de caixa.</p>
+                    <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Gestão financeira</span>
                 </div>
                 <div className="flex flex-wrap gap-4 items-center">
                     <button
@@ -442,15 +451,14 @@ export default function AdminFinancePage() {
                                                         {record.category}
                                                     </span>
                                                     {uploadedNote && (
-                                                        <a
-                                                            href={uploadedNote.fileUrl}
-                                                            target="_blank"
-                                                            rel="noreferrer"
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDownloadNote(record.id)}
                                                             className="ml-2 inline-flex items-center gap-1 border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-blue-300 hover:bg-blue-500/20 rounded-full"
                                                         >
                                                             <FileText size={10} />
                                                             Nota
-                                                        </a>
+                                                        </button>
                                                     )}
                                                 </div>
                                             </div>

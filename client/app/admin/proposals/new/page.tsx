@@ -92,7 +92,7 @@ const dataFotografia = [
     { id: "foto_completa", name: "Experiência Completa", defaultPrice: 4800, description: "10h de cobertura | 2 fotí³grafos profissionais | Making of do noivo e da noiva | Cerimônia + recepção + balada completa | 650+ fotos tratadas e editadas | Galeria completa | Entrega prioritária + backup garantido" },
     { id: "foto_ensaio_pre", name: "Adicional: Ensaio pré-casamento", defaultPrice: 1200, description: "Ensaio fotográfico pré-casamento." },
     { id: "foto_hora_extra", name: "Adicional: Hora extra", defaultPrice: 400, description: "Hora adicional de cobertura fotográfica." },
-    { id: "foto_album", name: "Adicional: ílbum físico", defaultPrice: 0, description: "Valor sob consulta." },
+    { id: "foto_album", name: "Adicional: Album físico", defaultPrice: 0, description: "Valor sob consulta." },
 ];
 
 const dataVideo = [
@@ -116,7 +116,7 @@ const dataCombos = [
     { id: "combo_storymaker_10h", name: "Adicional: Storymaker 10h", defaultPrice: 1500, description: "Cobertura storymaker por até 10 horas." },
     { id: "combo_pre_wedding_foto", name: "Adicional: Pré-wedding foto", defaultPrice: 1200, description: "Ensaio fotográfico pré-wedding." },
     { id: "combo_pre_wedding_vídeo", name: "Adicional: Pré-wedding vídeo", defaultPrice: 1400, description: "Vídeo pré-wedding." },
-    { id: "combo_album", name: "Adicional: ílbum físico", defaultPrice: 0, description: "Valor sob consulta." },
+    { id: "combo_album", name: "Adicional: Album físico", defaultPrice: 0, description: "Valor sob consulta." },
 ];
 
 const dataStorymaker = [

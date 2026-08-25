@@ -178,9 +178,7 @@ export default function AdminDemandsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <span className="text-blue-400 font-bold tracking-[0.18em] uppercase text-[10px]">Operação</span>
-                    <h1 className="text-3xl font-semibold text-white tracking-tight mt-2">Tarefas e acompanhamento</h1>
-                    <p className="mt-2 text-sm text-slate-400">Prioridades da equipe, responsáveis e próximos prazos.</p>
+                    <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Tarefas e acompanhamento</span>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}

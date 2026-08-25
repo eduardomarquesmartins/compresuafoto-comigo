@@ -5,10 +5,14 @@ const nextConfig = {
             { source: '/events/:path*', destination: '/compresuafoto/events/:path*', permanent: true },
             { source: '/event/:path*', destination: '/compresuafoto/events/:path*', permanent: true },
             { source: '/register', destination: '/compresuafoto/register', permanent: true },
-            { source: '/forgot-password', destination: '/compresuafoto/forgot-password', permanent: true },
             { source: '/my-orders', destination: '/compresuafoto/my-orders', permanent: true },
             { source: '/profile', destination: '/compresuafoto/profile', permanent: true },
             { source: '/orders/:path*', destination: '/compresuafoto/orders/:path*', permanent: true },
+            { source: '/admin/dashboard', destination: '/compresuafoto/admin/dashboard', permanent: true },
+            { source: '/admin/events/:path*', destination: '/compresuafoto/admin/events/:path*', permanent: true },
+            { source: '/admin/orders', destination: '/compresuafoto/admin/orders', permanent: true },
+            { source: '/admin/coupons', destination: '/compresuafoto/admin/coupons', permanent: true },
+            { source: '/admin/users', destination: '/compresuafoto/admin/users', permanent: true },
         ];
     },
     turbopack: {

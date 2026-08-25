@@ -630,7 +630,7 @@ function IntroTimelineSlide({ slide, onNext }: { slide: IntroSlide; onNext?: () 
                                 <blockquote className="relative rounded-3xl bg-black p-6 sm:p-7 text-white shadow-2xl">
                                     <QuoteGraphic />
                                     <p className="text-base sm:text-xl font-medium italic leading-snug">
-                                        "{slide.quote}"
+                                        &ldquo;{slide.quote}&rdquo;
                                     </p>
                                     <p className="mt-3 text-xs font-normal uppercase tracking-[0.35em] text-[#2f7fde]">
                                         Eduarda Conti • Fundadora &amp;CONTI
@@ -961,13 +961,8 @@ export default function AdminPresentationPage() {
         <div className="admin-page-stack pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <section className="admin-card overflow-hidden p-5 md:p-7">
                 <div className="min-w-0">
-                    <span className="admin-kicker">Portfólio</span>
-                    <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-none tracking-[-0.055em] text-white md:text-6xl">
-                        Apresentação Comercial
-                    </h1>
-                    <p className="mt-5 max-w-2xl text-base leading-7 text-slate-400">
-                    </p>
-                    <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                    <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Apresentação comercial</span>
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                         <button type="button" onClick={startPresentation} className="admin-primary-button">
                             <Play size={17} fill="currentColor" /> Iniciar apresentação
                         </button>

@@ -179,9 +179,7 @@ export default function AdminDebtsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <span className="text-blue-500 font-bold tracking-[0.18em] uppercase text-[10px]">Financeiro</span>
-                    <h1 className="text-3xl font-semibold text-white tracking-tight mt-2">Dívidas e acordos</h1>
-                    <p className="mt-2 text-sm text-slate-400">Priorize negociações, acompanhe propostas e registre cada etapa da quitação.</p>
+                    <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Dívidas e acordos</span>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}

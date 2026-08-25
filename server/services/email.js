@@ -104,7 +104,7 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
     }
 };
 
-exports.sendPasswordResetEmail = async (email, resetToken, clientUrl) => {
+exports.sendPasswordResetEmail = async (email, resetToken, clientUrl, app = 'photo') => {
     try {
         let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://econticomigo.com.br/compresuafoto';
         if (!finalClientUrl.startsWith('http')) {
@@ -114,15 +114,17 @@ exports.sendPasswordResetEmail = async (email, resetToken, clientUrl) => {
         const resetLink = `${finalClientUrl}/forgot-password?token=${encodeURIComponent(resetToken)}`;
         const currentYear = new Date().getFullYear();
 
+        const isEconti = app === 'econti';
+        const brand = isEconti ? '& CONTI Marketing Digital' : 'Compre Sua Foto';
         const { data, error } = await sendEmailOrFail({
-            from: process.env.EMAIL_FROM || 'Compre Sua Foto <contato@econti.com.br>',
+            from: (isEconti ? process.env.ECONTI_EMAIL_FROM : process.env.EMAIL_FROM) || `${brand} <contato@econti.com.br>`,
             to: [email],
-            subject: 'Recuperacao de senha - Compre Sua Foto',
+            subject: `Recuperacao de senha - ${brand}`,
             html: `
                 <div style="margin:0;padding:0;background-color:#f0f4f8;font-family:Arial,Helvetica,sans-serif;">
                     <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
                         <div style="background:#0a0a0a;padding:36px 40px;text-align:center;">
-                            <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Compre Sua Foto</h1>
+                            <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">${brand}</h1>
                         </div>
                         <div style="padding:32px 40px;">
                             <h2 style="color:#0f172a;font-size:24px;margin:0 0 12px;">Redefina sua senha</h2>

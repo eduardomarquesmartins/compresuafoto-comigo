@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePublicAppPath } from '@/lib/publicAppPath';
 import api from '@/lib/api';
@@ -8,6 +8,7 @@ import { KeyRound, Mail, ArrowLeft, CheckCircle, ShieldAlert, Loader2 } from 'lu
 
 function ForgotPasswordContent() {
     const router = useRouter();
+    const pathname = usePathname();
     const appPath = usePublicAppPath();
     const searchParams = useSearchParams();
     const token = searchParams.get('token');
@@ -30,7 +31,7 @@ function ForgotPasswordContent() {
         setError('');
         setLoading(true);
         try {
-            await api.post('/auth/forgot-password', { login });
+            await api.post('/auth/forgot-password', { login, app: pathname.startsWith('/compresuafoto') ? 'photo' : 'econti' });
             setStep(2);
         } catch (err: any) {
             setError(err.response?.data?.error || 'Erro ao processar sua solicitação. Tente novamente.');

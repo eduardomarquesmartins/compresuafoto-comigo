@@ -233,12 +233,7 @@ export default function AdminControlPage() {
             <section className="border-b border-zinc-200 px-6 py-7 md:px-8 md:py-8">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <h1 className="mt-3 max-w-4xl text-4xl font-semibold leading-none tracking-[-0.055em] text-white md:text-6xl">
-                            Gestão & <span style={{ color: "#00b7ff" }}>CONTI</span>
-                        </h1>
-                        <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 md:text-base">
-                            O que precisa de decisão hoje: caixa, compromissos financeiros e entregas da equipe.
-                        </p>
+                        <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Central operacional</span>
                     </div>
 
                     <div className="grid gap-2 sm:grid-cols-3">
@@ -259,46 +254,46 @@ export default function AdminControlPage() {
             </section>
 
             <section className="grid overflow-hidden border border-zinc-200 bg-white md:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-zinc-200">
-                <article className="border-b border-zinc-200 p-5 md:p-6 xl:border-b-0">
-                    <div className="admin-metric-icon text-emerald-300">
+                <article className="metric-tone-green border-b border-zinc-200 p-5 md:p-6 xl:border-b-0">
+                    <div className="metric-icon-green">
                         <TrendingUp size={18} />
                     </div>
                     <div className="mt-6">
                         <p className="admin-metric-label">Entradas do mês</p>
-                        <p className="mt-2 truncate text-3xl font-semibold tracking-[-0.05em] text-white">{currency.format(stats.incomes)}</p>
+                        <p className="metric-value-green mt-2 truncate text-3xl font-semibold tracking-[-0.05em]">{currency.format(stats.incomes)}</p>
                         <p className="mt-3 text-sm text-slate-500">{control.pendingIncomes.length} pendente(s)</p>
                     </div>
                 </article>
 
-                <article className="border-b border-zinc-200 p-5 md:p-6 xl:border-b-0">
-                    <div className="admin-metric-icon text-red-300">
+                <article className="metric-tone-red border-b border-zinc-200 p-5 md:p-6 xl:border-b-0">
+                    <div className="metric-icon-red">
                         <TrendingDown size={18} />
                     </div>
                     <div className="mt-6">
                         <p className="admin-metric-label">Saídas do mês</p>
-                        <p className="mt-2 truncate text-3xl font-semibold tracking-[-0.05em] text-white">{currency.format(stats.expenses)}</p>
+                        <p className="metric-value-red mt-2 truncate text-3xl font-semibold tracking-[-0.05em]">{currency.format(stats.expenses)}</p>
                         <p className="mt-3 text-sm text-slate-500">{control.pendingExpenses.length} pendente(s)</p>
                     </div>
                 </article>
 
-                <article className="border-b border-zinc-200 p-5 md:p-6 xl:border-b-0">
-                    <div className={`admin-metric-icon ${stats.balance >= 0 ? "text-[#9ecbff]" : "text-amber-300"}`}>
+                <article className={`metric-tone-blue border-b border-zinc-200 p-5 md:p-6 xl:border-b-0 ${stats.balance >= 0 ? "" : "metric-tone-amber"}`}>
+                    <div className={stats.balance >= 0 ? "metric-icon-blue" : "metric-icon-amber"}>
                         <Wallet size={18} />
                     </div>
                     <div className="mt-6">
                         <p className="admin-metric-label">Saldo realizado</p>
-                        <p className={`mt-2 truncate text-3xl font-semibold tracking-[-0.05em] ${stats.balance >= 0 ? "text-white" : "text-amber-200"}`}>{currency.format(stats.balance)}</p>
+                        <p className={`mt-2 truncate text-3xl font-semibold tracking-[-0.05em] ${stats.balance >= 0 ? "metric-value-blue" : "metric-value-amber"}`}>{currency.format(stats.balance)}</p>
                         <p className="mt-3 text-sm text-slate-500">Previsão: {currency.format(stats.forecast)}</p>
                     </div>
                 </article>
 
-                <article className="p-5 md:p-6">
-                    <div className="admin-metric-icon text-blue-300">
+                <article className="metric-tone-purple p-5 md:p-6">
+                    <div className="metric-icon-purple">
                         <ListChecks size={18} />
                     </div>
                     <div className="mt-6">
                         <p className="admin-metric-label">Demandas ativas</p>
-                        <p className="mt-2 truncate text-3xl font-semibold tracking-[-0.05em] text-white">{control.activeDemands.length}</p>
+                        <p className="metric-value-purple mt-2 truncate text-3xl font-semibold tracking-[-0.05em]">{control.activeDemands.length}</p>
                         <p className="mt-3 text-sm text-slate-500">{control.completedDemands} concluída(s)</p>
                     </div>
                 </article>

@@ -72,6 +72,10 @@ exports.register = async (req, res) => {
         const normalizedCpf = cleanCpf(cpf);
         const normalizedPhone = cleanPhone(phone);
 
+        if (!normalizedEmail.includes('@') || typeof password !== 'string' || password.length < 6) {
+            return res.status(400).json({ error: 'Informe um e-mail válido e uma senha de pelo menos 6 caracteres.' });
+        }
+
         const existingUser = await prisma.user.findFirst({
             where: {
                 OR: [
@@ -108,7 +112,7 @@ exports.register = async (req, res) => {
         });
 
         const token = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role, collaboratorProfile: user.collaboratorProfile },
+            { userId: user.id, email: user.email, role: user.role, collaboratorProfile: user.collaboratorProfile, authVersion: user.authVersion },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
@@ -151,7 +155,7 @@ exports.login = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role, collaboratorProfile: user.collaboratorProfile },
+            { userId: user.id, email: user.email, role: user.role, collaboratorProfile: user.collaboratorProfile, authVersion: user.authVersion },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
@@ -203,6 +207,9 @@ exports.resetPassword = async (req, res) => {
     const loginIdentifier = login || email;
 
     try {
+        if (typeof newPassword !== 'string' || newPassword.length < 6) {
+            return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
+        }
         const user = await prisma.user.findFirst({
             where: buildLoginWhere(loginIdentifier)
         });
@@ -221,7 +228,7 @@ exports.resetPassword = async (req, res) => {
 
         await prisma.user.update({
             where: { id: user.id },
-            data: { password: hashedPassword }
+            data: { password: hashedPassword, authVersion: { increment: 1 } }
         });
 
         res.json({ message: 'Senha redefinida com sucesso' });
@@ -275,7 +282,7 @@ exports.googleLogin = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role },
+            { userId: user.id, email: user.email, role: user.role, authVersion: user.authVersion },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
@@ -302,7 +309,7 @@ exports.googleLogin = async (req, res) => {
 };
 
 exports.forgotPassword = async (req, res) => {
-    const { login } = req.body;
+    const { login, app } = req.body;
     try {
         const user = await prisma.user.findFirst({
             where: buildLoginWhere(login)
@@ -313,14 +320,16 @@ exports.forgotPassword = async (req, res) => {
         }
 
         const resetToken = jwt.sign(
-            { userId: user.id },
+            { userId: user.id, authVersion: user.authVersion },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
 
-        const clientUrl = getConfiguredClientUrl();
+        const clientUrl = app === 'econti'
+            ? (process.env.ECONTI_CLIENT_URL || 'https://econticomigo.com.br')
+            : getConfiguredClientUrl();
 
-        await emailService.sendPasswordResetEmail(user.email, resetToken, clientUrl);
+        await emailService.sendPasswordResetEmail(user.email, resetToken, clientUrl, app === 'econti' ? 'econti' : 'photo');
 
         res.json({ message: 'E-mail de recuperacao enviado com sucesso.' });
     } catch (error) {
@@ -332,13 +341,24 @@ exports.forgotPassword = async (req, res) => {
 exports.resetPasswordWithToken = async (req, res) => {
     const { token, newPassword } = req.body;
     try {
+        if (typeof newPassword !== 'string' || newPassword.length < 6) {
+            return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
+        }
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const userId = decoded.userId;
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, authVersion: true }
+        });
+        if (!user || decoded.authVersion !== user.authVersion) {
+            return res.status(401).json({ error: 'Link de recuperacao invalido.' });
+        }
+
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         await prisma.user.update({
             where: { id: userId },
-            data: { password: hashedPassword }
+            data: { password: hashedPassword, authVersion: { increment: 1 } }
         });
 
         res.json({ message: 'Senha redefinida com sucesso!' });

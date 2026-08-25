@@ -1,5 +1,7 @@
 const prisma = require('../lib/prisma');
 const { readFinancialNote } = require('../services/financialNoteReader');
+const fs = require('fs');
+const path = require('path');
 
 const safeOriginalName = (name) => String(name || 'nota')
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
@@ -142,6 +144,30 @@ exports.createFinancialFromNote = async (req, res) => {
     } catch (err) {
         console.error('[CREATE FINANCIAL NOTE ERROR]:', err);
         res.status(500).json({ error: 'Erro ao criar despesa a partir da nota.' });
+    }
+};
+
+exports.downloadFinancialNote = async (req, res) => {
+    try {
+        const record = await prisma.financialRecord.findUnique({ where: { id: parseInt(req.params.id, 10) } });
+        if (!record) return res.status(404).json({ error: 'Lançamento não encontrado.' });
+
+        let note;
+        try { note = JSON.parse(record.obs || ''); } catch { note = null; }
+        if (note?.type !== 'uploaded-cost-note' || !note.publicPath) {
+            return res.status(404).json({ error: 'Não há nota anexada a este lançamento.' });
+        }
+
+        const fileName = path.basename(note.publicPath);
+        const filePath = path.join(__dirname, '../uploads/financial-notes', fileName);
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: 'O arquivo da nota não está mais disponível.' });
+        }
+
+        return res.download(filePath, safeOriginalName(note.originalName));
+    } catch (err) {
+        console.error('[DOWNLOAD FINANCIAL NOTE ERROR]:', err);
+        return res.status(500).json({ error: 'Erro ao baixar a nota.' });
     }
 };
 

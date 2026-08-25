@@ -421,11 +421,11 @@ exports.createEventFromDrive = async (req, res) => {
                     }
                 });
 
-                // Se for a primeira imagem e o evento NÃO tiver capa, define como capa
+                // A capa é pública; sempre use a versão com marca d'água.
                 if (results.success === 0 && !event.coverImage) {
                     await prisma.event.update({
                         where: { id: event.id },
-                        data: { coverImage: originalUrl }
+                        data: { coverImage: watermarkedUrl }
                     });
                 }
 

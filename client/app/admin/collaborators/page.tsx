@@ -86,7 +86,7 @@ export default function CollaboratorsPage() {
   };
 
   return <div className="admin-page-stack max-w-7xl mx-auto">
-    <section className="admin-card p-5 md:p-6"><p className="admin-kicker">Gestão de equipe</p><h1 className="mt-2 text-4xl font-semibold tracking-[-.065em] text-white md:text-5xl">Colaboradores</h1></section>
+    <section className="admin-card p-5 md:p-6"><p className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Colaboradores</p></section>
     <section className="grid gap-4 md:grid-cols-3"><Metric icon={<Users />} label="Colaboradores" value={String(data.collaborators.length)} /><Metric icon={<WalletCards />} label="Pendente de pagamento" value={money(pendingTotal)} /><Metric icon={<CheckCircle2 />} label="Lançamentos" value={String(data.completions.length)} /></section>
     {message && <p className="rounded-xl border border-blue-400/20 bg-blue-500/10 p-4 text-sm text-blue-100">{message}</p>}
     <section className="admin-card overflow-hidden p-0">

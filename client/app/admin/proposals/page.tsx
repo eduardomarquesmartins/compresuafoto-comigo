@@ -75,12 +75,7 @@ export default function ProposalsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
                 <div>
-                    <div className="mb-2">
-                        <span className="text-blue-500 font-medium tracking-widest uppercase text-xs">Gestão Comercial</span>
-                    </div>
-                    <h1 className="text-4xl font-light text-white tracking-tight flex items-center gap-4">
-                        Propostas
-                    </h1>
+                    <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Propostas comerciais</span>
                 </div>
                 <Link
                     href="/admin/proposals/new"

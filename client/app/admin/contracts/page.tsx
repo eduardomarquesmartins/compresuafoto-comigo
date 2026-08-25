@@ -437,8 +437,7 @@ export default function AdminContractsPage() {
         <div className="mx-auto max-w-6xl space-y-8 pb-20">
             <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
-                    <span className="text-xs font-medium uppercase tracking-widest text-blue-500">Documentos</span>
-                    <h1 className="mt-2 text-4xl font-light tracking-tight text-white">Gerador de Contratos</h1>
+                    <span className="text-sm font-extrabold uppercase tracking-[0.2em] text-blue-600">Gerador de contratos</span>
                 </div>
             </header>
 

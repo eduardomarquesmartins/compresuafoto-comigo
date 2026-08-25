@@ -28,7 +28,7 @@ const canAccessOrder = (req, order) => {
     return req.user.role === 'ADMIN' || req.user.userId === order.userId;
 };
 
-const buildOrderResponse = async (order) => {
+const buildOrderResponse = async (order, canDownloadOriginals = false) => {
     let photoIds = [];
     try {
         photoIds = JSON.parse(order.items);
@@ -43,7 +43,7 @@ const buildOrderResponse = async (order) => {
     const isPaid = paidStatuses.includes(order.status);
     const safePhotos = photos.map(photo => ({
         id: photo.id,
-        originalUrl: isPaid ? photo.originalUrl : null,
+        originalUrl: isPaid && canDownloadOriginals ? photo.originalUrl : null,
         watermarkedUrl: photo.watermarkedUrl,
         price: photo.price
     }));
@@ -354,7 +354,7 @@ exports.getOrderById = async (req, res) => {
             return res.status(403).json({ error: 'Order access denied' });
         }
 
-        res.json(await buildOrderResponse(order));
+        res.json(await buildOrderResponse(order, canAccessOrder(req, order)));
 
     } catch (error) {
         console.error("Get Order Error:", error);
@@ -425,7 +425,7 @@ exports.syncOrderWithMercadoPago = async (req, res) => {
 
         // If already paid, just return it
         if (paidStatuses.includes(order.status)) {
-            return res.json(await buildOrderResponse(order));
+            return res.json(await buildOrderResponse(order, canAccessOrder(req, order)));
         }
 
         // 2. If we have a payment_id, verify it with Mercado Pago
@@ -436,11 +436,11 @@ exports.syncOrderWithMercadoPago = async (req, res) => {
             if (paymentDetails.status === 'approved' && paymentDetails.external_reference === (order.publicId || order.id.toString())) {
                 const updatedOrder = await finalizeApprovedOrder(order.id, resolveClientUrl(req));
                 console.log(`[SYNC] Order ${id} manually synced to 'approved'`);
-                return res.json(await buildOrderResponse(updatedOrder));
+                return res.json(await buildOrderResponse(updatedOrder, canAccessOrder(req, updatedOrder)));
             }
         }
 
-        res.json(await buildOrderResponse(order));
+        res.json(await buildOrderResponse(order, canAccessOrder(req, order)));
     } catch (error) {
         console.error("Sync Error:", error);
         res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to sync with payment provider' });
@@ -460,7 +460,7 @@ exports.downloadOrderImages = async (req, res) => {
 
         if (!order) return res.status(404).send('Order not found');
 
-        if (isNumericId && !canAccessOrder(req, order)) {
+        if (!canAccessOrder(req, order)) {
             return res.status(403).send('Order access denied');
         }
 
@@ -619,6 +619,17 @@ exports.addPhotosToOrder = async (req, res) => {
         try { existingIds = JSON.parse(order.items); } catch (e) { }
 
         const mergedIds = [...new Set([...existingIds, ...newPhotoIds])];
+        const photos = await prisma.photo.findMany({
+            where: { id: { in: mergedIds } },
+            select: { id: true, eventId: true }
+        });
+
+        if (photos.length !== mergedIds.length) {
+            return res.status(400).json({ error: 'Uma ou mais fotos informadas não existem.' });
+        }
+        if (new Set(photos.map(photo => photo.eventId)).size > 1) {
+            return res.status(400).json({ error: 'Só é possível adicionar fotos do mesmo evento ao pedido.' });
+        }
 
         const updated = await prisma.order.update({
             where,

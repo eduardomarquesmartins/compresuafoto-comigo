@@ -222,10 +222,7 @@ export default function AdminClientsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <span className="text-blue-500 font-semibold tracking-widest uppercase text-xs">Gestão de Contas</span>
-                    <h1 className="text-4xl font-extralight text-white tracking-tight flex items-center gap-4 mt-2">
-                        Clientes Ativos
-                    </h1>
+                    <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Clientes ativos</span>
                 </div>
                 <button
                     onClick={() => handleOpenClientModal()}

@@ -75,7 +75,7 @@ exports.sendClientEmail = async (req, res) => {
             orderBy: { name: 'asc' }
         });
 
-        const recipients = clients.filter(client => client.email);
+        const recipients = clients.filter(client => client.email && !client.email.endsWith('@sem-email.local'));
 
         if (recipients.length === 0) {
             return res.status(400).json({ error: 'Nenhum cliente com e-mail valido foi encontrado.' });
