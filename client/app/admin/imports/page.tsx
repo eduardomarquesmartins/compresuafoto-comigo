@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import {
-    AlertTriangle,
     ArrowRight,
     CheckCircle2,
     FileSpreadsheet,
@@ -86,7 +85,7 @@ export default function AdminImportsPage() {
                 </div>
             </section>
 
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+            <div className="max-w-3xl">
                 <section className="admin-card p-5 md:p-6">
                     <div className="mb-7 flex items-center gap-3">
                         <div className="admin-metric-icon text-[#9ecbff]">
@@ -151,18 +150,6 @@ export default function AdminImportsPage() {
                     </div>
                 </section>
 
-                <aside className="admin-card p-5 md:p-6">
-                    <div className="admin-warning-icon">
-                        <AlertTriangle size={18} />
-                    </div>
-                    <h2 className="mt-6 text-2xl font-semibold tracking-[-0.045em] text-white">Quando usar</h2>
-                    <div className="mt-4 space-y-3 text-sm leading-6 text-slate-400">
-                        <p>Use para importar dados que já estão em planilhas, sem cadastrar tudo manualmente.</p>
-                        <p>Depois da importação, receitas, despesas, dívidas e demandas devem ser atualizadas pelas telas do sistema.</p>
-                        <p>Os lançamentos financeiros dessa planilha entram em maio de 2026.</p>
-                        <p className="text-amber-100">A importação atual limpa e substitui algumas áreas históricas, então use com atenção.</p>
-                    </div>
-                </aside>
             </div>
 
             {result && (
