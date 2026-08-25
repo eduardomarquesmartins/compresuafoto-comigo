@@ -4,6 +4,20 @@ import { useEffect, useState } from "react";
 import { Plus, ClipboardCheck, Calendar, User, Trash2, Edit2, CheckCircle, Clock, Loader2, AlertCircle } from "lucide-react";
 import { getDemands, createDemand, updateDemand, deleteDemand } from "@/lib/api";
 
+const demandAreas = [
+    "📊 Planilha",
+    "💰 Financeiro",
+    "📋 Operação",
+    "🤝 Clientes",
+    "📣 Marketing",
+    "⚖️ Jurídico / Contratos",
+    "⚠️ MEI",
+    "🏠 Pessoal"
+];
+
+const deadlineOptions = ["Hoje", "Esta semana", "Próxima semana", "Este mês", "Junho/2026", "Sem prazo"];
+const demandTypes = ["Operacional", "Financeiro", "Comercial", "Entrega", "Estrutura", "Hábito", "Estratégico", "Pessoal"];
+
 export default function AdminDemandsPage() {
     const [demands, setDemands] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -367,23 +381,43 @@ export default function AdminDemandsPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Área / Ícone</span>
-                                    <input required value={form.area} onChange={e => setForm({...form, area: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: 💰 Precificação ou 📋 Contratos" />
+                                    <input required list="demand-area-options" value={form.area} onChange={e => setForm({...form, area: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Selecione ou escreva uma área" />
+                                    <datalist id="demand-area-options">
+                                        {demandAreas.map((area) => <option key={area} value={area} />)}
+                                    </datalist>
                                 </label>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Responsável</span>
-                                    <input required value={form.responsible} onChange={e => setForm({...form, responsible: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: Eduarda ou Fernando ou Ambos" />
+                                    <div className="relative">
+                                        <select required value={form.responsible} onChange={e => setForm({...form, responsible: e.target.value})} className="w-full appearance-none bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 pr-10 text-white outline-none focus:border-blue-500 text-sm cursor-pointer">
+                                            {!['Eduarda', 'Fernando', 'Ambos'].includes(form.responsible) && <option value={form.responsible}>{form.responsible}</option>}
+                                            <option value="Eduarda">Eduarda</option>
+                                            <option value="Fernando">Fernando</option>
+                                            <option value="Ambos">Ambos</option>
+                                        </select>
+                                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400 text-xs">▼</span>
+                                    </div>
                                 </label>
                                 <label className="flex flex-col gap-2 md:col-span-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Ação / Demanda</span>
-                                    <input required value={form.action} onChange={e => setForm({...form, action: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="O que precisa ser feito?" />
+                                    <textarea required rows={2} value={form.action} onChange={e => setForm({...form, action: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm resize-y" placeholder="Descreva a ação de forma objetiva. Ex.: Enviar nova chave Pix aos clientes." />
                                 </label>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Prazo / Limite</span>
-                                    <input value={form.deadline} onChange={e => setForm({...form, deadline: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: Junho/2026 ou Esta semana" />
+                                    <input list="demand-deadline-options" value={form.deadline} onChange={e => setForm({...form, deadline: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Selecione ou escreva um prazo" />
+                                    <datalist id="demand-deadline-options">
+                                        {deadlineOptions.map((deadline) => <option key={deadline} value={deadline} />)}
+                                    </datalist>
                                 </label>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Tipo da Demanda</span>
-                                    <input value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm" placeholder="Ex: Operacional, Estrutura, Financeiro" />
+                                    <div className="relative">
+                                        <select value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="w-full appearance-none bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 pr-10 text-white outline-none focus:border-blue-500 text-sm cursor-pointer">
+                                            {!demandTypes.includes(form.type) && <option value={form.type}>{form.type}</option>}
+                                            {demandTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+                                        </select>
+                                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400 text-xs">▼</span>
+                                    </div>
                                 </label>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status</span>
