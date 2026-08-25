@@ -299,9 +299,7 @@ export default function AdminEmailsPage() {
                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Destinatários</p>
                             <h2 className="mt-1 text-lg font-semibold text-white">Clientes</h2>
                         </div>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-500/25 bg-blue-500/10 text-blue-300">
-                            <Users size={18} />
-                        </div>
+                        <Users size={21} className="text-blue-500" aria-hidden="true" />
                     </div>
 
                     <div className="grid grid-cols-3 rounded-lg border border-white/10 bg-black/20 p-1 text-xs font-semibold">
