@@ -110,9 +110,9 @@ export default function AdminImportsPage() {
                     <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex min-h-[170px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-white/15 bg-black/25 px-6 py-8 text-center transition hover:border-blue-400/40 hover:bg-blue-500/5"
+                        className="admin-upload-dropzone flex min-h-[170px] w-full flex-col items-center justify-center rounded-lg border border-dashed px-6 py-8 text-center transition"
                     >
-                        <Upload className="mb-4 text-[#9ecbff]" size={28} />
+                        <Upload className="admin-upload-icon mb-4" size={30} aria-hidden="true" />
                         <strong className="text-base text-white">{selectedFile ? selectedFile.name : "Selecionar planilha"}</strong>
                         <span className="mt-2 text-sm text-slate-500">Formatos aceitos: .xlsx e .xls</span>
                     </button>

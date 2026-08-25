@@ -1452,6 +1452,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     background: #b42318 !important;
                 }
 
+                .admin-shell main .admin-upload-dropzone {
+                    border-color: #cbd5e1 !important;
+                    background: #ffffff !important;
+                    color: #111111 !important;
+                }
+
+                .admin-shell main .admin-upload-dropzone:hover {
+                    border-color: #0044ff !important;
+                    background: #f4f7ff !important;
+                }
+
+                .admin-shell main .admin-upload-dropzone .admin-upload-icon {
+                    color: #0044ff !important;
+                    opacity: 1 !important;
+                }
+
                 .admin-shell main .admin-secondary-button,
                 .admin-shell main button[class*="bg-transparent"] {
                     min-height: 42px;
