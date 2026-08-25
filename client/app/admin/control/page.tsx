@@ -8,9 +8,6 @@ import {
     Banknote,
     CheckCircle2,
     ClipboardCheck,
-    Clock3,
-    DollarSign,
-    FileSpreadsheet,
     ListChecks,
     Loader2,
     ShieldAlert,
@@ -234,7 +231,7 @@ export default function AdminControlPage() {
                 </div>
             )}
 
-            <section className="admin-card p-5 md:p-7">
+            <section className="border-b border-zinc-200 pb-7 md:pb-9">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>
                         <span className="admin-kicker">Controle</span>
@@ -263,54 +260,54 @@ export default function AdminControlPage() {
                 </div>
             </section>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <article className="admin-metric-card">
+            <section className="grid overflow-hidden border border-zinc-200 bg-white md:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-zinc-200">
+                <article className="border-b border-zinc-200 p-5 md:p-6 xl:border-b-0">
                     <div className="admin-metric-icon text-emerald-300">
                         <TrendingUp size={18} />
                     </div>
-                    <div className="mt-8">
+                    <div className="mt-6">
                         <p className="admin-metric-label">Entradas do mês</p>
                         <p className="mt-2 truncate text-3xl font-semibold tracking-[-0.05em] text-white">{currency.format(stats.incomes)}</p>
                         <p className="mt-3 text-sm text-slate-500">{control.pendingIncomes.length} pendente(s)</p>
                     </div>
                 </article>
 
-                <article className="admin-metric-card">
+                <article className="border-b border-zinc-200 p-5 md:p-6 xl:border-b-0">
                     <div className="admin-metric-icon text-red-300">
                         <TrendingDown size={18} />
                     </div>
-                    <div className="mt-8">
+                    <div className="mt-6">
                         <p className="admin-metric-label">Saídas do mês</p>
                         <p className="mt-2 truncate text-3xl font-semibold tracking-[-0.05em] text-white">{currency.format(stats.expenses)}</p>
                         <p className="mt-3 text-sm text-slate-500">{control.pendingExpenses.length} pendente(s)</p>
                     </div>
                 </article>
 
-                <article className="admin-metric-card">
+                <article className="border-b border-zinc-200 p-5 md:p-6 xl:border-b-0">
                     <div className={`admin-metric-icon ${stats.balance >= 0 ? "text-[#9ecbff]" : "text-amber-300"}`}>
                         <Wallet size={18} />
                     </div>
-                    <div className="mt-8">
+                    <div className="mt-6">
                         <p className="admin-metric-label">Saldo realizado</p>
                         <p className={`mt-2 truncate text-3xl font-semibold tracking-[-0.05em] ${stats.balance >= 0 ? "text-white" : "text-amber-200"}`}>{currency.format(stats.balance)}</p>
                         <p className="mt-3 text-sm text-slate-500">Previsão: {currency.format(stats.forecast)}</p>
                     </div>
                 </article>
 
-                <article className="admin-metric-card">
+                <article className="p-5 md:p-6">
                     <div className="admin-metric-icon text-blue-300">
                         <ListChecks size={18} />
                     </div>
-                    <div className="mt-8">
+                    <div className="mt-6">
                         <p className="admin-metric-label">Demandas ativas</p>
                         <p className="mt-2 truncate text-3xl font-semibold tracking-[-0.05em] text-white">{control.activeDemands.length}</p>
                         <p className="mt-3 text-sm text-slate-500">{control.completedDemands} concluída(s)</p>
                     </div>
                 </article>
-            </div>
+            </section>
 
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
-                <section className="admin-card p-5 md:p-6">
+            <section className="grid border border-zinc-200 bg-white xl:grid-cols-[minmax(0,1fr)_400px]">
+                <div className="p-5 md:p-6">
                     <div className="mb-6 flex items-center justify-between gap-4">
                         <div>
                             <span className="admin-kicker">Prioridades</span>
@@ -322,12 +319,12 @@ export default function AdminControlPage() {
                         </Link>
                     </div>
 
-                    <div className="grid gap-3">
+                    <div className="mt-2">
                         {control.activeDemands.slice(0, 5).map((demand) => (
-                            <Link key={demand.id} href="/admin/demands" className="admin-action-link">
+                            <Link key={demand.id} href="/admin/demands" className="group flex items-center justify-between gap-4 border-b border-zinc-200 py-4 last:border-b-0 hover:bg-zinc-50">
                                 <span className="min-w-0">
-                                    <strong className="truncate">{demand.action}</strong>
-                                    <small>{demand.area || "Sem área"} · {demand.responsible || "Sem responsável"} · {demand.deadline || "Sem prazo"}</small>
+                                    <strong className="block truncate text-sm font-semibold text-zinc-950">{demand.action}</strong>
+                                    <small className="mt-1 block text-xs text-zinc-500">{demand.area || "Sem área"} · {demand.responsible || "Sem responsável"} · {demand.deadline || "Sem prazo"}</small>
                                 </span>
                                 <span className={`admin-pill ${isUrgentDemand(demand) ? "border-amber-400/30 text-amber-200" : ""}`}>{demand.status || "Pendente"}</span>
                             </Link>
@@ -341,18 +338,18 @@ export default function AdminControlPage() {
                             </div>
                         )}
                     </div>
-                </section>
+                </div>
 
-                <aside className="admin-card p-5 md:p-6">
+                <aside className="border-t border-zinc-200 p-5 md:p-6 xl:border-t-0 xl:border-l">
                     <span className="admin-kicker">Sinais</span>
                     <h2 className="mt-2 text-2xl font-semibold tracking-[-0.045em] text-white">Alertas do controle</h2>
 
-                    <div className="mt-6 space-y-3">
+                    <div className="mt-4">
                         {alerts.map((alert) => (
-                            <Link key={alert.title} href={alert.href} className="admin-action-link">
+                            <Link key={alert.title} href={alert.href} className="flex items-center justify-between gap-4 border-b border-zinc-200 py-4 last:border-b-0 hover:bg-zinc-50">
                                 <span>
-                                    <strong>{alert.title}</strong>
-                                    <small>{alert.detail}</small>
+                                    <strong className="block text-sm font-semibold text-zinc-950">{alert.title}</strong>
+                                    <small className="mt-1 block text-xs leading-5 text-zinc-500">{alert.detail}</small>
                                 </span>
                                 <AlertTriangle
                                     size={16}
@@ -367,99 +364,6 @@ export default function AdminControlPage() {
                         ))}
                     </div>
                 </aside>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-                <section className="admin-card p-5 md:p-6">
-                    <div className="flex items-center justify-between">
-                        <div className="admin-metric-icon text-[#9ecbff]">
-                            <DollarSign size={18} />
-                        </div>
-                        <span className="admin-pill">{records.length} lançamento(s)</span>
-                    </div>
-                    <h3 className="mt-7 text-xl font-semibold tracking-[-0.035em] text-white">Rotina financeira</h3>
-                    <div className="mt-5 space-y-3 text-sm text-slate-400">
-                        <p className="flex justify-between gap-3"><span>Receitas em aberto</span><strong className="text-white">{currency.format(control.pendingIncomeValue)}</strong></p>
-                        <p className="flex justify-between gap-3"><span>Despesas em aberto</span><strong className="text-white">{currency.format(control.pendingExpenseValue)}</strong></p>
-                    </div>
-                    <Link href="/admin/finance" className="admin-primary-button mt-6 w-full">
-                        Abrir financeiro
-                        <ArrowRight size={16} />
-                    </Link>
-                </section>
-
-                <section className="admin-card p-5 md:p-6">
-                    <div className="flex items-center justify-between">
-                        <div className="admin-metric-icon text-red-300">
-                            <ShieldAlert size={18} />
-                        </div>
-                        <span className="admin-pill">{control.openDebts.length} aberta(s)</span>
-                    </div>
-                    <h3 className="mt-7 text-xl font-semibold tracking-[-0.035em] text-white">Passivos e acordos</h3>
-                    <div className="mt-5 space-y-3 text-sm text-slate-400">
-                        <p className="flex justify-between gap-3"><span>Valor original</span><strong className="text-white">{currency.format(control.totalDebtOriginal)}</strong></p>
-                        <p className="flex justify-between gap-3"><span>Melhor oferta</span><strong className="text-white">{currency.format(control.totalDebtOffer)}</strong></p>
-                    </div>
-                    <Link href="/admin/debts" className="admin-primary-button mt-6 w-full">
-                        Abrir dívidas
-                        <ArrowRight size={16} />
-                    </Link>
-                </section>
-
-                <section className="admin-card p-5 md:p-6">
-                    <div className="flex items-center justify-between">
-                        <div className="admin-metric-icon text-emerald-300">
-                            <FileSpreadsheet size={18} />
-                        </div>
-                        <span className="admin-pill">{demands.length} item(ns)</span>
-                    </div>
-                    <h3 className="mt-7 text-xl font-semibold tracking-[-0.035em] text-white">Demandas e execução</h3>
-                    <div className="mt-5 space-y-3 text-sm text-slate-400">
-                        <p className="flex justify-between gap-3"><span>Urgentes</span><strong className="text-white">{control.urgentDemands.length}</strong></p>
-                        <p className="flex justify-between gap-3"><span>Concluídas</span><strong className="text-white">{control.completedDemands}</strong></p>
-                    </div>
-                    <Link href="/admin/demands" className="admin-primary-button mt-6 w-full">
-                        Abrir demandas
-                        <ArrowRight size={16} />
-                    </Link>
-                </section>
-            </div>
-
-            <section className="admin-card p-5 md:p-6">
-                <div className="mb-6 flex items-center justify-between gap-4">
-                    <div>
-                        <span className="admin-kicker">Agenda</span>
-                        <h2 className="mt-2 text-2xl font-semibold tracking-[-0.045em] text-white">Próximas ações sugeridas</h2>
-                    </div>
-                    <Clock3 className="text-slate-500" size={18} />
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <Link href="/admin/finance" className="admin-action-link">
-                        <span>
-                            <strong>Conferir recebíveis</strong>
-                            <small>{control.pendingIncomes.length} receita(s) em aberto no mês.</small>
-                        </span>
-                    </Link>
-                    <Link href="/admin/finance" className="admin-action-link">
-                        <span>
-                            <strong>Validar despesas</strong>
-                            <small>{control.pendingExpenses.length} despesa(s) pendente(s).</small>
-                        </span>
-                    </Link>
-                    <Link href="/admin/debts" className="admin-action-link">
-                        <span>
-                            <strong>Negociar passivos</strong>
-                            <small>{control.attentionDebts.length} item(ns) com atenção elevada.</small>
-                        </span>
-                    </Link>
-                    <Link href="/admin/demands" className="admin-action-link">
-                        <span>
-                            <strong>Atualizar responsáveis</strong>
-                            <small>{control.activeDemands.length} demanda(s) ativa(s).</small>
-                        </span>
-                    </Link>
-                </div>
             </section>
         </div>
     );
