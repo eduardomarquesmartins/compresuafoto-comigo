@@ -452,9 +452,7 @@ export default function AdminContractsPage() {
                 <section className="space-y-8 rounded-2xl border border-white/10 bg-[#161826] p-6 shadow-2xl">
                     <div className="space-y-5">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400">
-                                <FileText size={20} />
-                            </div>
+                            <FileText size={22} className="text-blue-500" aria-hidden="true" />
                             <h2 className="text-lg font-semibold text-white">Dados do Contratante</h2>
                         </div>
 
