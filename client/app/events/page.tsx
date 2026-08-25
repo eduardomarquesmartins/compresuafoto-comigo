@@ -112,10 +112,8 @@ export default function AllEventsPage() {
                 </div>
             </div>
 
-            <div className="pb-32 relative z-30 px-6">
-                <div className="container mx-auto">
-                    <DiscountCard />
-                </div>
+            <div className="relative z-30 pb-32">
+                <DiscountCard />
             </div>
         </>
     );

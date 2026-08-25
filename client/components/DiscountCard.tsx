@@ -27,8 +27,8 @@ const tiers = [
 
 export default function DiscountCard() {
     return (
-        <div className="container mx-auto px-4 md:px-6 mb-8 md:mb-12">
-            <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="mb-8 w-full md:mb-12">
+            <section className="w-full overflow-hidden border-y border-slate-200 bg-white shadow-sm">
                 <div className="grid gap-0 lg:grid-cols-[0.82fr_1.18fr]">
                     <div className="border-b border-slate-200 bg-slate-950 p-5 text-white sm:p-6 lg:border-b-0 lg:border-r">
                         <h2 className="text-2xl font-medium uppercase text-white md:text-3xl">
