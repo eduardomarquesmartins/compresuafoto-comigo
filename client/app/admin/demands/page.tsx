@@ -208,9 +208,7 @@ export default function AdminDemandsPage() {
             <div className="bg-[#12141d] border border-white/10 rounded-2xl px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                 
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-blue-400">
-                        <ClipboardCheck size={14} />
-                    </div>
+                    <ClipboardCheck size={19} className="text-blue-500" aria-hidden="true" />
                     <span className="text-xs font-bold uppercase tracking-widest text-slate-200">Filtros</span>
                 </div>
 
