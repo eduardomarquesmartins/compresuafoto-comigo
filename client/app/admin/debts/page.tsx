@@ -335,7 +335,7 @@ export default function AdminDebtsPage() {
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <button
                                                     onClick={() => handleOpenModal(debt)}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-2 text-[10px] font-bold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 cursor-pointer"
+                                                    className="inline-flex w-24 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-2 text-[10px] font-bold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 cursor-pointer"
                                                     title="Editar Débito"
                                                     aria-label="Editar débito"
                                                 >
@@ -345,7 +345,7 @@ export default function AdminDebtsPage() {
                                                 <button
                                                     onClick={() => handleDeleteDebt(debt.id)}
                                                     disabled={actionLoading === `delete-${debt.id}`}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#d92d20] bg-[#d92d20] px-2.5 py-2 text-[10px] font-bold text-white transition-colors hover:border-[#b42318] hover:bg-[#b42318] cursor-pointer disabled:opacity-50"
+                                                    className="admin-danger-button inline-flex w-24 items-center justify-center gap-1.5 px-2.5 py-2 text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-50"
                                                     title="Excluir Débito"
                                                     aria-label="Excluir débito"
                                                 >

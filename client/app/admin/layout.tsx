@@ -1425,6 +1425,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     background: var(--workspace-ink) !important;
                 }
 
+                .admin-shell main .admin-danger-button {
+                    min-height: 42px;
+                    border: 1px solid #d92d20 !important;
+                    border-radius: 2px !important;
+                    background: #d92d20 !important;
+                    box-shadow: none !important;
+                    color: #ffffff !important;
+                    font-size: 11px !important;
+                    font-weight: 800 !important;
+                    letter-spacing: 0.12em !important;
+                    text-transform: uppercase;
+                }
+
+                .admin-shell main .admin-danger-button *,
+                .admin-shell main .admin-danger-button:hover {
+                    color: #ffffff !important;
+                }
+
+                .admin-shell main .admin-danger-button:hover {
+                    border-color: #b42318 !important;
+                    background: #b42318 !important;
+                }
+
                 .admin-shell main .admin-secondary-button,
                 .admin-shell main button[class*="bg-transparent"] {
                     min-height: 42px;
