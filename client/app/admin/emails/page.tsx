@@ -35,9 +35,9 @@ const templates = [
     {
         id: "relationship",
         label: "Relacionamento",
-        subject: "Uma mensagem da Compre Sua Foto para {nome}",
-        preheader: "Estamos por aqui para ajudar sua operação com fotos.",
-        body: "Queria passar por aqui para manter nosso contato ativo.\n\nSe precisar organizar eventos, revisar pedidos, atualizar contratos ou alinhar novas campanhas, nossa equipe está pronta para ajudar.\n\nConte com a gente para deixar a experiência dos seus clientes mais simples, rápida e profissional.",
+        subject: "Uma mensagem da & CONTI para {nome}",
+        preheader: "Estratégia, conteúdo e presença digital para o seu negócio.",
+        body: "Queria passar por aqui para manter nosso contato ativo.\n\nSe precisar alinhar estratégia, conteúdo, campanhas, gravações ou os próximos passos do seu projeto, nossa equipe está pronta para ajudar.\n\nConte com a gente para fortalecer a presença digital do seu negócio com clareza e consistência.",
         ctaLabel: "Falar com a equipe",
         ctaUrl: ""
     },
@@ -452,7 +452,7 @@ export default function AdminEmailsPage() {
                             </div>
                             <label className="flex cursor-pointer items-center justify-center gap-3 rounded-lg border border-dashed border-white/15 bg-black/20 px-4 py-5 text-sm font-semibold text-slate-300 transition hover:border-blue-500/45 hover:text-white">
                                 <FileUp size={18} />
-                                Anexar documentos ou fotos
+                                Anexar arquivos
                                 <input
                                     type="file"
                                     multiple
@@ -518,7 +518,7 @@ export default function AdminEmailsPage() {
                         </div>
                         <div className="p-5">
                             <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-600">& CONTI</p>
-                            <h3 className="mt-2 text-xl font-bold">Compre Sua Foto</h3>
+                            <h3 className="mt-2 text-xl font-bold">&amp; CONTI Marketing Digital</h3>
                             <p className="mt-5 text-sm leading-6">Ola, <strong>{previewClient?.name || "Cliente"}</strong>.</p>
                             <div className="mt-4 space-y-4 text-sm leading-6 text-slate-700">
                                 {previewBody.split(/\n{2,}/).filter(Boolean).map((paragraph, index) => (

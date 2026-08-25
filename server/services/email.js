@@ -416,7 +416,7 @@ exports.sendClientBroadcastEmail = async ({ clients, subject, preheader, body, c
 
         try {
             const { data, error } = await resend.emails.send({
-                from: process.env.EMAIL_FROM || 'Compre Sua Foto <contato@econti.com.br>',
+                from: process.env.ECONTI_EMAIL_FROM || process.env.EMAIL_FROM || '& CONTI Marketing Digital <contato@econti.com.br>',
                 to: [client.email],
                 subject: finalSubject,
                 ...(replyTo ? { replyTo } : {}),
@@ -430,7 +430,7 @@ exports.sendClientBroadcastEmail = async ({ clients, subject, preheader, body, c
                             <div style="overflow:hidden;border-radius:18px;background:#ffffff;border:1px solid #e2e8f0;box-shadow:0 18px 50px rgba(15,23,42,0.08);">
                                 <div style="background:#050505;padding:34px 34px 30px;text-align:left;">
                                     <div style="color:#0ea5e9;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;">&amp; CONTI</div>
-                                    <h1 style="color:#ffffff;font-size:24px;line-height:1.2;margin:0;font-weight:700;">Compre Sua Foto</h1>
+                                    <h1 style="color:#ffffff;font-size:24px;line-height:1.2;margin:0;font-weight:700;">Marketing Digital</h1>
                                     <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:10px 0 0;">${escapeHtml(finalPreheader || 'Uma mensagem importante para você.')}</p>
                                 </div>
                                 <div style="padding:34px;">
@@ -446,7 +446,7 @@ exports.sendClientBroadcastEmail = async ({ clients, subject, preheader, body, c
                                 </div>
                                 <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:22px 34px;text-align:left;">
                                     <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0;">
-                                        &copy; ${currentYear} &amp; CONTI / Compre Sua Foto. Em caso de dúvidas, responda este e-mail.
+                                        &copy; ${currentYear} &amp; CONTI Marketing Digital. Em caso de dúvidas, responda este e-mail.
                                     </p>
                                 </div>
                             </div>
