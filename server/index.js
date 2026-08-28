@@ -94,6 +94,12 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
+// Downloads open on this API host in a new tab. Redirect its favicon request to
+// the public site so the browser does not log a misleading 404 during downloads.
+app.get('/favicon.ico', (req, res) => {
+    res.redirect(302, 'https://www.econticomigo.com.br/favicon.ico');
+});
+
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {

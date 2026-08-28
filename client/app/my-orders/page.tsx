@@ -6,7 +6,6 @@ import Navbar from '@/components/Navbar';
 import { Download, Package, Calendar, Clock, CheckCircle, XCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { getPublicAppUrl } from '@/lib/publicAppUrl';
 import { usePublicAppPath } from '@/lib/publicAppPath';
 
 interface Order {
@@ -23,6 +22,7 @@ export default function MyOrdersPage() {
     const appPath = usePublicAppPath();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [downloadingOrderId, setDownloadingOrderId] = useState<number | null>(null);
 
     useEffect(() => {
         // useLayoutEffect usually better for auth redirect to avoid flash but useEffect is standard in next
@@ -76,6 +76,30 @@ export default function MyOrdersPage() {
             return Array.isArray(items) ? items.length : 0;
         } catch (e) {
             return 0;
+        }
+    };
+
+    const handleDownloadOrder = async (order: Order) => {
+        setDownloadingOrderId(order.id);
+
+        try {
+            const response = await api.get(`/orders/${order.id}/zip`, {
+                responseType: 'blob',
+                timeout: 120000,
+            });
+            const fileUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }));
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.download = `pedido-${order.publicId || order.id}.zip`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(fileUrl);
+        } catch (error) {
+            console.error('Não foi possível baixar as fotos:', error);
+            alert('Não foi possível baixar as fotos. Verifique sua conexão e tente novamente.');
+        } finally {
+            setDownloadingOrderId(null);
         }
     };
 
@@ -150,14 +174,15 @@ export default function MyOrdersPage() {
 
                                     <div className="pt-4 mt-auto">
                                         {(order.status === 'PAID' || order.status === 'approved') ? (
-                                            <a
-                                                href={`${getPublicAppUrl()}/api/orders/${order.publicId || order.id}/zip`}
-                                                target="_blank"
-                                                className="w-full bg-brand text-white hover:bg-brand-dark py-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-1 active:translate-y-0"
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDownloadOrder(order)}
+                                                disabled={downloadingOrderId === order.id}
+                                                className="w-full bg-brand text-white hover:bg-brand-dark py-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-1 active:translate-y-0 disabled:cursor-wait disabled:opacity-70"
                                             >
                                                 <Download size={20} />
-                                                Baixar Fotos
-                                            </a>
+                                                {downloadingOrderId === order.id ? 'Preparando fotos...' : 'Baixar Fotos'}
+                                            </button>
                                         ) : (
                                             <div className="w-full bg-slate-100 text-slate-400 border border-slate-200 py-4 rounded-xl font-medium flex items-center justify-center gap-2 cursor-not-allowed">
                                                 <AlertCircle size={20} />
