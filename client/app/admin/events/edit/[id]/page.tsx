@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getEvent, updateEvent } from '@/lib/api'; // Ensure getEvent is exported correctly
 import { useParams } from 'next/navigation';
-import { Save, ArrowLeft, Archive, RefreshCw } from 'lucide-react';
+import { Save, ArrowLeft, Archive, RefreshCw, Image as ImageIcon, Upload } from 'lucide-react';
 import { adminPath } from '@/lib/adminPath';
 
 export default function EditEventPage() {
@@ -11,6 +11,8 @@ export default function EditEventPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [coverImage, setCoverImage] = useState<File | null>(null);
+    const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -39,6 +41,7 @@ export default function EditEventPage() {
                 description: event.description || '',
                 status: event.status || 'ACTIVE'
             });
+            setCoverPreview(event.coverImage || null);
         } catch (error) {
             alert('Falha ao carregar evento');
             router.push(adminPath('events'));
@@ -47,11 +50,26 @@ export default function EditEventPage() {
         }
     };
 
+    const handleCoverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setCoverImage(file);
+        setCoverPreview(URL.createObjectURL(file));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
         try {
-            await updateEvent(Number(params?.id), formData);
+            if (coverImage) {
+                const payload = new FormData();
+                Object.entries(formData).forEach(([key, value]) => payload.append(key, value));
+                payload.append('coverImage', coverImage);
+                await updateEvent(Number(params?.id), payload);
+            } else {
+                await updateEvent(Number(params?.id), formData);
+            }
             alert('Evento atualizado com sucesso!');
             router.push(adminPath('events'));
         } catch (error) {
@@ -108,6 +126,36 @@ export default function EditEventPage() {
                         onChange={e => setFormData({ ...formData, description: e.target.value })}
                         className="w-full rounded-[16px] border border-zinc-800 bg-zinc-950 px-5 py-4 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 resize-none"
                     />
+                </div>
+
+                <div>
+                    <div className="mb-2 flex items-center justify-between px-1">
+                        <label className="block font-mono text-[10px] font-semibold uppercase tracking-widest text-zinc-400">Foto de capa</label>
+                        <span className="text-xs text-zinc-500">JPG, PNG ou WEBP</span>
+                    </div>
+                    <label className="group relative flex min-h-44 cursor-pointer items-center justify-center overflow-hidden rounded-[16px] border border-dashed border-zinc-700 bg-zinc-950 transition hover:border-blue-500/70 hover:bg-blue-500/5">
+                        <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleCoverChange}
+                            className="sr-only"
+                        />
+                        {coverPreview ? (
+                            <>
+                                <img src={coverPreview} alt="Prévia da capa do evento" className="absolute inset-0 h-full w-full object-cover opacity-80 transition group-hover:opacity-45" />
+                                <div className="relative z-10 flex flex-col items-center gap-2 rounded-xl bg-black/60 px-5 py-3 text-center opacity-0 backdrop-blur-sm transition group-hover:opacity-100 group-focus-within:opacity-100">
+                                    <Upload size={18} className="text-blue-300" />
+                                    <span className="text-sm font-semibold text-white">Trocar foto de capa</span>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center gap-2 px-5 py-8 text-center text-zinc-400 transition group-hover:text-blue-300">
+                                <ImageIcon size={24} />
+                                <span className="text-sm font-semibold text-zinc-200">Escolher foto de capa</span>
+                                <span className="text-xs">Esta imagem aparece na abertura do evento.</span>
+                            </div>
+                        )}
+                    </label>
                 </div>
 
                 <div className="flex gap-4 pt-6 border-t border-zinc-800 mt-8 items-center">
