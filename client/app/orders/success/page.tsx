@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import api from "@/lib/api";
 import { CheckCircle, Download, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { getPublicAppUrl } from "@/lib/publicAppUrl";
+import { usePublicAppPath } from "@/lib/publicAppPath";
 
 interface Order {
     id: number;
@@ -20,6 +21,7 @@ interface Order {
 
 function OrderSuccessContent() {
     const searchParams = useSearchParams();
+    const appPath = usePublicAppPath();
     const orderId = searchParams.get("external_reference") || searchParams.get("id"); // From Mercado Pago OR Email Link
     // Mercado Pago can return either `status` or `collection_status`, depending on
     // the checkout flow. Both must be accepted before attempting the server sync.
@@ -28,6 +30,8 @@ function OrderSuccessContent() {
 
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
+    const [downloadingZip, setDownloadingZip] = useState(false);
+    const [downloadError, setDownloadError] = useState<string | null>(null);
 
     useEffect(() => {
         if (orderId) {
@@ -96,6 +100,38 @@ function OrderSuccessContent() {
         }
     };
 
+    const handleZipDownload = async () => {
+        if (!order || downloadingZip) return;
+
+        if (!localStorage.getItem('token')) {
+            setDownloadError('Entre com a mesma conta usada na compra para baixar as fotos.');
+            return;
+        }
+
+        setDownloadingZip(true);
+        setDownloadError(null);
+
+        try {
+            const response = await api.get(`/orders/${order.id}/zip`, {
+                responseType: 'blob',
+                timeout: 120000,
+            });
+            const fileUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }));
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.download = `pedido-${order.publicId || order.id}.zip`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(fileUrl);
+        } catch (error) {
+            console.error('Não foi possível baixar as fotos do pedido:', error);
+            setDownloadError('Não foi possível baixar as fotos agora. Confirme que entrou com a conta da compra e tente novamente.');
+        } finally {
+            setDownloadingZip(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -143,15 +179,27 @@ function OrderSuccessContent() {
                             </div>
                         </div>
 
-                        <div className="mb-8">
-                            <a
-                                href={`${api.defaults.baseURL}/orders/${order.publicId || order.id}/zip`}
-                                target="_blank"
+                        <div className="mb-8 flex flex-col items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={handleZipDownload}
+                                disabled={downloadingZip}
                                 className="bg-brand hover:bg-brand/80 text-white px-8 py-4 rounded-full font-bold text-lg flex items-center gap-3 transition-all transform hover:scale-105 shadow-xl shadow-brand/20"
                             >
-                                <Download size={24} />
-                                Baixar Todas (ZIP)
-                            </a>
+                                {downloadingZip ? <Loader2 size={24} className="animate-spin" /> : <Download size={24} />}
+                                {downloadingZip ? 'Preparando download...' : 'Baixar Todas (ZIP)'}
+                            </button>
+                            {downloadError && (
+                                <div role="alert" className="max-w-md text-sm text-red-600">
+                                    <p>{downloadError}</p>
+                                    <a
+                                        href={appPath(`login?redirectTo=${encodeURIComponent(`/orders/success?id=${orderId || order.id}`)}`)}
+                                        className="mt-2 inline-block font-semibold text-brand underline underline-offset-4"
+                                    >
+                                        Entrar para baixar
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : (
