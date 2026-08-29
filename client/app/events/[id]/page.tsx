@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, ArrowLeft, Loader2, Trash2, X, LockKeyhole, Maximize2 } from "lucide-react";
+import { Camera, ArrowLeft, ArrowRight, Loader2, Trash2, X, LockKeyhole, Maximize2 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
 import DiscountCard from "@/components/DiscountCard";
@@ -386,23 +386,57 @@ export default function EventDetailsPage() {
                     <div className="container mx-auto px-6 relative z-30 mt-8">
 
                         {/* Selfie Search Option */}
-                        <div className="flex flex-col items-center justify-center pb-12 text-center space-y-4">
-                            <div className="max-w-md flex flex-col items-center">
-                                <h3 className="text-xl font-medium mb-2 text-foreground italic opacity-90">Quer encontrar suas fotos mais rápido?</h3>
+                        <div className="mb-12">
+                            <div className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-white/90 p-6 md:p-8 shadow-xl shadow-blue-500/5 backdrop-blur-md dark:bg-slate-900/90 dark:border-blue-500/30">
+                                {/* Efeitos de iluminação azul no fundo */}
+                                <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
+                                <div className="absolute -left-16 -bottom-16 h-48 w-48 rounded-full bg-indigo-400/15 blur-3xl pointer-events-none" />
 
-                                {/* Selfie Trigger */}
-                                <div className="relative group w-auto mt-4">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleSelfieUpload}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                                        disabled={searching}
-                                    />
-                                    <button className="bg-slate-900 border border-slate-700 hover:border-brand text-white w-auto px-8 py-2 rounded-full font-medium text-sm transition-all flex items-center justify-center gap-2 group">
-                                        {searching ? <Loader2 className="w-4 h-4 animate-spin text-brand" /> : <Camera className="w-4 h-4 text-brand" />}
-                                        {searching ? "Procurando..." : "Subir Selfie para Filtrar"}
-                                    </button>
+                                <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+                                    {/* Lado esquerdo: Ícone com Glow + Textos */}
+                                    <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
+                                        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/30">
+                                            <Camera className="h-8 w-8" />
+                                            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-4 w-4 bg-blue-500 border-2 border-white dark:border-slate-900"></span>
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                                                Quer encontrar suas fotos em segundos?
+                                            </h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                Envie uma selfie e nossa IA localiza todas as fotos onde você aparece.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Lado direito: Botão de Ação com Input File invisível */}
+                                    <div className="relative shrink-0 group">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleSelfieUpload}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                                            disabled={searching}
+                                        />
+                                        <button 
+                                            disabled={searching}
+                                            className="group relative inline-flex items-center justify-center gap-3 rounded-full bg-slate-900 px-7 py-4 text-sm font-bold text-white shadow-xl shadow-slate-900/20 transition-all duration-300 hover:scale-105 hover:bg-slate-800 hover:shadow-2xl active:scale-95 cursor-pointer dark:bg-blue-600 dark:hover:bg-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            {searching ? (
+                                                <Loader2 className="h-5 w-5 animate-spin text-blue-400 dark:text-white" />
+                                            ) : (
+                                                <Camera className="h-5 w-5 text-blue-400 transition-transform group-hover:rotate-12 dark:text-white" />
+                                            )}
+                                            <span>{searching ? "Procurando..." : "Subir Selfie para Filtrar"}</span>
+                                            {!searching && (
+                                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 opacity-70" />
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
