@@ -118,9 +118,9 @@ export const getEvents = async (status?: string) => {
 export const updateEvent = async (id: number, data: any) => {
     // If data contains a file, we need to use FormData
     if (data instanceof FormData) {
-        const response = await api.put(`events/${id}`, data, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        // Do not set Content-Type here. The browser adds the multipart boundary
+        // required by Multer when it serializes a FormData body.
+        const response = await api.put(`events/${id}`, data);
         return response.data;
     }
 

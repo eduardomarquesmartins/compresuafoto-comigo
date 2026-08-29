@@ -620,11 +620,21 @@ export default function EventDetailsPage() {
                                     onClick={(event) => event.stopPropagation()}
                                     className="relative flex h-full w-full max-w-6xl items-center justify-center"
                                 >
-                                    <img
-                                        src={getImageUrl(getPhotoUrl(previewPhoto))}
-                                        alt={`Prévia ampliada da foto ${previewPhoto.id}`}
-                                        className="max-h-[84vh] max-w-full rounded-2xl object-contain shadow-2xl"
-                                    />
+                                    <div className="relative max-h-[84vh] max-w-full overflow-hidden rounded-2xl shadow-2xl">
+                                        <img
+                                            src={getImageUrl(getPhotoUrl(previewPhoto))}
+                                            alt={`Prévia ampliada da foto ${previewPhoto.id}`}
+                                            className="block max-h-[84vh] max-w-full object-contain"
+                                        />
+                                        <div
+                                            aria-hidden="true"
+                                            className="pointer-events-none absolute inset-0 overflow-hidden"
+                                        >
+                                            <div className="absolute inset-x-[-18%] top-1/2 -translate-y-1/2 -rotate-[18deg] border-y border-white/45 bg-slate-950/75 py-3 text-center text-xs font-bold tracking-[0.28em] text-white shadow-lg sm:py-4 sm:text-sm">
+                                                PRÉVIA — USO NÃO AUTORIZADO
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div className="absolute left-0 right-0 top-0 flex items-center justify-between gap-4 text-white">
                                         <span className="inline-flex items-center gap-2 rounded-full bg-black/50 px-4 py-2 text-sm font-medium backdrop-blur">
                                             <Maximize2 size={16} /> Prévia ampliada
