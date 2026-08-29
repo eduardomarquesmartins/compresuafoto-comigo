@@ -395,12 +395,8 @@ export default function EventDetailsPage() {
                                 <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
                                     {/* Lado esquerdo: Ícone com Glow + Textos */}
                                     <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
-                                        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/30">
+                                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/30">
                                             <Camera className="h-8 w-8" />
-                                            <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-4 w-4 bg-blue-500 border-2 border-white dark:border-slate-900"></span>
-                                            </span>
                                         </div>
 
                                         <div>
