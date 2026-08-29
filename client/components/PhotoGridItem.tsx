@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Maximize2 } from 'lucide-react';
 import PhotoSkeleton from './PhotoSkeleton';
 import Image from 'next/image';
 
@@ -8,11 +9,12 @@ interface PhotoGridItemProps {
     photo: any;
     isSelected: boolean;
     onToggle: (photo: any) => void;
+    onPreview: (photo: any) => void;
     getImageUrl: (path?: string) => string;
     getPhotoUrl: (photo: any) => string | undefined;
 }
 
-export default function PhotoGridItem({ photo, isSelected, onToggle, getImageUrl, getPhotoUrl }: PhotoGridItemProps) {
+export default function PhotoGridItem({ photo, isSelected, onToggle, onPreview, getImageUrl, getPhotoUrl }: PhotoGridItemProps) {
     const [isLoaded, setIsLoaded] = useState(false);
     const [hasImageError, setHasImageError] = useState(false);
     const photoUrl = getPhotoUrl(photo);
@@ -67,6 +69,19 @@ export default function PhotoGridItem({ photo, isSelected, onToggle, getImageUrl
                     )}
                 </AnimatePresence>
             </div>
+
+            <button
+                type="button"
+                aria-label="Ampliar foto"
+                title="Ampliar foto"
+                onClick={(event) => {
+                    event.stopPropagation();
+                    onPreview(photo);
+                }}
+                className="absolute right-3 top-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-slate-950/80 text-white shadow-lg backdrop-blur transition hover:scale-105 hover:bg-brand focus:outline-none focus:ring-2 focus:ring-white"
+            >
+                <Maximize2 size={18} />
+            </button>
         </div>
     );
 }

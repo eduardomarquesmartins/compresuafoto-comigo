@@ -3,6 +3,10 @@ const fs = require('fs');
 const prisma = require('../lib/prisma');
 
 const COLLECTION_ID = process.env.REKOGNITION_COLLECTION_ID || "event-photos-collection";
+const SEARCH_FACE_MATCH_THRESHOLD = 80;
+// Rekognition ranks matches across the whole collection before the application
+// filters them by event. Fifty results can hide valid photos from large events.
+const SEARCH_MAX_FACES = 200;
 
 // Lazy initialization of the client
 let client = null;
@@ -133,6 +137,15 @@ exports.indexFacesFromS3 = async (bucket, key) => {
     }
 };
 
+const createSearchFacesByImageInput = (imageBytes) => ({
+    CollectionId: COLLECTION_ID,
+    Image: { Bytes: imageBytes },
+    FaceMatchThreshold: SEARCH_FACE_MATCH_THRESHOLD,
+    MaxFaces: SEARCH_MAX_FACES,
+});
+
+exports.createSearchFacesByImageInput = createSearchFacesByImageInput;
+
 exports.searchFacesByImage = async (imageInput, eventId) => {
     const rekognition = getClient();
     if (!rekognition) throw new Error("AWS Rekognition not initialized");
@@ -146,12 +159,7 @@ exports.searchFacesByImage = async (imageInput, eventId) => {
             imageBytes = fs.readFileSync(imageInput);
         }
 
-        const command = new SearchFacesByImageCommand({
-            CollectionId: COLLECTION_ID,
-            Image: { Bytes: imageBytes },
-            FaceMatchThreshold: 80,
-            MaxFaces: 50
-        });
+        const command = new SearchFacesByImageCommand(createSearchFacesByImageInput(imageBytes));
 
         const response = await rekognition.send(command);
 

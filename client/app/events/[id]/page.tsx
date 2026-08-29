@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, ArrowLeft, Loader2, Trash2, X, LockKeyhole } from "lucide-react";
+import { Camera, ArrowLeft, Loader2, Trash2, X, LockKeyhole, Maximize2 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
 import DiscountCard from "@/components/DiscountCard";
@@ -41,6 +41,7 @@ export default function EventDetailsPage() {
     const [matchedPhotos, setMatchedPhotos] = useState<Photo[] | null>(null);
     const [galleryVisible, setGalleryVisible] = useState(true);
     const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const [previewPhoto, setPreviewPhoto] = useState<Photo | null>(null);
 
     // Global Store
     const {
@@ -93,6 +94,17 @@ export default function EventDetailsPage() {
         window.addEventListener('pageshow', handlePageShow);
         return () => window.removeEventListener('pageshow', handlePageShow);
     }, []);
+
+    useEffect(() => {
+        if (!previewPhoto) return;
+
+        const closePreviewOnEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setPreviewPhoto(null);
+        };
+
+        window.addEventListener('keydown', closePreviewOnEscape);
+        return () => window.removeEventListener('keydown', closePreviewOnEscape);
+    }, [previewPhoto]);
 
     // Restore search results and selection from sessionStorage on mount (e.g., after login redirect)
     useEffect(() => {
@@ -439,6 +451,7 @@ export default function EventDetailsPage() {
                                                 photo={photo}
                                                 isSelected={isSelected}
                                                 onToggle={toggleSelection}
+                                                onPreview={setPreviewPhoto}
                                                 getImageUrl={getImageUrl}
                                                 getPhotoUrl={getPhotoUrl}
                                             />
@@ -586,6 +599,49 @@ export default function EventDetailsPage() {
                             </div>
                         </div>
                     )}
+
+                    <AnimatePresence>
+                        {previewPhoto && getPhotoUrl(previewPhoto) && (
+                            <motion.div
+                                role="dialog"
+                                aria-modal="true"
+                                aria-label="Prévia ampliada da foto"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setPreviewPhoto(null)}
+                                className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-sm md:p-8"
+                            >
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.96, y: 18 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.98, y: 8 }}
+                                    transition={{ duration: 0.2 }}
+                                    onClick={(event) => event.stopPropagation()}
+                                    className="relative flex h-full w-full max-w-6xl items-center justify-center"
+                                >
+                                    <img
+                                        src={getImageUrl(getPhotoUrl(previewPhoto))}
+                                        alt={`Prévia ampliada da foto ${previewPhoto.id}`}
+                                        className="max-h-[84vh] max-w-full rounded-2xl object-contain shadow-2xl"
+                                    />
+                                    <div className="absolute left-0 right-0 top-0 flex items-center justify-between gap-4 text-white">
+                                        <span className="inline-flex items-center gap-2 rounded-full bg-black/50 px-4 py-2 text-sm font-medium backdrop-blur">
+                                            <Maximize2 size={16} /> Prévia ampliada
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPreviewPhoto(null)}
+                                            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-brand focus:outline-none focus:ring-2 focus:ring-white"
+                                            aria-label="Fechar prévia"
+                                        >
+                                            <X size={22} />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </>
             )}
         </div>
