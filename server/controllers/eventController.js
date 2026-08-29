@@ -11,10 +11,44 @@ const { logToFile } = require('../utils/logger');
 
 const isRawImage = (fileName = '') => fileName.toLowerCase().endsWith('.arw');
 
+const normalizeVisibility = (visibility) => visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC';
+
+const resolveAuthorizedUserId = async (visibility, authorizedUserId) => {
+    if (visibility !== 'PRIVATE') return null;
+
+    const userId = Number(authorizedUserId);
+    if (!Number.isInteger(userId) || userId <= 0) {
+        const error = new Error('Selecione a cliente que poderá acessar esta galeria privada.');
+        error.status = 400;
+        throw error;
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, role: true }
+    });
+
+    if (!user || user.role !== 'CUSTOMER') {
+        const error = new Error('A cliente selecionada não possui uma conta de cliente válida.');
+        error.status = 400;
+        throw error;
+    }
+
+    return user.id;
+};
+
+const canAccessPrivateEvent = (event, user) => (
+    event.visibility !== 'PRIVATE'
+    || user?.role === 'ADMIN'
+    || event.authorizedUserId === user?.userId
+);
+
 exports.createEvent = async (req, res) => {
     logToFile('createEvent called');
     try {
-        const { name, date, description } = req.body;
+        const { name, date, description, visibility: requestedVisibility, authorizedUserId: requestedUserId } = req.body;
+        const visibility = normalizeVisibility(requestedVisibility);
+        const authorizedUserId = await resolveAuthorizedUserId(visibility, requestedUserId);
         let coverImage = null;
 
         // Process Additional Photos in the background if provided
@@ -49,7 +83,9 @@ exports.createEvent = async (req, res) => {
                 date: new Date(date),
                 description,
                 coverImage,
-                status: 'ACTIVE'
+                status: 'ACTIVE',
+                visibility,
+                authorizedUserId,
             }
         });
         logToFile(`Event created successfully: ID ${event.id}`);
@@ -119,7 +155,7 @@ exports.createEvent = async (req, res) => {
     } catch (error) {
         logToFile(`Global Create Event Error: ${error.message}`);
         console.error("Create Event Error:", error);
-        res.status(500).json({ error: 'Internal Server Error: ' + error.message });
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Internal Server Error: ' + error.message });
     }
 };
 
@@ -127,6 +163,7 @@ exports.getEvents = async (req, res) => {
     try {
         const { status } = req.query;
         const where = {};
+        const isAdmin = req.user?.role === 'ADMIN';
 
         // If status is provided, filter by it. 
         // If not, fetch all? Or default to ACTIVE?
@@ -135,17 +172,36 @@ exports.getEvents = async (req, res) => {
             where.status = status;
         }
 
+        if (!isAdmin) {
+            where.visibility = 'PUBLIC';
+        }
+
+        const select = {
+            id: true,
+            name: true,
+            date: true,
+            description: true,
+            coverImage: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            _count: { select: { photos: true } }
+        };
+
+        if (isAdmin) {
+            select.visibility = true;
+            select.authorizedUserId = true;
+            select.authorizedUser = {
+                select: { id: true, name: true, fullName: true, email: true }
+            };
+        }
+
         const events = await prisma.event.findMany({
             where,
             orderBy: {
                 date: 'desc'
             },
-            include: {
-                // photos: true // Optional: do we need photos count?
-                _count: {
-                    select: { photos: true }
-                }
-            }
+            select
         });
         res.json(events);
     } catch (error) {
@@ -172,6 +228,10 @@ exports.getEventById = async (req, res) => {
 
         if (!event) return res.status(404).json({ error: 'Event not found' });
 
+        if (!canAccessPrivateEvent(event, req.user)) {
+            return res.status(403).json({ error: 'Esta galeria é privada. Entre com a conta autorizada para acessá-la.' });
+        }
+
         // Strip originalUrl for non-admin users to protect unwatermarked photos
         const isAdmin = req.user && req.user.role === 'ADMIN';
         if (!isAdmin) {
@@ -190,13 +250,18 @@ exports.getEventById = async (req, res) => {
 exports.updateEvent = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, date, description, status } = req.body;
+        const { name, date, description, status, visibility: requestedVisibility, authorizedUserId: requestedUserId } = req.body;
 
         const data = {};
         if (name) data.name = name;
         if (date) data.date = new Date(date);
         if (description !== undefined) data.description = description;
         if (status) data.status = status;
+        if (requestedVisibility !== undefined) {
+            const visibility = normalizeVisibility(requestedVisibility);
+            data.visibility = visibility;
+            data.authorizedUserId = await resolveAuthorizedUserId(visibility, requestedUserId);
+        }
 
         if (req.files && req.files['coverImage']) {
             const file = req.files['coverImage'][0];
@@ -217,7 +282,7 @@ exports.updateEvent = async (req, res) => {
         res.json(event);
     } catch (error) {
         console.error("Update Event Error:", error);
-        res.status(500).json({ error: 'Failed to update event' });
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to update event' });
     }
 };
 
@@ -323,7 +388,9 @@ exports.createEventFromDrive = async (req, res) => {
         if (!req.body) {
             return res.status(400).json({ error: 'Request body is missing. Ensure you are sending FormData.' });
         }
-        const { name, date, description, folderId } = req.body;
+        const { name, date, description, folderId, visibility: requestedVisibility, authorizedUserId: requestedUserId } = req.body;
+        const visibility = normalizeVisibility(requestedVisibility);
+        const authorizedUserId = await resolveAuthorizedUserId(visibility, requestedUserId);
 
         if (!folderId) {
             return res.status(400).json({ error: 'Folder ID is required' });
@@ -362,7 +429,9 @@ exports.createEventFromDrive = async (req, res) => {
                 date: new Date(date),
                 description,
                 coverImage,
-                status: 'ACTIVE'
+                status: 'ACTIVE',
+                visibility,
+                authorizedUserId,
             }
         });
 
@@ -448,6 +517,6 @@ exports.createEventFromDrive = async (req, res) => {
     } catch (error) {
         logToFile(`Create Event from Drive Error: ${error.message}`);
         console.error("Create Event from Drive Error:", error);
-        res.status(500).json({ error: 'Internal Server Error: ' + error.message });
+        res.status(error.status || 500).json({ error: error.status ? error.message : 'Internal Server Error: ' + error.message });
     }
 };

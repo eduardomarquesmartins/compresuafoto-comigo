@@ -14,7 +14,7 @@ const photoController = require('../controllers/photoController');
 
 router.post('/', authenticate, isAdmin, eventUploads, eventController.createEvent);
 router.post('/from-drive', authenticate, isAdmin, upload.single('coverImage'), eventController.createEventFromDrive);
-router.get('/', eventController.getEvents);
+router.get('/', optionalAuth, eventController.getEvents);
 router.get('/:id', optionalAuth, eventController.getEventById);
 router.put('/:id', authenticate, isAdmin, eventUploads, eventController.updateEvent);
 router.delete('/:id', authenticate, isAdmin, eventController.deleteEvent);

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, ArrowLeft, Loader2, Trash2, X } from "lucide-react";
+import { Camera, ArrowLeft, Loader2, Trash2, X, LockKeyhole } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
 import DiscountCard from "@/components/DiscountCard";
@@ -36,6 +36,7 @@ export default function EventDetailsPage() {
     const appPath = usePublicAppPath();
     const [event, setEvent] = useState<Event | null>(null);
     const [loading, setLoading] = useState(true);
+    const [accessError, setAccessError] = useState<string | null>(null);
     const [searching, setSearching] = useState(false);
     const [matchedPhotos, setMatchedPhotos] = useState<Photo[] | null>(null);
     const [galleryVisible, setGalleryVisible] = useState(true);
@@ -119,8 +120,12 @@ export default function EventDetailsPage() {
         try {
             const res = await api.get(`/events/${id}`);
             setEvent(res.data);
-        } catch (error) {
-            console.error("Erro ao buscar detalhes:", error);
+        } catch (error: any) {
+            if (error.response?.status === 403) {
+                setAccessError(error.response?.data?.error || 'Esta galeria é privada.');
+            } else {
+                console.error("Erro ao buscar detalhes:", error);
+            }
         } finally {
             setLoading(false);
         }
@@ -287,6 +292,26 @@ export default function EventDetailsPage() {
             setIsCheckingOut(false);
         }
     };
+
+    if (accessError) {
+        return (
+            <>
+                <Navbar />
+                <main className="flex min-h-screen items-center justify-center bg-background px-6 pb-24 pt-32 text-center">
+                    <div className="max-w-md rounded-[2rem] border border-brand/20 bg-white p-10 shadow-xl">
+                        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand/10 text-brand">
+                            <LockKeyhole size={30} />
+                        </div>
+                        <h1 className="text-2xl font-semibold text-slate-900">Galeria privada</h1>
+                        <p className="mt-3 leading-relaxed text-slate-600">{accessError}</p>
+                        <Link href={appPath(`login?redirectTo=${encodeURIComponent(pathname)}`)} className="mt-7 inline-flex rounded-xl bg-slate-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-brand">
+                            Entrar com a conta autorizada
+                        </Link>
+                    </div>
+                </main>
+            </>
+        );
+    }
 
     if (!event && !loading) return <div className="text-slate-500 text-center pt-20">Evento não encontrado.</div>;
 

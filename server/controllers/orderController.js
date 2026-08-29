@@ -4,6 +4,7 @@ const archiver = require('archiver');
 const https = require('https');
 const emailService = require('../services/email');
 const { logToFile } = require('../utils/logger');
+const { buildOrderPreferencePayload } = require('../services/mercadoPagoCheckout');
 
 // Initialize Mercado Pago
 const client = new MercadoPagoConfig({ accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || 'TEST-00000000-0000-0000-0000-000000000000' });
@@ -73,6 +74,28 @@ const resolveClientUrl = (req, fallback = 'https://econticomigo.com.br/compresua
     return clientUrl;
 };
 
+const resolveServerUrl = (req) => {
+    let serverUrl = process.env.SERVER_URL || 'https://compresuafoto-comigo.onrender.com';
+    const host = req.get('host');
+    if (host && host.includes('localhost')) {
+        serverUrl = `http://${host}`;
+    }
+    return serverUrl;
+};
+
+const createPaymentPreference = async (req, order, eventName) => {
+    const preference = new Preference(client);
+    const payload = buildOrderPreferencePayload({
+        orderReference: order.publicId || order.id,
+        eventName,
+        total: order.total,
+        clientUrl: resolveClientUrl(req),
+        serverUrl: resolveServerUrl(req),
+    });
+
+    return preference.create(payload);
+};
+
 const applyCouponRedemption = async (tx, order, userCpf) => {
     if (!order.couponCode) return;
 
@@ -122,6 +145,10 @@ const finalizeApprovedOrder = async (orderId, clientUrl = null) => {
 
         if (paidStatuses.includes(order.status)) {
             return { order, alreadyPaid: true };
+        }
+
+        if (order.status === 'MERGED') {
+            return { order, alreadyPaid: true, skipped: true };
         }
 
         const userCpf = order.user?.cpf ? order.user.cpf.replace(/\D/g, '') : null;
@@ -182,6 +209,21 @@ exports.createOrder = async (req, res) => {
 
         if (photos.length === 0) {
             return res.status(400).json({ error: 'Nenhuma foto válida selecionada.' });
+        }
+
+        const eventIds = [...new Set(photos.map((photo) => photo.eventId))];
+        const events = await prisma.event.findMany({
+            where: { id: { in: eventIds } },
+            select: { id: true, visibility: true, authorizedUserId: true }
+        });
+        const hasPrivatePhotoWithoutAccess = events.some((event) => (
+            event.visibility === 'PRIVATE'
+            && req.user.role !== 'ADMIN'
+            && event.authorizedUserId !== userId
+        ));
+
+        if (hasPrivatePhotoWithoutAccess) {
+            return res.status(403).json({ error: 'Você não tem acesso a uma ou mais fotos desta galeria privada.' });
         }
 
         // Progressive pricing tiers (must match client-side useCartStore)
@@ -274,41 +316,9 @@ exports.createOrder = async (req, res) => {
             });
         }
 
-        // 5. Create Preference in Mercado Pago
-        const preference = new Preference(client);
-
-        // Dynamically determine Client URL (handle localhost vs production)
-        const CLIENT_URL = resolveClientUrl(req);
-
-        // Dynamically determine Backend URL for Webhooks
-        let SERVER_URL = process.env.SERVER_URL || 'https://compresuafoto-comigo.onrender.com';
-        const host = req.get('host');
-        if (host && host.includes('localhost')) {
-            SERVER_URL = `http://${host}`;
-        }
-
-        const preferencePayload = {
-            body: {
-                items: [
-                    {
-                        id: 'photos',
-                        title: `Fotos - ${eventName || 'Evento'}`,
-                        quantity: 1,
-                        unit_price: Number(serverTotal.toFixed(2))
-                    }
-                ],
-                external_reference: result.publicId || result.id.toString(),
-                notification_url: `${SERVER_URL}/api/webhooks/mercadopago`,
-                back_urls: {
-                    success: `${CLIENT_URL}/orders/success`,
-                    failure: `${CLIENT_URL}/orders/failure`,
-                    pending: `${CLIENT_URL}/orders/pending`
-                },
-                auto_return: 'approved'
-            }
-        };
-
-        const response = await preference.create(preferencePayload);
+        // 5. Create Preference in Mercado Pago. The same builder is also used when
+        // a customer resumes payment for this pending order later.
+        const response = await createPaymentPreference(req, result, eventName || 'Evento');
 
         res.status(201).json({
             orderId: result.publicId || result.id,
@@ -319,6 +329,42 @@ exports.createOrder = async (req, res) => {
     } catch (error) {
         console.error("Order Error:", error);
         res.status(500).json({ error: error.message, details: error.cause });
+    }
+};
+
+exports.resumePendingOrderPayment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const order = await prisma.order.findUnique({
+            where: getOrderWhere(id, true),
+        });
+
+        if (!order) {
+            return res.status(404).json({ error: 'Pedido não encontrado.' });
+        }
+
+        if (!canAccessOrder(req, order)) {
+            return res.status(403).json({ error: 'Você não tem acesso a este pedido.' });
+        }
+
+        if (paidStatuses.includes(order.status)) {
+            return res.status(409).json({ error: 'Este pedido já foi pago.' });
+        }
+
+        if (order.status !== 'PENDING' && order.status !== 'pending') {
+            return res.status(409).json({ error: 'Este pedido não está disponível para pagamento.' });
+        }
+
+        const response = await createPaymentPreference(req, order, 'Pedido de fotos');
+
+        return res.json({
+            orderId: order.publicId || order.id,
+            init_point: response.init_point,
+            sandbox_init_point: response.sandbox_init_point,
+        });
+    } catch (error) {
+        console.error('Resume Pending Order Payment Error:', error);
+        return res.status(500).json({ error: 'Não foi possível abrir o pagamento deste pedido. Tente novamente.' });
     }
 };
 
@@ -394,6 +440,102 @@ exports.updateOrderStatus = async (req, res) => {
     } catch (error) {
         console.error("Update Status Error:", error);
         res.status(500).json({ error: 'Failed to update order status' });
+    }
+};
+
+// Admin: Consolidate selected pending orders from the same customer into one checkout.
+exports.mergePendingOrders = async (req, res) => {
+    try {
+        const rawOrderIds = Array.isArray(req.body?.orderIds) ? req.body.orderIds : [];
+        const orderIds = [...new Set(rawOrderIds.map(Number).filter(Number.isInteger))];
+
+        if (orderIds.length < 2) {
+            return res.status(400).json({ error: 'Selecione pelo menos dois pedidos para unificar.' });
+        }
+
+        const result = await prisma.$transaction(async (tx) => {
+            const orders = await tx.order.findMany({
+                where: { id: { in: orderIds } },
+                orderBy: { id: 'asc' }
+            });
+
+            if (orders.length !== orderIds.length) {
+                const error = new Error('Um ou mais pedidos não foram encontrados.');
+                error.status = 404;
+                throw error;
+            }
+
+            if (orders.some(order => order.status !== 'PENDING')) {
+                const error = new Error('Somente pedidos pendentes podem ser unificados.');
+                error.status = 409;
+                throw error;
+            }
+
+            const userId = orders[0].userId;
+            if (orders.some(order => order.userId !== userId)) {
+                const error = new Error('Selecione apenas pedidos da mesma cliente.');
+                error.status = 400;
+                throw error;
+            }
+
+            const photoIds = [...new Set(orders.flatMap((order) => {
+                try {
+                    const items = JSON.parse(order.items);
+                    return Array.isArray(items) ? items.map(Number).filter(Number.isInteger) : [];
+                } catch {
+                    return [];
+                }
+            }))];
+
+            if (photoIds.length === 0) {
+                const error = new Error('Os pedidos selecionados não possuem fotos válidas para unificar.');
+                error.status = 400;
+                throw error;
+            }
+
+            const existingPhotoCount = await tx.photo.count({
+                where: { id: { in: photoIds } }
+            });
+            if (existingPhotoCount !== photoIds.length) {
+                const error = new Error('Uma ou mais fotos dos pedidos selecionados não estão mais disponíveis.');
+                error.status = 409;
+                throw error;
+            }
+
+            const total = Number(orders.reduce((sum, order) => sum + order.total, 0).toFixed(2));
+            const mergedOrder = await tx.order.create({
+                data: {
+                    total,
+                    items: JSON.stringify(photoIds),
+                    status: 'PENDING',
+                    userId,
+                    // The final amount already preserves any discounts from the source orders.
+                    couponCode: null,
+                }
+            });
+
+            const sourceOrders = await tx.order.updateMany({
+                where: { id: { in: orderIds }, status: 'PENDING' },
+                data: { status: 'MERGED' }
+            });
+            if (sourceOrders.count !== orderIds.length) {
+                const error = new Error('Um dos pedidos foi alterado enquanto a unificação era realizada. Atualize a lista e tente novamente.');
+                error.status = 409;
+                throw error;
+            }
+
+            return { mergedOrder, sourceOrderIds: orderIds, photoCount: photoIds.length };
+        });
+
+        res.status(201).json({
+            message: 'Pedidos unificados com sucesso.',
+            order: result.mergedOrder,
+            sourceOrderIds: result.sourceOrderIds,
+            photoCount: result.photoCount,
+        });
+    } catch (error) {
+        console.error('Merge Orders Error:', error);
+        res.status(error.status || 500).json({ error: error.message || 'Não foi possível unificar os pedidos.' });
     }
 };
 
@@ -613,6 +755,9 @@ exports.addPhotosToOrder = async (req, res) => {
 
         const order = await prisma.order.findUnique({ where });
         if (!order) return res.status(404).json({ error: 'Pedido não encontrado.' });
+        if (order.status === 'MERGED') {
+            return res.status(409).json({ error: 'Pedidos unificados não podem mais ser alterados.' });
+        }
 
         // Merge existing photo IDs with new ones (avoid duplicates)
         let existingIds = [];

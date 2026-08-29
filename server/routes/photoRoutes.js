@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const photoController = require('../controllers/photoController');
 const upload = require('../middlewares/upload');
-const { authenticate, isAdmin } = require('../middlewares/auth');
+const { authenticate, isAdmin, optionalAuth } = require('../middlewares/auth');
 const rateLimit = require('../middlewares/rateLimit');
 
 
@@ -26,6 +26,6 @@ router.post('/register-direct-upload', authenticate, isAdmin, photoController.re
 router.post('/upload', authenticate, isAdmin, uploadMiddleware, photoController.uploadPhotos);
 
 // Search photos by face (upload selfie) — rate limited
-router.post('/search', searchLimiter, upload.single('selfie'), photoController.searchPhotos);
+router.post('/search', optionalAuth, searchLimiter, upload.single('selfie'), photoController.searchPhotos);
 
 module.exports = router;

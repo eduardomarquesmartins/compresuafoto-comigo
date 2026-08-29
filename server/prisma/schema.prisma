@@ -29,6 +29,7 @@ model User {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   orders           Order[]
+  privateEvents    Event[]  @relation("PrivateEventAccess")
   completedServices ServiceCompletion[] @relation("CollaboratorServices")
   serviceDefinitions ServiceDefinition[] @relation("ServiceCollaborator")
 }
@@ -39,15 +40,21 @@ enum CollaboratorProfile {
 }
 
 model Event {
-  id          Int      @id @default(autoincrement())
-  name        String
-  date        DateTime
-  description String?
-  coverImage  String?
-  status      String   @default("ACTIVE")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  photos      Photo[]
+  id               Int      @id @default(autoincrement())
+  name             String
+  date             DateTime
+  description      String?
+  coverImage       String?
+  status           String   @default("ACTIVE")
+  visibility       String   @default("PUBLIC")
+  authorizedUserId Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  photos           Photo[]
+  authorizedUser   User?    @relation("PrivateEventAccess", fields: [authorizedUserId], references: [id], onDelete: SetNull)
+
+  @@index([visibility])
+  @@index([authorizedUserId])
 }
 
 model Photo {

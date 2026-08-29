@@ -5,6 +5,7 @@ import { getEvent, updateEvent } from '@/lib/api'; // Ensure getEvent is exporte
 import { useParams } from 'next/navigation';
 import { Save, ArrowLeft, Archive, RefreshCw, Image as ImageIcon, Upload } from 'lucide-react';
 import { adminPath } from '@/lib/adminPath';
+import EventPrivacyFields from '@/components/admin/EventPrivacyFields';
 
 export default function EditEventPage() {
     const params = useParams();
@@ -18,7 +19,9 @@ export default function EditEventPage() {
         name: '',
         date: '',
         description: '',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        visibility: 'PUBLIC' as 'PUBLIC' | 'PRIVATE',
+        authorizedUserId: ''
     });
 
     useEffect(() => {
@@ -39,7 +42,9 @@ export default function EditEventPage() {
                 name: event.name,
                 date: event.date.split('T')[0], // Extract YYYY-MM-DD
                 description: event.description || '',
-                status: event.status || 'ACTIVE'
+                status: event.status || 'ACTIVE',
+                visibility: event.visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC',
+                authorizedUserId: event.authorizedUserId ? String(event.authorizedUserId) : ''
             });
             setCoverPreview(event.coverImage || null);
         } catch (error) {
@@ -157,6 +162,14 @@ export default function EditEventPage() {
                         )}
                     </label>
                 </div>
+
+                <EventPrivacyFields
+                    visibility={formData.visibility}
+                    authorizedUserId={formData.authorizedUserId}
+                    onVisibilityChange={(visibility) => setFormData({ ...formData, visibility })}
+                    onAuthorizedUserChange={(authorizedUserId) => setFormData({ ...formData, authorizedUserId })}
+                    disabled={saving}
+                />
 
                 <div className="flex gap-4 pt-6 border-t border-zinc-800 mt-8 items-center">
                     <button

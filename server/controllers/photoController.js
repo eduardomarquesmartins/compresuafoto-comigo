@@ -314,6 +314,25 @@ exports.searchPhotos = async (req, res) => {
             return res.status(400).json({ error: 'Selfie is required' });
         }
 
+        const event = await prisma.event.findUnique({
+            where: { id: parsedEventId },
+            select: { visibility: true, authorizedUserId: true }
+        });
+
+        const canAccessPrivateEvent = event
+            && (event.visibility !== 'PRIVATE'
+                || req.user?.role === 'ADMIN'
+                || event.authorizedUserId === req.user?.userId);
+
+        if (!canAccessPrivateEvent) {
+            if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+            return res.status(event ? 403 : 404).json({
+                error: event
+                    ? 'Esta galeria é privada. Entre com a conta autorizada para pesquisar as fotos.'
+                    : 'Evento não encontrado.'
+            });
+        }
+
         // Read from disk storage
         let selfieBuffer = fs.readFileSync(req.file.path);
 

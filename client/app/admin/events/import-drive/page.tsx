@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { CheckCircle2, AlertCircle, Loader2, ChevronRight, HardDrive } from 'lucide-react';
 import { adminPath } from '@/lib/adminPath';
+import EventPrivacyFields from '@/components/admin/EventPrivacyFields';
 
 export default function ImportDrivePage() {
     const router = useRouter();
@@ -12,6 +13,8 @@ export default function ImportDrivePage() {
     const [statusText, setStatusText] = useState('');
     const [summary, setSummary] = useState<any>(null);
     const [preview, setPreview] = useState<string | null>(null);
+    const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
+    const [authorizedUserId, setAuthorizedUserId] = useState("");
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -38,12 +41,18 @@ export default function ImportDrivePage() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (visibility === "PRIVATE" && !authorizedUserId) {
+            alert('Selecione a conta da cliente para criar uma galeria privada.');
+            return;
+        }
         setLoading(true);
         setProgress(5);
         setSummary(null);
         setStatusText('Iniciando conexão com Google Drive...');
 
         const formData = new FormData(e.currentTarget);
+        formData.set('visibility', visibility);
+        if (visibility === "PRIVATE") formData.set('authorizedUserId', authorizedUserId);
 
         try {
             // Pequenos delays artificiais para os primeiros estados de status
@@ -147,6 +156,14 @@ export default function ImportDrivePage() {
                                 )}
                             </div>
                         </div>
+
+                        <EventPrivacyFields
+                            visibility={visibility}
+                            authorizedUserId={authorizedUserId}
+                            onVisibilityChange={setVisibility}
+                            onAuthorizedUserChange={setAuthorizedUserId}
+                            disabled={loading}
+                        />
 
                         <div className="bg-slate-900/80 p-6 rounded-2xl border border-blue-500/20 space-y-4">
                             <div className="flex items-center gap-2 text-blue-400 text-sm font-semibold uppercase tracking-wider">

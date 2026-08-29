@@ -11,6 +11,8 @@ interface Event {
     date: string;
     description: string;
     status?: string;
+    visibility?: 'PUBLIC' | 'PRIVATE';
+    authorizedUser?: { email: string; name?: string | null; fullName?: string | null } | null;
     _count?: {
         photos: number;
     }
@@ -153,6 +155,11 @@ export default function AdminEventsPage() {
                                             <ImageIcon size={12} className="text-blue-500" />
                                             {event._count?.photos || 0} fotos indexadas
                                         </p>
+                                        {event.visibility === 'PRIVATE' && (
+                                            <p className="mt-2 text-xs font-medium text-violet-300">
+                                                Galeria privada: {event.authorizedUser?.fullName || event.authorizedUser?.name || event.authorizedUser?.email || 'cliente autorizada'}
+                                            </p>
+                                        )}
                                     </td>
                                     <td className="px-8 py-6">
                                         <span className={`inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-black tracking-widest uppercase border ${event.status === 'ARCHIVED'
@@ -161,6 +168,11 @@ export default function AdminEventsPage() {
                                             }`}>
                                             {event.status === 'ARCHIVED' ? 'Arquivado' : 'Ativo'}
                                         </span>
+                                        {event.visibility === 'PRIVATE' && (
+                                            <span className="ml-2 inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-black tracking-widest uppercase border border-violet-500/20 bg-violet-500/10 text-violet-300">
+                                                Privado
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex justify-end gap-2 items-center">

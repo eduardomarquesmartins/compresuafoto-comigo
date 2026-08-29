@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Package, CheckCircle, Clock, AlertTriangle, Loader2, Search, Eye, X, ImagePlus, ChevronDown } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Loader2, Search, Eye, X, ImagePlus, ChevronDown, GitMerge } from "lucide-react";
 import api from "@/lib/api";
 
 interface OrderUser {
@@ -38,6 +38,7 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string; ico
     PENDING: { label: "Pendente", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20 shadow-[inset_0_0_10px_rgba(251,191,36,0.1)]", icon: <Clock className="w-3 h-3" /> },
     rejected: { label: "Rejeitado", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20 shadow-[inset_0_0_10px_rgba(248,113,113,0.1)]", icon: <AlertTriangle className="w-3 h-3" /> },
     cancelled: { label: "Cancelado", color: "text-slate-400", bg: "bg-slate-800/50 border-slate-700", icon: <X className="w-3 h-3" /> },
+    MERGED: { label: "Unificado", color: "text-violet-300", bg: "bg-violet-500/10 border-violet-500/20", icon: <GitMerge className="w-3 h-3" /> },
 };
 
 export default function AdminOrdersPage() {
@@ -48,6 +49,8 @@ export default function AdminOrdersPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterEventId, setFilterEventId] = useState<number | "ALL">("ALL");
     const [showOnlyActive, setShowOnlyActive] = useState(false);
+    const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
+    const [isMergingOrders, setIsMergingOrders] = useState(false);
 
     // Detail Modal
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -98,6 +101,47 @@ export default function AdminOrdersPage() {
             }
         } catch (error) {
             alert("Erro ao aprovar pedido.");
+        }
+    };
+
+    const toggleOrderSelection = (orderId: number) => {
+        setSelectedOrderIds((current) => current.includes(orderId)
+            ? current.filter((id) => id !== orderId)
+            : [...current, orderId]);
+    };
+
+    const handleMergeOrders = async () => {
+        const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id));
+        if (selectedOrders.length < 2) {
+            alert('Selecione pelo menos dois pedidos pendentes.');
+            return;
+        }
+
+        const sameCustomer = selectedOrders.every((order) => order.userId === selectedOrders[0].userId);
+        const onlyPending = selectedOrders.every((order) => order.status === 'PENDING');
+        if (!sameCustomer || !onlyPending) {
+            alert('Selecione somente pedidos pendentes da mesma cliente.');
+            return;
+        }
+
+        const total = selectedOrders.reduce((sum, order) => sum + order.total, 0);
+        const customerName = selectedOrders[0].user?.name || selectedOrders[0].user?.email || 'esta cliente';
+        const confirmed = confirm(
+            `Unificar ${selectedOrders.length} pedidos de ${customerName} em um único pedido de R$ ${total.toFixed(2)}?\n\nOs pedidos originais permanecerão no histórico como “Unificado” e não poderão mais ser aprovados.`
+        );
+        if (!confirmed) return;
+
+        setIsMergingOrders(true);
+        try {
+            const response = await api.post('/orders/admin/merge', { orderIds: selectedOrderIds });
+            alert(`Pedido #${response.data.order.id} criado com ${response.data.photoCount} foto(s).`);
+            setSelectedOrderIds([]);
+            setSelectedOrder(null);
+            await fetchOrders();
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Não foi possível unificar os pedidos.');
+        } finally {
+            setIsMergingOrders(false);
         }
     };
 
@@ -224,7 +268,18 @@ export default function AdminOrdersPage() {
                         Pedidos
                     </h1>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
+                    {selectedOrderIds.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={handleMergeOrders}
+                            disabled={selectedOrderIds.length < 2 || isMergingOrders}
+                            className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-xs font-bold uppercase tracking-widest text-white shadow-lg shadow-violet-950/30 transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                            {isMergingOrders ? <Loader2 size={16} className="animate-spin" /> : <GitMerge size={16} />}
+                            {isMergingOrders ? 'Unificando...' : `Unificar ${selectedOrderIds.length} pedido${selectedOrderIds.length > 1 ? 's' : ''}`}
+                        </button>
+                    )}
                     <button
                         onClick={() => setShowOnlyActive(!showOnlyActive)}
                         className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${showOnlyActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'bg-[#0a0a0c]/80 backdrop-blur-xl border border-white/5 text-slate-400 hover:text-white'}`}
@@ -334,6 +389,7 @@ export default function AdminOrdersPage() {
                 <table className="w-full text-left">
                     <thead className="bg-black/40 border-b border-white/5">
                         <tr>
+                            <th className="w-12 px-4 py-5" aria-label="Selecionar pedidos" />
                             <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 w-24">Pedido</th>
                             <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Cliente</th>
                             <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Status</th>
@@ -346,7 +402,7 @@ export default function AdminOrdersPage() {
                     <tbody className="divide-y divide-white/5">
                         {filteredOrders.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="p-20 text-center">
+                                <td colSpan={8} className="p-20 text-center">
                                     <div className="flex flex-col items-center gap-4">
                                         <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center border border-white/5 shadow-inner">
                                             <Search size={32} className="text-slate-600" />
@@ -361,9 +417,20 @@ export default function AdminOrdersPage() {
                         ) : (
                             filteredOrders.map((order) => {
                                 const statusInfo = getStatusInfo(order.status);
-                                const isPaid = order.status === "approved" || order.status === "PAID";
+                                const canApprove = order.status === 'PENDING';
+                                const isSelected = selectedOrderIds.includes(order.id);
                                 return (
-                                    <tr key={order.id} className="hover:bg-white/[0.02] transition-colors group">
+                                    <tr key={order.id} className={`transition-colors group ${isSelected ? 'bg-violet-500/[0.06]' : 'hover:bg-white/[0.02]'}`}>
+                                        <td className="px-4 py-6 text-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                disabled={order.status !== 'PENDING'}
+                                                onChange={() => toggleOrderSelection(order.id)}
+                                                aria-label={`Selecionar pedido #${order.id}`}
+                                                className="h-4 w-4 cursor-pointer accent-violet-500 disabled:cursor-not-allowed disabled:opacity-25"
+                                            />
+                                        </td>
                                         <td className="px-8 py-6">
                                             <span className="font-mono text-sm font-bold text-slate-500 group-hover:text-blue-400 transition-colors">#{order.id}</span>
                                             {order.couponCode && (
@@ -398,7 +465,7 @@ export default function AdminOrdersPage() {
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex items-center justify-end gap-2">
-                                                {!isPaid && (
+                                                {canApprove && (
                                                     <button
                                                         onClick={() => handleApprove(order)}
                                                         className="text-slate-400 hover:text-green-400 p-2 hover:bg-green-500/10 border border-transparent hover:border-green-500/20 rounded-lg transition-all"
@@ -471,24 +538,26 @@ export default function AdminOrdersPage() {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-4 mb-10">
-                                {selectedOrder.status !== "approved" && selectedOrder.status !== "PAID" && (
+                            {selectedOrder.status !== "MERGED" && (
+                                <div className="flex gap-4 mb-10">
+                                    {selectedOrder.status === "PENDING" && (
+                                        <button
+                                            onClick={() => handleApprove(selectedOrder)}
+                                            className="flex-1 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 shadow-[inset_0_0_15px_rgba(7ade80,0.1)]"
+                                        >
+                                            <CheckCircle className="w-4 h-4" />
+                                            Confirmar Pagamento
+                                        </button>
+                                    )}
                                     <button
-                                        onClick={() => handleApprove(selectedOrder)}
-                                        className="flex-1 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 shadow-[inset_0_0_15px_rgba(7ade80,0.1)]"
+                                        onClick={handleOpenAddPhotos}
+                                        className="flex-1 bg-blue-600 hover:bg-blue-500 text-white border border-blue-400/30 py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(37,99,235,0.3)]"
                                     >
-                                        <CheckCircle className="w-4 h-4" />
-                                        Confirmar Pagamento
+                                        <ImagePlus className="w-4 h-4" />
+                                        Vincular Fotos Manuais
                                     </button>
-                                )}
-                                <button
-                                    onClick={handleOpenAddPhotos}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white border border-blue-400/30 py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(37,99,235,0.3)]"
-                                >
-                                    <ImagePlus className="w-4 h-4" />
-                                    Vincular Fotos Manuais
-                                </button>
-                            </div>
+                                </div>
+                            )}
 
                             {/* Photos Grid */}
                             <div>

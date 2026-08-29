@@ -7,6 +7,7 @@ import axios from 'axios';
 import api from '@/lib/api';
 import { uploadPhotosDirectToS3 } from '@/lib/directPhotoUpload';
 import { adminPath } from '@/lib/adminPath';
+import EventPrivacyFields from '@/components/admin/EventPrivacyFields';
 
 export default function CreateEventPage() {
     const router = useRouter();
@@ -16,6 +17,8 @@ export default function CreateEventPage() {
     const [error, setError] = useState<string | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+    const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
+    const [authorizedUserId, setAuthorizedUserId] = useState("");
     const selectedPhotoCount = selectedPhotos.length;
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,6 +38,10 @@ export default function CreateEventPage() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (visibility === "PRIVATE" && !authorizedUserId) {
+            setError('Selecione a conta da cliente para criar uma galeria privada.');
+            return;
+        }
         setLoading(true);
         setError(null);
         setUploadProgress(0);
@@ -42,6 +49,8 @@ export default function CreateEventPage() {
         const formData = new FormData(e.currentTarget);
         formData.set('date', new Date().toISOString().split('T')[0]);
         formData.delete('photos');
+        formData.set('visibility', visibility);
+        if (visibility === "PRIVATE") formData.set('authorizedUserId', authorizedUserId);
 
         try {
             const eventResponse = await api.post('/events', formData, {
@@ -181,6 +190,14 @@ export default function CreateEventPage() {
                         </div>
                     </div>
                 </div>
+
+                <EventPrivacyFields
+                    visibility={visibility}
+                    authorizedUserId={authorizedUserId}
+                    onVisibilityChange={setVisibility}
+                    onAuthorizedUserChange={setAuthorizedUserId}
+                    disabled={loading}
+                />
 
                 <AnimatePresence>
                     {error && (

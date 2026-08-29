@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Navbar from '@/components/Navbar';
-import { Download, Package, Calendar, Clock, CheckCircle, XCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { Download, Package, Calendar, Clock, CheckCircle, XCircle, AlertCircle, ArrowRight, CreditCard } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePublicAppPath } from '@/lib/publicAppPath';
@@ -23,6 +23,7 @@ export default function MyOrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [downloadingOrderId, setDownloadingOrderId] = useState<number | null>(null);
+    const [payingOrderId, setPayingOrderId] = useState<number | null>(null);
 
     useEffect(() => {
         // useLayoutEffect usually better for auth redirect to avoid flash but useEffect is standard in next
@@ -100,6 +101,26 @@ export default function MyOrdersPage() {
             alert('Não foi possível baixar as fotos. Verifique sua conexão e tente novamente.');
         } finally {
             setDownloadingOrderId(null);
+        }
+    };
+
+    const handleResumePayment = async (order: Order) => {
+        if (payingOrderId) return;
+
+        setPayingOrderId(order.id);
+        try {
+            const response = await api.post(`/orders/${order.id}/payment-link`);
+            const checkoutUrl = response.data.init_point || response.data.sandbox_init_point;
+
+            if (!checkoutUrl) {
+                throw new Error('O provedor de pagamento não retornou um link de pagamento.');
+            }
+
+            window.location.assign(checkoutUrl);
+        } catch (error: any) {
+            console.error('Não foi possível retomar o pagamento:', error);
+            alert(error.response?.data?.error || error.message || 'Não foi possível abrir o pagamento. Tente novamente.');
+            setPayingOrderId(null);
         }
     };
 
@@ -183,10 +204,20 @@ export default function MyOrdersPage() {
                                                 <Download size={20} />
                                                 {downloadingOrderId === order.id ? 'Preparando fotos...' : 'Baixar Fotos'}
                                             </button>
+                                        ) : order.status === 'PENDING' || order.status === 'pending' ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleResumePayment(order)}
+                                                disabled={payingOrderId === order.id}
+                                                className="w-full bg-brand text-white hover:bg-brand-dark py-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand/20 hover:shadow-brand/40 hover:-translate-y-1 active:translate-y-0 disabled:cursor-wait disabled:opacity-70"
+                                            >
+                                                <CreditCard size={20} />
+                                                {payingOrderId === order.id ? 'Abrindo pagamento...' : 'Pagar agora'}
+                                            </button>
                                         ) : (
-                                            <div className="w-full bg-slate-100 text-slate-400 border border-slate-200 py-4 rounded-xl font-medium flex items-center justify-center gap-2 cursor-not-allowed">
+                                            <div className="w-full bg-slate-100 text-slate-400 border border-slate-200 py-4 rounded-xl font-medium flex items-center justify-center gap-2">
                                                 <AlertCircle size={20} />
-                                                Aguardando Pagamento
+                                                Pedido indisponível
                                             </div>
                                         )}
                                     </div>
