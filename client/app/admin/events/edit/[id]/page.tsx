@@ -166,8 +166,8 @@ export default function EditEventPage() {
                 <EventPrivacyFields
                     visibility={formData.visibility}
                     authorizedUserId={formData.authorizedUserId}
-                    onVisibilityChange={(visibility) => setFormData({ ...formData, visibility })}
-                    onAuthorizedUserChange={(authorizedUserId) => setFormData({ ...formData, authorizedUserId })}
+                    onVisibilityChange={(visibility) => setFormData((current) => ({ ...current, visibility }))}
+                    onAuthorizedUserChange={(authorizedUserId) => setFormData((current) => ({ ...current, authorizedUserId }))}
                     disabled={saving}
                 />
 

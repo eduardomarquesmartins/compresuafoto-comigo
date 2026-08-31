@@ -384,9 +384,9 @@ export default function AdminOrdersPage() {
             </div>
 
             {/* Orders Table */}
-            <div className="bg-[#0a0a0c]/80 backdrop-blur-xl rounded-[32px] border border-white/5 shadow-2xl overflow-hidden relative">
+            <div className="bg-[#0a0a0c]/80 backdrop-blur-xl rounded-[32px] border border-white/5 shadow-2xl overflow-x-auto relative">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
-                <table className="w-full text-left">
+                <table className="min-w-[1120px] w-full text-left">
                     <thead className="bg-black/40 border-b border-white/5">
                         <tr>
                             <th className="w-12 px-4 py-5" aria-label="Selecionar pedidos" />
@@ -396,7 +396,7 @@ export default function AdminOrdersPage() {
                             <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Fotos</th>
                             <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Total</th>
                             <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Data</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right w-36">Ações</th>
+                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right w-[230px]">Ações</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -464,22 +464,24 @@ export default function AdminOrdersPage() {
                                             {new Date(order.createdAt).toLocaleDateString("pt-BR")}
                                         </td>
                                         <td className="px-8 py-6">
-                                            <div className="flex items-center justify-end gap-2">
+                                            <div className="flex min-w-[190px] items-center justify-end gap-2">
                                                 {canApprove && (
                                                     <button
                                                         onClick={() => handleApprove(order)}
-                                                        className="text-slate-400 hover:text-green-400 p-2 hover:bg-green-500/10 border border-transparent hover:border-green-500/20 rounded-lg transition-all"
+                                                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
                                                         title="Aprovar Pedido"
                                                     >
                                                         <CheckCircle className="w-4 h-4" />
+                                                        Aprovar
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleViewDetails(order)}
-                                                    className="text-slate-400 hover:text-blue-400 p-2 hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 rounded-lg transition-all"
+                                                    className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0044ff] px-3 text-xs font-bold text-white shadow-sm transition hover:bg-[#0038d6] focus:outline-none focus:ring-2 focus:ring-blue-400/60"
                                                     title="Ver Detalhes"
                                                 >
                                                     <Eye className="w-4 h-4" />
+                                                    Detalhes
                                                 </button>
                                             </div>
                                         </td>
