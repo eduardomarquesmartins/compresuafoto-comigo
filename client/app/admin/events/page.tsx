@@ -163,13 +163,13 @@ export default function AdminEventsPage() {
                                     </td>
                                     <td className="px-8 py-6">
                                         <span className={`inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-black tracking-widest uppercase border ${event.status === 'ARCHIVED'
-                                                ? 'bg-slate-900 border-slate-700 text-slate-400'
-                                                : 'bg-green-500/10 border-green-500/20 text-green-400 shadow-[inset_0_0_10px_rgba(7ade80,0.1)]'
+                                                ? 'bg-slate-600 border-slate-700 text-white shadow-sm'
+                                                : 'bg-emerald-500 border-emerald-600 text-white shadow-md shadow-emerald-950/30'
                                             }`}>
                                             {event.status === 'ARCHIVED' ? 'Arquivado' : 'Ativo'}
                                         </span>
                                         {event.visibility === 'PRIVATE' && (
-                                            <span className="ml-2 inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-black tracking-widest uppercase border border-violet-500/20 bg-violet-500/10 text-violet-300">
+                                            <span className="ml-2 inline-flex items-center px-3 py-1.5 rounded-md text-[10px] font-black tracking-widest uppercase border border-violet-700 bg-violet-600 text-white shadow-md shadow-violet-950/25">
                                                 Privado
                                             </span>
                                         )}

@@ -17,19 +17,19 @@ const sendEmailOrFail = async (payload) => {
 /**
  * Envia e-mail de confirmação de pedido com link de download
  */
-exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) => {
+exports.sendOrderEmail = async (email, orderAccessId, photosCount, clientUrl = null) => {
     try {
         let finalClientUrl = clientUrl || process.env.CLIENT_URL || 'https://econticomigo.com.br/compresuafoto';
         if (!finalClientUrl.startsWith('http')) {
             finalClientUrl = `https://${finalClientUrl}`;
         }
-        const downloadLink = `${finalClientUrl}/orders/success?id=${orderId}`;
+        const downloadLink = `${finalClientUrl}/orders/success?id=${orderAccessId}`;
         const currentYear = new Date().getFullYear();
 
         const { data, error } = await sendEmailOrFail({
             from: process.env.EMAIL_FROM || 'Compre Sua Foto <contato@econti.com.br>',
             to: [email],
-            subject: `Pedido #${orderId} - Suas fotos estão prontas para download`,
+            subject: 'Suas fotos estão prontas para download',
             html: `
                 <div style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
                     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
@@ -56,13 +56,9 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
                                 Suas fotos foram processadas com sucesso e estão prontas para download.
                             </p>
 
-                            <!-- Order Summary Card -->
+                            <!-- Purchase Summary Card -->
                             <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
                                 <table style="width: 100%; border-collapse: collapse;">
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Pedido</td>
-                                        <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">#${orderId}</td>
-                                    </tr>
                                     <tr>
                                         <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 14px;">Fotos</td>
                                         <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${photosCount} foto${photosCount > 1 ? 's' : ''}</td>
@@ -81,8 +77,7 @@ exports.sendOrderEmail = async (email, orderId, photosCount, clientUrl = null) =
                                 </a>
                             </div>
                             <p style="text-align: center; color: #94a3b8; font-size: 12px; margin: 12px 0 0;">
-                                Ou copie e cole este link no navegador:<br>
-                                <a href="${downloadLink}" style="color: #2563eb; word-break: break-all; font-size: 11px;">${downloadLink}</a>
+                                Se o botão não abrir, acesse sua conta na plataforma para visualizar suas fotos.
                             </p>
                         </div>
 

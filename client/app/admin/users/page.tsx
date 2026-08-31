@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import { AlertTriangle, FileText, RefreshCw, Search, Shield, Trash2, UserPlus, X } from "lucide-react";
 
-type UserRole = "ADMIN" | "DESIGNER" | "DEMANDAS" | string;
+type UserRole = "ADMIN" | "CUSTOMER" | "DESIGNER" | "DEMANDAS" | string;
 
 interface User {
     id: number;
@@ -20,11 +20,13 @@ interface User {
 type NewUser = {
     name: string;
     email: string;
+    cpf: string;
+    phone: string;
     password: string;
-    role: "ADMIN" | "DESIGNER" | "DEMANDAS";
+    role: "ADMIN" | "CUSTOMER" | "DESIGNER" | "DEMANDAS";
 };
 
-const emptyNewUser: NewUser = { name: "", email: "", password: "", role: "ADMIN" };
+const emptyNewUser: NewUser = { name: "", email: "", cpf: "", phone: "", password: "", role: "CUSTOMER" };
 
 const roleLabel = (user: User) => {
     if (user.collaboratorProfile === "DESIGNER") return "Designer";
@@ -121,6 +123,7 @@ export default function UsersPage() {
             setUsers(currentUsers => [res.data, ...currentUsers]);
             setIsCreateModalOpen(false);
             setNewUser(emptyNewUser);
+            setActionMessage(newUser.role === "CUSTOMER" ? "Cliente cadastrada e pronta para acessar a plataforma." : "Usuário criado com sucesso.");
         } catch (error) {
             setActionMessage(getUsersErrorMessage(error));
         } finally {
@@ -294,7 +297,6 @@ export default function UsersPage() {
                     <div className="admin-card w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
                         <div className="mb-6 flex items-start justify-between gap-4">
                             <div>
-                                <span className="admin-kicker">Invite</span>
                                 <h2 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-white">Novo usuário</h2>
                             </div>
                             <button onClick={() => setIsCreateModalOpen(false)} className="rounded-xl p-2 text-slate-500 hover:bg-white/10 hover:text-slate-200">
@@ -323,11 +325,35 @@ export default function UsersPage() {
                                     onChange={e => setNewUser({ ...newUser, email: e.target.value })}
                                 />
                             </div>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-slate-300">CPF <span className="text-slate-500">(opcional)</span></label>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        placeholder="000.000.000-00"
+                                        className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-2.5 text-white outline-none placeholder:text-slate-600 focus:border-blue-400/60 focus:ring-4 focus:ring-blue-500/10"
+                                        value={newUser.cpf}
+                                        onChange={e => setNewUser({ ...newUser, cpf: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-slate-300">Telefone <span className="text-slate-500">(opcional)</span></label>
+                                    <input
+                                        type="tel"
+                                        placeholder="(00) 00000-0000"
+                                        className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-2.5 text-white outline-none placeholder:text-slate-600 focus:border-blue-400/60 focus:ring-4 focus:ring-blue-500/10"
+                                        value={newUser.phone}
+                                        onChange={e => setNewUser({ ...newUser, phone: e.target.value })}
+                                    />
+                                </div>
+                            </div>
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-slate-300">Senha</label>
                                 <input
                                     type="password"
                                     required
+                                    minLength={6}
                                     className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-2.5 text-white outline-none focus:border-blue-400/60 focus:ring-4 focus:ring-blue-500/10"
                                     value={newUser.password}
                                     onChange={e => setNewUser({ ...newUser, password: e.target.value })}
@@ -340,6 +366,7 @@ export default function UsersPage() {
                                     value={newUser.role}
                                     onChange={e => setNewUser({ ...newUser, role: e.target.value as NewUser["role"] })}
                                 >
+                                    <option value="CUSTOMER">Cliente</option>
                                     <option value="ADMIN">Administrador</option>
                                     <option value="DESIGNER">Designer</option>
                                     <option value="DEMANDAS">Demandas da empresa</option>

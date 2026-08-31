@@ -387,23 +387,22 @@ export default function AdminOrdersPage() {
             {/* Orders Table */}
             <div className="bg-[#0a0a0c]/80 backdrop-blur-xl rounded-[32px] border border-white/5 shadow-2xl overflow-x-auto relative">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
-                <table className="min-w-[1120px] w-full text-left">
+                <table className="min-w-[960px] w-full table-fixed text-left">
                     <thead className="bg-black/40 border-b border-white/5">
                         <tr>
                             <th className="w-12 px-4 py-5" aria-label="Selecionar pedidos" />
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 w-24">Pedido</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Cliente</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Status</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Fotos</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Total</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Data</th>
-                            <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right w-[230px]">Ações</th>
+                            <th className="w-[36%] px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Cliente</th>
+                            <th className="w-[13%] px-4 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Status</th>
+                            <th className="w-[9%] px-4 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Fotos</th>
+                            <th className="w-[11%] px-4 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Total</th>
+                            <th className="w-[12%] px-4 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Data</th>
+                            <th className="w-[19%] px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right">Ações</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
                         {filteredOrders.length === 0 ? (
                             <tr>
-                                <td colSpan={8} className="p-20 text-center">
+                                <td colSpan={7} className="p-20 text-center">
                                     <div className="flex flex-col items-center gap-4">
                                         <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center border border-white/5 shadow-inner">
                                             <Search size={32} className="text-slate-600" />
@@ -432,8 +431,9 @@ export default function AdminOrdersPage() {
                                                 className="h-4 w-4 cursor-pointer accent-violet-500 disabled:cursor-not-allowed disabled:opacity-25"
                                             />
                                         </td>
-                                        <td className="px-8 py-6">
-                                            <span className="font-mono text-sm font-bold text-slate-500 group-hover:text-blue-400 transition-colors">#{order.id}</span>
+                                        <td className="px-5 py-6">
+                                            <p className="font-medium text-white text-sm tracking-tight mb-1">{order.user?.name || "Sem nome"}</p>
+                                            <p className="truncate text-xs font-semibold uppercase tracking-wider text-slate-500">{order.user?.email}</p>
                                             {order.couponCode && (
                                                 <div className="mt-1.5">
                                                     <span className="text-[9px] bg-blue-500/10 border border-blue-500/20 text-blue-400 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
@@ -442,30 +442,26 @@ export default function AdminOrdersPage() {
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="px-8 py-6">
-                                            <p className="font-medium text-white text-sm tracking-tight mb-1">{order.user?.name || "Sem nome"}</p>
-                                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{order.user?.email}</p>
-                                        </td>
-                                        <td className="px-8 py-6">
+                                        <td className="px-4 py-6">
                                             <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-black tracking-widest uppercase border border-solid ${statusInfo.bg} ${statusInfo.color}`}>
                                                 {statusInfo.icon}
                                                 {statusInfo.label}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-6">
+                                        <td className="px-4 py-6">
                                             <div className="flex items-center gap-1.5 text-slate-300 font-medium text-sm border border-white/5 bg-white/[0.02] w-fit px-3 py-1.5 rounded-lg">
                                                 <ImagePlus size={14} className="text-slate-500" />
                                                 <span>{order.photoCount}</span>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-6">
+                                        <td className="px-4 py-6">
                                             <span className="font-light tracking-tight text-white text-base">R$ {order.total.toFixed(2)}</span>
                                         </td>
-                                        <td className="px-8 py-6 text-sm text-slate-400 font-medium tracking-tight">
+                                        <td className="px-4 py-6 text-sm text-slate-400 font-medium tracking-tight">
                                             {new Date(order.createdAt).toLocaleDateString("pt-BR")}
                                         </td>
-                                        <td className="px-8 py-6">
-                                            <div className="flex min-w-[190px] items-center justify-end gap-2">
+                                        <td className="px-5 py-6">
+                                            <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                                                 {canApprove && (
                                                     <button
                                                         onClick={() => handleApprove(order)}

@@ -138,40 +138,55 @@ exports.updateRole = async (req, res) => {
 
 exports.createUser = async (req, res) => {
     try {
-        const { name, fullName, cpf, email, password, role } = req.body;
-        const allowedRoles = ['ADMIN', 'DESIGNER', 'DEMANDAS', 'COLLABORATOR'];
-        const selectedRole = allowedRoles.includes(role) ? role : 'ADMIN';
+        const { name, fullName, cpf, phone, email, password, role } = req.body;
+        const allowedRoles = ['ADMIN', 'CUSTOMER', 'DESIGNER', 'DEMANDAS', 'COLLABORATOR'];
+        const selectedRole = allowedRoles.includes(role) ? role : 'CUSTOMER';
+        const normalizedName = cleanOptionalUniqueValue(name) || cleanOptionalUniqueValue(fullName);
         const normalizedEmail = String(email || '').trim().toLowerCase();
         const normalizedCpf = cleanCpf(cpf);
+        const normalizedPhone = cleanPhone(phone);
 
-        if (!normalizedEmail.includes('@') || typeof password !== 'string' || password.length < 6) {
-            return res.status(400).json({ error: 'Informe um e-mail válido e uma senha de pelo menos 6 caracteres.' });
+        if (!normalizedName || !normalizedEmail.includes('@') || typeof password !== 'string' || password.length < 6) {
+            return res.status(400).json({ error: 'Informe nome, e-mail válido e uma senha de pelo menos 6 caracteres.' });
         }
 
         const existing = await prisma.user.findFirst({
             where: {
                 OR: [
                     { email: normalizedEmail },
-                    ...(normalizedCpf ? [{ cpf: normalizedCpf }] : [])
+                    ...(normalizedCpf ? [{ cpf: normalizedCpf }] : []),
+                    ...(normalizedPhone ? [{ phone: normalizedPhone }] : [])
                 ]
             }
         });
 
         if (existing) {
-            return res.status(400).json({ error: 'Este email ou CPF ja esta cadastrado.' });
+            return res.status(400).json({ error: 'Este e-mail, CPF ou telefone já está cadastrado.' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await prisma.user.create({
             data: {
-                name,
-                fullName,
+                name: normalizedName,
+                fullName: cleanOptionalUniqueValue(fullName) || normalizedName,
                 cpf: normalizedCpf,
+                phone: normalizedPhone,
                 email: normalizedEmail,
                 password: hashedPassword,
                 role: ['DESIGNER', 'DEMANDAS'].includes(selectedRole) ? 'COLLABORATOR' : selectedRole,
                 collaboratorProfile: selectedRole === 'DESIGNER' ? 'DESIGNER' : selectedRole === 'DEMANDAS' ? 'COMPANY_DEMANDS' : null
+            },
+            select: {
+                id: true,
+                name: true,
+                fullName: true,
+                cpf: true,
+                phone: true,
+                email: true,
+                role: true,
+                collaboratorProfile: true,
+                createdAt: true,
             }
         });
 
