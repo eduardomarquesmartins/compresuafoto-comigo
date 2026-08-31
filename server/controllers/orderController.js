@@ -5,6 +5,7 @@ const https = require('https');
 const emailService = require('../services/email');
 const { logToFile } = require('../utils/logger');
 const { buildOrderPreferencePayload } = require('../services/mercadoPagoCheckout');
+const { calculateProgressiveTotal } = require('../services/progressivePricing');
 
 // Initialize Mercado Pago
 const client = new MercadoPagoConfig({ accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || 'TEST-00000000-0000-0000-0000-000000000000' });
@@ -228,13 +229,8 @@ exports.createOrder = async (req, res) => {
 
         // Progressive pricing tiers (must match client-side useCartStore)
         const count = photos.length;
-        const UNIT_PRICE = 20; // Base price R$ 20 per photo
-        let pricePerPhoto = UNIT_PRICE;
-        if (count >= 20) pricePerPhoto = 9;
-        else if (count >= 10) pricePerPhoto = 10;
-        else if (count >= 5) pricePerPhoto = 15;
-
-        let serverTotal = count * pricePerPhoto;
+        const { pricePerPhoto, total: progressiveTotal } = calculateProgressiveTotal(count);
+        let serverTotal = progressiveTotal;
 
         // 2. Fetch user and check for CPF
         let userCpf = null;
@@ -502,14 +498,16 @@ exports.mergePendingOrders = async (req, res) => {
                 throw error;
             }
 
-            const total = Number(orders.reduce((sum, order) => sum + order.total, 0).toFixed(2));
+            const originalTotal = Number(orders.reduce((sum, order) => sum + order.total, 0).toFixed(2));
+            const { total, pricePerPhoto } = calculateProgressiveTotal(photoIds.length);
             const mergedOrder = await tx.order.create({
                 data: {
                     total,
                     items: JSON.stringify(photoIds),
                     status: 'PENDING',
                     userId,
-                    // The final amount already preserves any discounts from the source orders.
+                    // A merged checkout gets the applicable progressive tier for all its photos.
+                    // Coupons from source orders are intentionally not combined to avoid duplicate discounts.
                     couponCode: null,
                 }
             });
@@ -524,7 +522,14 @@ exports.mergePendingOrders = async (req, res) => {
                 throw error;
             }
 
-            return { mergedOrder, sourceOrderIds: orderIds, photoCount: photoIds.length };
+            return {
+                mergedOrder,
+                sourceOrderIds: orderIds,
+                photoCount: photoIds.length,
+                originalTotal,
+                pricePerPhoto,
+                savings: Number((originalTotal - total).toFixed(2)),
+            };
         });
 
         res.status(201).json({
@@ -532,6 +537,9 @@ exports.mergePendingOrders = async (req, res) => {
             order: result.mergedOrder,
             sourceOrderIds: result.sourceOrderIds,
             photoCount: result.photoCount,
+            originalTotal: result.originalTotal,
+            pricePerPhoto: result.pricePerPhoto,
+            savings: result.savings,
         });
     } catch (error) {
         console.error('Merge Orders Error:', error);

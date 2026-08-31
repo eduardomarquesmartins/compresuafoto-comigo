@@ -124,17 +124,18 @@ export default function AdminOrdersPage() {
             return;
         }
 
-        const total = selectedOrders.reduce((sum, order) => sum + order.total, 0);
         const customerName = selectedOrders[0].user?.name || selectedOrders[0].user?.email || 'esta cliente';
         const confirmed = confirm(
-            `Unificar ${selectedOrders.length} pedidos de ${customerName} em um único pedido de R$ ${total.toFixed(2)}?\n\nOs pedidos originais permanecerão no histórico como “Unificado” e não poderão mais ser aprovados.`
+            `Unificar ${selectedOrders.length} pedidos de ${customerName}?\n\nO sistema recalculará automaticamente a promoção progressiva usando todas as fotos do pedido unificado. Os pedidos originais permanecerão no histórico como “Unificado” e não poderão mais ser aprovados.`
         );
         if (!confirmed) return;
 
         setIsMergingOrders(true);
         try {
             const response = await api.post('/orders/admin/merge', { orderIds: selectedOrderIds });
-            alert(`Pedido #${response.data.order.id} criado com ${response.data.photoCount} foto(s).`);
+            const savings = Number(response.data.savings || 0);
+            const savingsMessage = savings > 0 ? ` Economia aplicada: R$ ${savings.toFixed(2)}.` : '';
+            alert(`Pedido #${response.data.order.id} criado com ${response.data.photoCount} foto(s), por R$ ${Number(response.data.order.total).toFixed(2)}.${savingsMessage}`);
             setSelectedOrderIds([]);
             setSelectedOrder(null);
             await fetchOrders();
