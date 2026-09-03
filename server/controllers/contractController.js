@@ -160,6 +160,42 @@ const resolveContractClient = async ({
     });
 };
 
+const proposalScopeSnapshot = (value) => {
+    try {
+        const services = typeof value === 'string' ? JSON.parse(value) : value;
+        return Array.isArray(services) ? services.map(s => s.name || s.serviceName || s.description || String(s)).join('; ') || 'Serviços conforme proposta' : String(value || 'Serviços conforme proposta');
+    } catch { return String(value || 'Serviços conforme proposta'); }
+};
+
+const getOrCreateLinkedProposalContract = async (proposalId, supplied = {}) => {
+    const id = parseInt(proposalId, 10);
+    if (!Number.isInteger(id)) throw Object.assign(new Error('proposalId inválido.'), { status: 400 });
+    const proposal = await prisma.proposal.findUnique({ where: { id }, include: { client: true, contract: { include: { client: true } } } });
+    if (!proposal || proposal.status === 'DELETED') throw Object.assign(new Error('Proposta não encontrada.'), { status: 404 });
+    if (proposal.status !== 'APPROVED' || !proposal.clientId) throw Object.assign(new Error('A proposta deve estar aprovada e vinculada a um cliente.'), { status: 409 });
+    if (supplied.clientId && parseInt(supplied.clientId, 10) !== proposal.clientId) throw Object.assign(new Error('Cliente incompatível com a proposta.'), { status: 409 });
+    if (supplied.durationMonths !== undefined && Number(supplied.durationMonths) !== 6) throw Object.assign(new Error('Vigência incompatível com o snapshot da proposta.'), { status: 409 });
+    if (supplied.paymentDay !== undefined && Number(supplied.paymentDay) !== 25) throw Object.assign(new Error('Dia de pagamento incompatível com o snapshot da proposta.'), { status: 409 });
+    const verify = (contract) => {
+        if (supplied.scope && supplied.scope !== contract.scope) throw Object.assign(new Error('Escopo incompatível com o snapshot da proposta.'), { status: 409 });
+        if (supplied.monthlyValue !== undefined && Number(supplied.monthlyValue) !== Number(contract.monthlyValue)) throw Object.assign(new Error('Valor incompatível com o snapshot da proposta.'), { status: 409 });
+        if (supplied.durationMonths !== undefined && Number(supplied.durationMonths) !== Number(contract.durationMonths)) throw Object.assign(new Error('Vigência incompatível com o contrato vinculado.'), { status: 409 });
+        if (supplied.paymentDay !== undefined && Number(supplied.paymentDay) !== Number(contract.paymentDay)) throw Object.assign(new Error('Dia de pagamento incompatível com o contrato vinculado.'), { status: 409 });
+        return contract;
+    };
+    if (proposal.contract) return verify(proposal.contract);
+    const startDate = new Date(), endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 6);
+    try {
+        return await prisma.contract.create({ data: { proposalId: proposal.id, clientId: proposal.clientId, scope: proposalScopeSnapshot(proposal.selectedServices), monthlyValue: Number(proposal.total), durationMonths: 6, paymentDay: 25, startDate, endDate, status: 'PENDING_SIGNATURE', contractDate: new Date().toLocaleDateString('pt-BR'), signatureToken: crypto.randomBytes(24).toString('hex') }, include: { client: true } });
+    } catch (error) {
+        if (error.code !== 'P2002') throw error;
+        const contract = await prisma.contract.findUnique({ where: { proposalId: id }, include: { client: true } });
+        if (!contract) throw error;
+        return verify(contract);
+    }
+};
+
 exports.generateContract = async (req, res) => {
     try {
         const { clientName, clientDocument, scope, monthlyValue, durationMonths, paymentDay } = req.body;
@@ -209,7 +245,11 @@ exports.getContracts = async (req, res) => {
 
 exports.createContract = async (req, res) => {
     try {
-        const { clientId, scope, monthlyValue, durationMonths, paymentDay, startDate, contractDate } = req.body;
+        const { clientId, proposalId, scope, monthlyValue, durationMonths, paymentDay, startDate, contractDate } = req.body;
+        if (proposalId) {
+            const contract = await getOrCreateLinkedProposalContract(proposalId, { clientId, scope, monthlyValue, durationMonths, paymentDay });
+            return res.status(200).json(contract);
+        }
         if (!clientId || !scope || !monthlyValue) {
             return res.status(400).json({ error: 'Cliente, escopo e valor mensal sao obrigatorios.' });
         }
@@ -262,19 +302,25 @@ exports.sendSignatureLink = async (req, res) => {
             paymentDay,
             startDate,
             contractDate,
+            proposalId,
             delivery = 'email'
         } = req.body;
 
-        if (!scope || !monthlyValue) {
+        if (!proposalId && (!scope || !monthlyValue)) {
             return res.status(400).json({ error: 'Escopo e valor mensal sao obrigatorios.' });
         }
 
-        const parsedMonthlyValue = parsePositiveMoney(monthlyValue, 'Valor mensal');
-        const duration = parsePositiveInt(durationMonths, 'Vigencia', 6);
-        const parsedPaymentDay = parsePaymentDay(paymentDay);
+        const parsedMonthlyValue = proposalId ? null : parsePositiveMoney(monthlyValue, 'Valor mensal');
+        const duration = proposalId ? null : parsePositiveInt(durationMonths, 'Vigencia', 6);
+        const parsedPaymentDay = proposalId ? null : parsePaymentDay(paymentDay);
 
         let client;
-        try {
+        let linkedContract = null;
+        if (proposalId) {
+            linkedContract = await getOrCreateLinkedProposalContract(proposalId, { clientId, scope, monthlyValue, durationMonths, paymentDay });
+            if (linkedContract.signedAt || !linkedContract.signatureToken) return res.status(409).json({ error: 'O contrato vinculado não está disponível para nova assinatura.' });
+            client = linkedContract.client;
+        } else try {
             client = await resolveContractClient({
                 clientId,
                 clientName,
@@ -306,34 +352,20 @@ exports.sendSignatureLink = async (req, res) => {
             return res.status(400).json({ error: 'O cliente precisa ter e-mail cadastrado para receber o link de assinatura.' });
         }
 
-        const start = startDate ? new Date(startDate) : new Date();
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + duration);
-        const signatureToken = crypto.randomBytes(24).toString('hex');
-
-        const contract = await prisma.contract.create({
-            data: {
-                clientId: client.id,
-                scope,
-                monthlyValue: parsedMonthlyValue,
-                durationMonths: duration,
-                paymentDay: parsedPaymentDay,
-                startDate: start,
-                endDate: end,
-                status: 'PENDING_SIGNATURE',
-                contractDate: contractDate || new Date().toLocaleDateString('pt-BR'),
-                signatureToken
-            },
-            include: {
-                client: true
-            }
-        });
+        let contract = linkedContract;
+        if (!contract) {
+            const start = startDate ? new Date(startDate) : new Date();
+            const end = new Date(start);
+            end.setMonth(end.getMonth() + duration);
+            const signatureToken = crypto.randomBytes(24).toString('hex');
+            contract = await prisma.contract.create({ data: { clientId: client.id, scope, monthlyValue: parsedMonthlyValue, durationMonths: duration, paymentDay: parsedPaymentDay, startDate: start, endDate: end, status: 'PENDING_SIGNATURE', contractDate: contractDate || new Date().toLocaleDateString('pt-BR'), signatureToken }, include: { client: true } });
+        }
 
         const pdfBuffer = await contractService.generateContractBuffer({
             ...getContractPdfPayload(contract),
             clientName: contract.client?.name || contract.clientName
         });
-        const signLink = buildSignatureLink(signatureToken);
+        const signLink = buildSignatureLink(contract.signatureToken);
 
         if (delivery === 'email') {
             const emailResult = await emailService.sendContractSignatureLinkEmail(
@@ -368,6 +400,9 @@ exports.sendSignatureLink = async (req, res) => {
 exports.deleteContract = async (req, res) => {
     try {
         const { id } = req.params;
+        const contract = await prisma.contract.findUnique({ where: { id: parseInt(id, 10) }, select: { proposalId: true } });
+        if (!contract) return res.status(404).json({ error: 'Contrato não encontrado.' });
+        if (contract.proposalId) return res.status(409).json({ error: 'Contratos vinculados a proposta não podem ser excluídos; o vínculo é auditável.' });
         await prisma.contract.delete({
             where: { id: parseInt(id, 10) }
         });
@@ -493,19 +528,18 @@ exports.signPublicContract = async (req, res) => {
         }
 
         const signedAt = new Date();
-        const updatedContract = await prisma.contract.update({
-            where: { id: contract.id },
+        const signed = await prisma.contract.updateMany({
+            where: { id: contract.id, signedAt: null },
             data: {
                 status: 'ACTIVE',
                 signedAt,
                 signedName: resolvedSignerName,
                 signedDocument: resolvedSignerDocument,
                 signedSignatureData
-            },
-            include: {
-                client: true
             }
         });
+        if (signed.count !== 1) return res.status(409).json({ error: 'Este contrato ja foi assinado.' });
+        const updatedContract = await prisma.contract.findUnique({ where: { id: contract.id }, include: { client: true } });
 
         if (updatedContract.clientId) {
             await prisma.client.update({
@@ -549,3 +583,5 @@ exports.signPublicContract = async (req, res) => {
         res.status(500).json({ error: 'Erro ao assinar contrato.' });
     }
 };
+
+exports._internals = { getOrCreateLinkedProposalContract, proposalScopeSnapshot };

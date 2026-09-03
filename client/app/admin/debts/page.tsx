@@ -302,10 +302,10 @@ export default function AdminDebtsPage() {
                                         <td className="px-6 py-5 text-xs text-slate-400 font-medium">
                                             {debt.holder || "-"}
                                         </td>
-                                        <td className="px-6 py-5 font-mono text-sm text-slate-400 font-medium">
+                                        <td className="px-6 py-5 font-sans tabular-nums text-sm text-slate-400 font-medium">
                                             R$ {debt.originalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                         </td>
-                                        <td className="px-6 py-5 font-mono text-sm text-white font-bold">
+                                        <td className="px-6 py-5 font-sans tabular-nums text-sm text-white font-bold">
                                             R$ {debt.bestOffer.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                         </td>
                                         <td className="px-6 py-5 text-xs text-slate-400 font-medium">

@@ -1,0 +1,13 @@
+const router = require('express').Router();
+const controller = require('../controllers/billingController');
+const { authenticate, isAdmin } = require('../middlewares/auth');
+router.get('/public/:publicId', controller.getPublicCharge);
+router.post('/public/:publicId/sync', controller.syncPublicCharge);
+router.use(authenticate, isAdmin);
+router.post('/charges', controller.createCharge);
+router.get('/charges', controller.listCharges);
+router.get('/charges/:id', controller.getCharge);
+router.post('/charges/:id/cancel', controller.cancelCharge);
+router.post('/charges/:id/reissue', controller.reissueCharge);
+router.post('/charges/:id/refresh-link', controller.refreshLink);
+module.exports = router;

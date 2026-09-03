@@ -591,7 +591,7 @@ export default function NewProposalPage() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <p className="text-slate-500 text-sm font-mono">R$ {item.defaultPrice.toFixed(2)}</p>
+                                            <p className="text-slate-500 text-sm font-sans tabular-nums font-semibold">R$ {item.defaultPrice.toFixed(2)}</p>
                                         )}
                                     </div>
                                 </div>
@@ -832,7 +832,7 @@ export default function NewProposalPage() {
                                             </div>
                                             <div className="text-right sm:w-[110px]">
                                                 <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Subtotal</p>
-                                                <p className="text-sm font-black text-white font-mono">R$ {formatMoney(service.price * normalizeQuantity(service.quantity))}</p>
+                                                <p className="text-sm font-black text-white font-sans tabular-nums">R$ {formatMoney(service.price * normalizeQuantity(service.quantity))}</p>
                                             </div>
                                             <button
                                                 type="button"
@@ -921,7 +921,7 @@ export default function NewProposalPage() {
                                         setTotalFinalDraft(formatMoney(subtotal));
                                     }
                                 }}
-                                className="w-full bg-slate-950/70 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono text-lg focus:border-blue-500 focus:outline-none"
+                                className="w-full bg-slate-950/70 border border-slate-700 rounded-xl px-4 py-3 text-white font-sans tabular-nums text-lg focus:border-blue-500 focus:outline-none"
                                 aria-label="Valor final da proposta"
                             />
                             <button

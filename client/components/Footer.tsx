@@ -6,7 +6,12 @@ import { usePathname } from 'next/navigation';
 export default function Footer() {
     const currentYear = new Date().getFullYear();
     const pathname = usePathname();
-    if (pathname?.startsWith('/admin') || pathname === '/login' || pathname === '/register') {
+    if (
+        pathname?.startsWith('/compresuafoto') ||
+        pathname?.startsWith('/admin') ||
+        pathname === '/login' ||
+        pathname === '/register'
+    ) {
         return null;
     }
     return (

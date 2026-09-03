@@ -58,6 +58,7 @@ build/
 *.env
 *.tsbuildinfo
 work/
+.slim/deepwork/
 *.xlsx
 *.pdf
 server/analyze_specific_sheets.js

@@ -89,12 +89,12 @@ const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, s
                                             )}
                                         </div>
                                         <div className="text-right ml-4">
-                                            <p className="text-[4.5mm] font-bold text-slate-900 font-mono">
+                                            <p className="text-[4.5mm] font-bold text-slate-900 font-sans tabular-nums">
                                                 <span className="text-[3mm] font-semibold text-slate-400 mr-2">R$</span>
                                                 {lineTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                             </p>
                                             {quantity > 1 && (
-                                                <p className="text-[2.6mm] text-slate-400 font-mono mt-1">
+                                                <p className="text-[2.6mm] text-slate-400 font-sans tabular-nums mt-1">
                                                     {quantity} x R$ {service.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                 </p>
                                             )}
@@ -115,7 +115,7 @@ const ProposalServices: React.FC<ProposalServicesProps> = ({ selectedServices, s
                             <span className="text-[4mm] text-slate-500 font-medium tracking-tight">Valor que será salvo, enviado e gerado no PDF</span>
                         </div>
                         <div className="text-right">
-                            <span className="text-[12mm] font-bold text-slate-900 leading-none font-mono tracking-tighter">
+                            <span className="text-[12mm] font-bold text-slate-900 leading-none font-sans tabular-nums tracking-tight">
                                 R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
                         </div>

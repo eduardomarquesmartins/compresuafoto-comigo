@@ -39,6 +39,20 @@ enum CollaboratorProfile {
   COMPANY_DEMANDS
 }
 
+enum BillingChargeKind {
+  ONE_OFF
+}
+
+enum BillingChargeStatus {
+  OPEN
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+  REVIEW
+}
+
 model Event {
   id               Int      @id @default(autoincrement())
   name             String
@@ -118,9 +132,15 @@ model Proposal {
   total            Float
   status           String   @default("PENDING")
   proposalType     String   @default("empresarial")
+  publicToken      String   @unique
+  acceptedAt       DateTime?
+  declinedAt       DateTime?
+  approvedAt       DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   client           Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  billingCharges   BillingCharge[]
+  contract         Contract?
 }
 
 model Client {
@@ -139,11 +159,13 @@ model Client {
   contracts      Contract[]
   financials     FinancialRecord[]
   proposals      Proposal[]
+  billingCharges BillingCharge[]
 }
 
 model Contract {
   id             Int      @id @default(autoincrement())
   clientId       Int
+  proposalId     Int?     @unique
   scope          String
   monthlyValue   Float
   durationMonths Int      @default(6)
@@ -160,6 +182,8 @@ model Contract {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  proposal       Proposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  billingCharges BillingCharge[]
 }
 
 model FinancialRecord {
@@ -176,6 +200,66 @@ model FinancialRecord {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   client      Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  billingChargeId Int?
+  billingCharge BillingCharge? @relation(fields: [billingChargeId], references: [id], onDelete: SetNull)
+
+  @@index([billingChargeId])
+}
+
+model BillingCharge {
+  id                Int      @id @default(autoincrement())
+  publicId          String   @unique @default(uuid())
+  clientId          Int
+  amount            Decimal  @db.Decimal(12, 2)
+  currency          String   @default("BRL")
+  description       String
+  kind              BillingChargeKind   @default(ONE_OFF)
+  status            BillingChargeStatus @default(OPEN)
+  externalReference String   @unique
+  preferenceId      String?
+  checkoutUrl       String?
+  dueDate           DateTime?
+  paidAt            DateTime?
+  contractId        Int?
+  proposalId        Int?
+  idempotencyKey    String?  @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  client            Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  contract          Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  proposal          Proposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  paymentAttempts   PaymentAttempt[]
+  financialRecords  FinancialRecord[]
+  webhookEvents     BillingWebhookEvent[]
+
+  @@index([clientId, status])
+}
+
+model PaymentAttempt {
+  id                Int      @id @default(autoincrement())
+  providerPaymentId String   @unique
+  billingChargeId   Int
+  status            String
+  statusDetail      String?
+  paymentMethod     String?
+  paymentType       String?
+  transactionAmount Decimal? @db.Decimal(12, 2)
+  feeAmount         Decimal? @db.Decimal(12, 2)
+  approvedAt        DateTime?
+  rawPayload        Json
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  billingCharge     BillingCharge @relation(fields: [billingChargeId], references: [id], onDelete: Cascade)
+}
+
+model BillingWebhookEvent {
+  id                Int      @id @default(autoincrement())
+  providerEventId   String   @unique
+  billingChargeId   Int?
+  payload           Json
+  processedAt       DateTime?
+  createdAt         DateTime @default(now())
+  billingCharge     BillingCharge? @relation(fields: [billingChargeId], references: [id], onDelete: SetNull)
 }
 
 model Debt {

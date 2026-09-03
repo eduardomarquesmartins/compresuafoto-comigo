@@ -268,6 +268,26 @@ export const linkProposalClient = async (id: number, clientId?: number) => {
     return response.data;
 };
 
+export const getOrCreateProposalContract = async (id: number) => {
+    const response = await api.post(`proposals/${id}/contract`);
+    return response.data;
+};
+
+export const getPublicProposal = async (token: string) => {
+    const response = await api.get(`proposals/public/${token}`);
+    return response.data;
+};
+
+export const acceptPublicProposal = async (token: string, data?: any) => {
+    const response = await api.post(`proposals/public/${token}/accept`, data);
+    return response.data;
+};
+
+export const declinePublicProposal = async (token: string) => {
+    const response = await api.post(`proposals/public/${token}/decline`);
+    return response.data;
+};
+
 export const downloadContractPdf = async (data: {
     clientName: string;
     clientDocument: string;
@@ -466,6 +486,26 @@ export const deleteFinancial = async (id: number) => {
     const response = await api.delete(`financials/${id}`);
     return response.data;
 };
+
+// --- Cobranças avulsas (Econti Billing) ---
+export type BillingChargeInput = { clientId: number; amount: number; description: string; dueDate?: string; contractId?: number; proposalId?: number };
+export const createBillingCharge = async (data: BillingChargeInput, idempotencyKey?: string) => {
+    const response = await api.post('billing/charges', data, { headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined });
+    return response.data;
+};
+export const getBillingCharges = async (params?: { status?: string; clientId?: number }) => (await api.get('billing/charges', { params })).data;
+export const getBillingCharge = async (id: number) => (await api.get(`billing/charges/${id}`)).data;
+export const cancelBillingCharge = async (id: number) => (await api.post(`billing/charges/${id}/cancel`)).data;
+export const reissueBillingCharge = async (id: number, idempotencyKey?: string) => {
+    const key = idempotencyKey || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `reissue-${id}-${Date.now()}`);
+    const response = await api.post(`billing/charges/${id}/reissue`, undefined, {
+        headers: { 'Idempotency-Key': key }
+    });
+    return response.data;
+};
+export const refreshBillingChargeLink = async (id: number) => (await api.post(`billing/charges/${id}/refresh-link`)).data;
+export const getPublicBillingCharge = async (publicId: string) => (await api.get(`billing/public/${publicId}`)).data;
+export const syncPublicBillingCharge = async (publicId: string, paymentId: string) => (await api.post(`billing/public/${publicId}/sync`, undefined, { params: { payment_id: paymentId } })).data;
 
 // --- Importador Excel (Excel Import API) ---
 export const importExcel = async (file: File) => {

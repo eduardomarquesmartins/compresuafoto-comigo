@@ -88,7 +88,8 @@ app.use(cors({
     }
 }));
 app.use((req, res, next) => {
-    console.log(`REQ: ${req.method} ${req.path}`);
+    const safePath = req.path.replace(/\/(?:public|public-contracts)\/[^/]+/, (match) => match.startsWith('/public-contracts/') ? '/public-contracts/[redacted]' : '/public/[redacted]');
+    console.log(`REQ: ${req.method} ${safePath}`);
     next();
 });
 app.use(express.json({ limit: '5mb' }));
@@ -130,6 +131,8 @@ app.use('/api/photos', photoRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/coupons', require('./routes/couponRoutes'));
 app.post('/api/webhooks/mercadopago', require('./controllers/webhookController').handleMercadoPagoWebhook);
+app.post('/api/webhooks/mercadopago/billing', require('./controllers/billingController').handleWebhook);
+app.use('/api/billing', require('./routes/billingRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/proposals', require('./routes/proposalRoutes'));
 app.use('/api/contracts', require('./routes/contractRoutes'));

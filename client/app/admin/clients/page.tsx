@@ -379,7 +379,7 @@ export default function AdminClientsPage() {
                                             <div key={contract.id} className="bg-[#0f111a]/60 border border-white/10 hover:border-white/20 rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-all">
                                                 <div className="space-y-3 flex-1">
                                                     <div className="flex flex-wrap items-center gap-3">
-                                                        <span className="font-mono text-base font-bold text-white bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-xl">
+                                                        <span className="font-sans tabular-nums text-base font-bold text-white bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-xl">
                                                             R$ {contract.monthlyValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} / mês
                                                         </span>
                                                         <span className="text-[10px] text-slate-300 bg-[#161826] border border-white/10 px-3 py-1 rounded-lg font-bold uppercase tracking-wider">

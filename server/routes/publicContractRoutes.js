@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const contractController = require('../controllers/contractController');
+const { publicTokenGuard } = require('../middlewares/publicTokenGuard');
 
-router.get('/:token', contractController.getPublicContractByToken);
-router.get('/:token/pdf', contractController.getPublicContractPdfByToken);
-router.post('/:token/sign', contractController.signPublicContract);
+router.get('/:token', publicTokenGuard, contractController.getPublicContractByToken);
+router.get('/:token/pdf', publicTokenGuard, contractController.getPublicContractPdfByToken);
+router.post('/:token/sign', publicTokenGuard, contractController.signPublicContract);
 
 module.exports = router;

@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { 
     Plus, DollarSign, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, 
-    Calendar, Trash2, CheckCircle, Clock, Loader2, Filter, AlertCircle, FileUp, FileText
+    Trash2, CheckCircle, Clock, Loader2, Filter, AlertCircle, FileUp, FileText,
+    CreditCard, Copy, ExternalLink, MessageCircle, RefreshCw, XCircle, RotateCcw
 } from "lucide-react";
 import api, {
-    getFinancials, getFinancialStats, createFinancial, updateFinancial, deleteFinancial, getClients, uploadFinancialNote
+    getFinancials, getFinancialStats, createFinancial, updateFinancial, deleteFinancial, getClients, uploadFinancialNote,
+    createBillingCharge, getBillingCharges, cancelBillingCharge, refreshBillingChargeLink, reissueBillingCharge, getContracts
 } from "@/lib/api";
 
 const CATEGORIES = {
@@ -50,6 +52,87 @@ const parseUploadedNote = (obs?: string) => {
     }
 };
 
+export const parseCurrencyInput = (value: string | number | null | undefined): number => {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+
+    let str = String(value).trim();
+    if (!str) return 0;
+
+    // Remove any non-digit character except dot, comma, and minus sign
+    str = str.replace(/[^\d.,\-]/g, "");
+    if (!str) return 0;
+
+    const hasComma = str.includes(",");
+    const hasDot = str.includes(".");
+
+    if (hasComma && hasDot) {
+        const lastComma = str.lastIndexOf(",");
+        const lastDot = str.lastIndexOf(".");
+
+        if (lastComma > lastDot) {
+            // Brazilian format e.g. "1.234,56" or "1.000.000,50" -> dots are thousands, comma is decimal
+            str = str.replace(/\./g, "").replace(",", ".");
+        } else {
+            // International format e.g. "1,234.56" -> commas are thousands, dot is decimal
+            str = str.replace(/,/g, "");
+        }
+    } else if (hasComma) {
+        const commaCount = (str.match(/,/g) || []).length;
+        if (commaCount > 1) {
+            str = str.replace(/,/g, "");
+        } else {
+            // Single comma e.g. "100,00", "100,5" -> decimal separator
+            str = str.replace(",", ".");
+        }
+    } else if (hasDot) {
+        const dotCount = (str.match(/\./g) || []).length;
+        if (dotCount > 1) {
+            str = str.replace(/\./g, "");
+        } else {
+            const [integerPart, decimalPart] = str.split(".");
+            if (decimalPart && decimalPart.length === 3 && integerPart && integerPart.length >= 1 && integerPart.length <= 3) {
+                // e.g. "1.000", "10.000", "100.000" -> thousands separator in Brazilian notation
+                str = str.replace(/\./g, "");
+            }
+        }
+    }
+
+    const num = Number(str);
+    return Number.isFinite(num) ? num : 0;
+};
+
+const getNextPaymentDate = (paymentDayInput?: number | string | null): string => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    const currentDay = today.getDate();
+
+    let targetDay = parseInt(String(paymentDayInput || 25), 10);
+    if (isNaN(targetDay) || targetDay < 1) targetDay = 1;
+    if (targetDay > 31) targetDay = 31;
+
+    let targetYear = currentYear;
+    let targetMonth = currentMonth;
+
+    if (currentDay > targetDay) {
+        targetMonth += 1;
+        if (targetMonth > 11) {
+            targetMonth = 0;
+            targetYear += 1;
+        }
+    }
+
+    const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+    const finalDay = Math.min(targetDay, daysInTargetMonth);
+
+    const yyyy = String(targetYear);
+    const mm = String(targetMonth + 1).padStart(2, "0");
+    const dd = String(finalDay).padStart(2, "0");
+
+    return `${yyyy}-${mm}-${dd}`;
+};
+
 const getInitialFinanceFilters = () => {
     if (typeof window === "undefined") {
         return {
@@ -70,10 +153,21 @@ export default function AdminFinancePage() {
     const [records, setRecords] = useState<any[]>([]);
     const [stats, setStats] = useState({ incomes: 0, expenses: 0, balance: 0, forecast: 0 });
     const [clients, setClients] = useState<any[]>([]);
+    const [contracts, setContracts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [noteModalOpen, setNoteModalOpen] = useState(false);
     const [noteFile, setNoteFile] = useState<File | null>(null);
+
+    // Cobranças por link
+    const [billingCharges, setBillingCharges] = useState<any[]>([]);
+    const [billingLoading, setBillingLoading] = useState(false);
+    const [billingStatusFilter, setBillingStatusFilter] = useState("ALL");
+    const [billingClientFilter, setBillingClientFilter] = useState("ALL");
+    const [billingModalOpen, setBillingModalOpen] = useState(false);
+    const [billingForm, setBillingForm] = useState({ clientId: "", contractId: "", amount: "", description: "", dueDate: "" });
+    const [billingAction, setBillingAction] = useState<string | null>(null);
+    const [billingError, setBillingError] = useState<string | null>(null);
 
     // Filtros
     const [month, setMonth] = useState(initialFilters.month);
@@ -106,15 +200,17 @@ export default function AdminFinancePage() {
                 year,
                 type: typeFilter !== "ALL" ? typeFilter : undefined
             };
-            const [recordsResult, statsResult, clientsResult] = await Promise.allSettled([
+            const [recordsResult, statsResult, clientsResult, contractsResult] = await Promise.allSettled([
                 getFinancials(params),
                 getFinancialStats({ month, year }),
-                getClients()
+                getClients(),
+                getContracts()
             ]);
 
             setRecords(recordsResult.status === "fulfilled" ? recordsResult.value : []);
             setStats(statsResult.status === "fulfilled" ? statsResult.value : { incomes: 0, expenses: 0, balance: 0, forecast: 0 });
-            setClients(clientsResult.status === "fulfilled" ? clientsResult.value : []);
+            setClients(clientsResult.status === "fulfilled" && Array.isArray(clientsResult.value) ? clientsResult.value : []);
+            setContracts(contractsResult.status === "fulfilled" && Array.isArray(contractsResult.value) ? contractsResult.value : []);
         } catch (error) {
             console.error("Erro ao carregar dados financeiros:", error);
         } finally {
@@ -122,9 +218,32 @@ export default function AdminFinancePage() {
         }
     };
 
+    const fetchBillingCharges = async (statusFilter = billingStatusFilter, clientFilter = billingClientFilter) => {
+        try {
+            setBillingLoading(true);
+            const params: { status?: string; clientId?: number } = {};
+            if (statusFilter !== "ALL") {
+                params.status = statusFilter;
+            }
+            if (clientFilter !== "ALL") {
+                params.clientId = Number(clientFilter);
+            }
+            const charges = await getBillingCharges(params);
+            setBillingCharges(Array.isArray(charges) ? charges : []);
+        } catch (error) {
+            console.error("Erro ao carregar cobranças por link:", error);
+        } finally {
+            setBillingLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchFinanceData();
     }, [month, year, typeFilter]);
+
+    useEffect(() => {
+        fetchBillingCharges(billingStatusFilter, billingClientFilter);
+    }, [billingStatusFilter, billingClientFilter]);
 
     const handleOpenModal = (type: "INCOME" | "EXPENSE") => {
         setForm({
@@ -192,8 +311,9 @@ export default function AdminFinancePage() {
 
     const handleSaveRecord = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.description || !form.amount) {
-            alert("Descrição e valor são obrigatórios.");
+        const parsedAmount = parseCurrencyInput(form.amount);
+        if (!form.description.trim() || parsedAmount <= 0) {
+            alert("Descrição e valor válido maior que zero são obrigatórios.");
             return;
         }
 
@@ -201,6 +321,7 @@ export default function AdminFinancePage() {
             setActionLoading("save");
             await createFinancial({
                 ...form,
+                amount: parsedAmount,
                 clientId: form.clientId ? parseInt(form.clientId) : undefined
             });
             setModalOpen(false);
@@ -240,6 +361,180 @@ export default function AdminFinancePage() {
         } finally {
             setActionLoading(null);
         }
+    };
+
+    const formatBillingAmount = (amount: unknown) => Number(amount || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    const openBillingModal = () => {
+        setBillingError(null);
+        setBillingForm({
+            clientId: clients[0]?.id ? String(clients[0].id) : "",
+            contractId: "",
+            amount: "",
+            description: "",
+            dueDate: ""
+        });
+        setBillingModalOpen(true);
+    };
+
+    const handleBillingClientChange = (newClientId: string) => {
+        setBillingForm(prev => ({
+            ...prev,
+            clientId: newClientId,
+            contractId: ""
+        }));
+    };
+
+    const handleBillingContractChange = (newContractId: string) => {
+        if (!newContractId) {
+            setBillingForm(prev => ({
+                ...prev,
+                contractId: ""
+            }));
+            return;
+        }
+
+        const contract = contracts.find(c => String(c.id) === String(newContractId));
+        if (!contract) return;
+
+        const nextDueDate = getNextPaymentDate(contract.paymentDay);
+        const [y, m, d] = nextDueDate.split("-").map(Number);
+        const dateObj = new Date(y, m - 1, d);
+        const monthName = dateObj.toLocaleDateString("pt-BR", { month: "long" });
+        const suggestedDesc = `Mensalidade de ${monthName}`;
+        const formattedAmount = contract.monthlyValue != null
+            ? Number(contract.monthlyValue).toFixed(2).replace(".", ",")
+            : "";
+
+        setBillingForm(prev => ({
+            ...prev,
+            contractId: newContractId,
+            amount: formattedAmount,
+            dueDate: nextDueDate,
+            description: suggestedDesc
+        }));
+    };
+
+    const handleCreateBilling = async (event: React.FormEvent) => {
+        event.preventDefault();
+        const amount = parseCurrencyInput(billingForm.amount);
+        if (!billingForm.clientId || !billingForm.description.trim() || amount <= 0) {
+            setBillingError("Selecione o cliente e informe uma descrição e um valor válido maior que zero.");
+            return;
+        }
+
+        try {
+            setBillingAction("create");
+            const contractIdNum = billingForm.contractId ? Number(billingForm.contractId) : undefined;
+            let idempotencyKey: string | undefined;
+
+            if (contractIdNum) {
+                let yearMonth = "";
+                if (billingForm.dueDate) {
+                    const [y, m] = billingForm.dueDate.split("-");
+                    if (y && m) yearMonth = `${y}-${m.padStart(2, "0")}`;
+                }
+                if (!yearMonth) {
+                    const now = new Date();
+                    const yyyy = now.getFullYear();
+                    const mm = String(now.getMonth() + 1).padStart(2, "0");
+                    yearMonth = `${yyyy}-${mm}`;
+                }
+                idempotencyKey = `contract-${contractIdNum}-${yearMonth}`;
+            } else {
+                idempotencyKey = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : undefined;
+            }
+
+            const payload: any = {
+                clientId: Number(billingForm.clientId),
+                amount,
+                description: billingForm.description.trim(),
+                dueDate: billingForm.dueDate || undefined
+            };
+            if (contractIdNum) {
+                payload.contractId = contractIdNum;
+            }
+
+            const charge = await createBillingCharge(payload, idempotencyKey);
+            setBillingCharges(current => [charge, ...current.filter(item => item.id !== charge.id)]);
+            setBillingModalOpen(false);
+            setBillingForm({ clientId: "", contractId: "", amount: "", description: "", dueDate: "" });
+            alert("Cobrança criada. Agora você pode copiar o link ou abrir o WhatsApp.");
+        } catch (error: any) {
+            const errorData = error.response?.data;
+            if (error.response?.status === 502 && errorData?.chargeId) {
+                setBillingError(`A cobrança #${errorData.chargeId} foi criada no sistema, mas houve instabilidade na comunicação com o Mercado Pago e ela ficou Em Revisão (não foi paga).`);
+                fetchBillingCharges();
+            } else {
+                setBillingError(errorData?.error || "Não foi possível criar a cobrança.");
+            }
+        } finally {
+            setBillingAction(null);
+        }
+    };
+
+    const handleReissueCharge = async (charge: any) => {
+        if (billingAction) return;
+        const clientName = charge.client?.name || "este cliente";
+        const formattedVal = formatBillingAmount(charge.amount);
+        if (!confirm(`Gerar uma nova cobrança para ${clientName} no valor de ${formattedVal}?\n\nA cobrança cancelada anterior será mantida no histórico.`)) {
+            return;
+        }
+
+        try {
+            setBillingAction(`reissue-${charge.id}`);
+            const reissued = await reissueBillingCharge(charge.id);
+            setBillingCharges(current => [reissued, ...current.filter(item => item.id !== reissued.id)]);
+            alert("Nova cobrança gerada com sucesso! O histórico da cobrança cancelada anterior foi preservado.");
+        } catch (error: any) {
+            console.error("Erro ao reemitir cobrança:", error);
+            if (error.response?.status === 502 && error.response?.data?.chargeId) {
+                alert(`Nova cobrança criada (#${error.response.data.chargeId}), mas ficou Em Revisão por instabilidade no provedor (não foi paga).`);
+                fetchBillingCharges();
+            } else {
+                alert(error.response?.data?.error || "Não foi possível gerar nova cobrança.");
+            }
+        } finally {
+            setBillingAction(null);
+        }
+    };
+
+    const copyBillingLink = async (link?: string) => {
+        if (!link) return;
+        try {
+            await navigator.clipboard.writeText(link);
+            alert("Link copiado.");
+        } catch {
+            window.prompt("Copie o link da cobrança:", link);
+        }
+    };
+
+    const whatsappBillingLink = (charge: any) => {
+        const rawPhone = String(charge.client?.phone || "").replace(/\D/g, "");
+        if (!rawPhone || !charge.checkoutUrl) return null;
+        const phone = rawPhone.length <= 11 ? `55${rawPhone}` : rawPhone;
+        const message = `Olá, ${charge.client?.name || "tudo bem"}! Segue o link para pagamento de ${charge.description} no valor de ${formatBillingAmount(charge.amount)}: ${charge.checkoutUrl}`;
+        return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    };
+
+    const handleBillingAction = async (action: "cancel" | "refresh", charge: any) => {
+        if (billingAction) return;
+        try {
+            setBillingAction(`${action}-${charge.id}`);
+            const updated = action === "cancel"
+                ? await cancelBillingCharge(charge.id)
+                : await refreshBillingChargeLink(charge.id);
+            setBillingCharges(current => current.map(item => item.id === charge.id ? { ...item, ...updated } : item));
+        } catch (error: any) {
+            alert(error.response?.data?.error || "Não foi possível atualizar a cobrança.");
+        } finally {
+            setBillingAction(null);
+        }
+    };
+
+    const billingStatus = (status: string) => {
+        const labels: Record<string, string> = { OPEN: "Aberta", PENDING: "Aguardando", PAID: "Paga", FAILED: "Falhou", CANCELLED: "Cancelada", REFUNDED: "Reembolsada", REVIEW: "Em revisão" };
+        return labels[status] || status;
     };
 
     return (
@@ -336,6 +631,214 @@ export default function AdminFinancePage() {
                     </div>
                 </div>
             </div>
+
+            {/* Cobranças Econti */}
+            <section className="bg-[#12141d] border border-blue-500/20 rounded-[28px] p-6 md:p-8 shadow-xl shadow-blue-950/10 space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">Recebimentos Econti</p>
+                        <h2 className="text-xl md:text-2xl font-bold text-white mt-1">Cobranças por link</h2>
+                        <p className="text-xs text-slate-400 mt-2 max-w-xl">Gere um link Checkout Pro para o cliente pagar com Pix, cartão ou boleto. O botão do WhatsApp apenas abre uma mensagem pronta no seu celular.</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={openBillingModal}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-blue-950/30 transition hover:from-blue-500 hover:to-indigo-500 active:scale-95 cursor-pointer"
+                    >
+                        <CreditCard size={16} />
+                        Gerar cobrança
+                    </button>
+                </div>
+
+                {/* Filtros específicos de Cobranças por link */}
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                            <Filter size={14} className="text-blue-400" />
+                            <span>Filtrar cobranças:</span>
+                        </div>
+
+                        {/* Filtro por Cliente */}
+                        <label className="flex items-center gap-2">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Cliente</span>
+                            <div className="relative">
+                                <select
+                                    value={billingClientFilter}
+                                    onChange={(e) => setBillingClientFilter(e.target.value)}
+                                    className="bg-[#181a29] border border-slate-700/80 focus:border-blue-500 rounded-xl px-3.5 py-2 text-white outline-none text-xs transition-colors appearance-none pr-8 cursor-pointer"
+                                >
+                                    <option value="ALL">Todos os clientes</option>
+                                    {clients.map((c) => (
+                                        <option key={c.id} value={String(c.id)}>{c.name}</option>
+                                    ))}
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400 text-xs">▼</div>
+                            </div>
+                        </label>
+
+                        {/* Filtro por Status */}
+                        <label className="flex items-center gap-2">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Status</span>
+                            <div className="relative">
+                                <select
+                                    value={billingStatusFilter}
+                                    onChange={(e) => setBillingStatusFilter(e.target.value)}
+                                    className="bg-[#181a29] border border-slate-700/80 focus:border-blue-500 rounded-xl px-3.5 py-2 text-white outline-none text-xs transition-colors appearance-none pr-8 cursor-pointer"
+                                >
+                                    <option value="ALL">Todos os status</option>
+                                    <option value="PENDING">Aguardando / Aberta</option>
+                                    <option value="PAID">Paga</option>
+                                    <option value="CANCELLED">Cancelada</option>
+                                    <option value="FAILED">Falhou</option>
+                                    <option value="REFUNDED">Reembolsada</option>
+                                    <option value="REVIEW">Em revisão</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400 text-xs">▼</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    {(billingStatusFilter !== "ALL" || billingClientFilter !== "ALL") && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setBillingStatusFilter("ALL");
+                                setBillingClientFilter("ALL");
+                            }}
+                            className="text-[10px] uppercase tracking-wider text-slate-400 hover:text-blue-400 font-bold transition-colors cursor-pointer"
+                        >
+                            Limpar filtros
+                        </button>
+                    )}
+                </div>
+
+                {billingLoading ? (
+                    <div className="py-12 flex justify-center items-center">
+                        <Loader2 className="animate-spin text-blue-500 w-8 h-8" />
+                    </div>
+                ) : billingCharges.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 px-5 py-8 text-center">
+                        <CreditCard size={26} className="mx-auto text-slate-600" />
+                        <p className="mt-3 text-sm font-semibold text-slate-300">
+                            {billingStatusFilter !== "ALL" || billingClientFilter !== "ALL"
+                                ? "Nenhuma cobrança encontrada com os filtros selecionados."
+                                : "Nenhuma cobrança criada ainda."}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto rounded-2xl border border-white/5">
+                        <table className="w-full min-w-[760px] text-left border-collapse">
+                            <thead className="bg-[#0d0f19] border-b border-white/10">
+                                <tr>
+                                    <th className="px-5 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Cliente / Descrição</th>
+                                    <th className="px-5 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Valor</th>
+                                    <th className="px-5 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Vencimento</th>
+                                    <th className="px-5 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Status</th>
+                                    <th className="px-5 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {billingCharges.map(charge => {
+                                    const whatsappUrl = whatsappBillingLink(charge);
+                                    const terminal = ["PAID", "CANCELLED", "REFUNDED"].includes(charge.status);
+                                    const isReview = charge.status === "REVIEW";
+                                    const isCancelled = charge.status === "CANCELLED";
+                                    const isPaid = charge.status === "PAID";
+                                    const isFailed = charge.status === "FAILED";
+
+                                    const statusColor = isPaid
+                                        ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/20"
+                                        : isFailed
+                                            ? "text-rose-300 bg-rose-500/10 border-rose-500/20"
+                                            : isCancelled
+                                                ? "text-slate-400 bg-slate-500/10 border-slate-500/20"
+                                                : isReview
+                                                    ? "text-amber-300 bg-amber-500/15 border-amber-500/30 font-bold"
+                                                    : "text-amber-300 bg-amber-500/10 border-amber-500/20";
+                                    return (
+                                        <tr key={charge.id || charge.publicId} className="hover:bg-white/[0.025] transition-colors">
+                                            <td className="px-5 py-4">
+                                                <div className="font-bold text-white text-sm">{charge.client?.name || "Cliente"}</div>
+                                                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                    <span className="text-xs text-slate-400 max-w-[280px] truncate" title={charge.description}>
+                                                        {charge.description}
+                                                    </span>
+                                                    {charge.contractId && (
+                                                        <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-bold text-blue-300 border border-blue-500/20">
+                                                            Contrato #{charge.contractId}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-4 font-sans tabular-nums font-bold text-blue-300">{formatBillingAmount(charge.amount)}</td>
+                                            <td className="px-5 py-4 text-xs text-slate-400 font-sans tabular-nums">{charge.dueDate ? new Date(charge.dueDate).toLocaleDateString("pt-BR") : "Sem prazo"}</td>
+                                            <td className="px-5 py-4">
+                                                <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${statusColor}`}>
+                                                    {isReview && <AlertCircle size={10} className="text-amber-400" />}
+                                                    {billingStatus(charge.status)}
+                                                </span>
+                                                {isReview && (
+                                                    <span className="block mt-1 text-[9px] text-amber-400/90 font-medium leading-tight max-w-[220px]">
+                                                        Falha no provedor (não foi paga)
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-5 py-4">
+                                                <div className="flex justify-end items-center gap-1.5">
+                                                    {isCancelled ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleReissueCharge(charge)}
+                                                            disabled={billingAction === `reissue-${charge.id}`}
+                                                            title="Gerar nova cobrança a partir desta cancelada (preserva a antiga no histórico)"
+                                                            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs font-bold text-blue-300 transition hover:border-blue-400 hover:bg-blue-500/20 hover:text-white disabled:opacity-40 cursor-pointer shadow-sm"
+                                                        >
+                                                            {billingAction === `reissue-${charge.id}` ? (
+                                                                <Loader2 size={13} className="animate-spin text-blue-300" />
+                                                            ) : (
+                                                                <RotateCcw size={13} />
+                                                            )}
+                                                            <span>Gerar nova cobrança</span>
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <button type="button" onClick={() => copyBillingLink(charge.checkoutUrl)} disabled={!charge.checkoutUrl} title="Copiar link" className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-300 disabled:opacity-30 cursor-pointer"><Copy size={14} /></button>
+                                                            {charge.checkoutUrl && <a href={charge.checkoutUrl} target="_blank" rel="noreferrer" title="Abrir checkout" className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-300"><ExternalLink size={14} /></a>}
+                                                            {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" title="Abrir WhatsApp com mensagem pronta" className="rounded-lg border border-emerald-500/20 p-2 text-emerald-400 transition hover:bg-emerald-500/10"><MessageCircle size={14} /></a>}
+                                                            {!terminal && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleBillingAction("refresh", charge)}
+                                                                    disabled={billingAction === `refresh-${charge.id}`}
+                                                                    title={isReview ? "Tentar gerar link novamente no Mercado Pago" : "Gerar novo link"}
+                                                                    className={`rounded-lg border p-2 transition cursor-pointer disabled:opacity-30 ${isReview ? "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:text-white" : "border-white/10 text-slate-400 hover:bg-white/5 hover:text-white"}`}
+                                                                >
+                                                                    {billingAction === `refresh-${charge.id}` ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                                                                </button>
+                                                            )}
+                                                            {!terminal && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => { if (confirm("Cancelar esta cobrança?")) handleBillingAction("cancel", charge); }}
+                                                                    disabled={billingAction === `cancel-${charge.id}`}
+                                                                    title="Cancelar cobrança"
+                                                                    className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-30 cursor-pointer"
+                                                                >
+                                                                    {billingAction === `cancel-${charge.id}` ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                                                                </button>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
 
             {/* Filter Bar */}
             <div className="bg-[#12141d] border border-white/10 rounded-2xl px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
@@ -481,7 +984,7 @@ export default function AdminFinancePage() {
                                             )}
                                         </td>
                                         <td className="px-8 py-5">
-                                            <span className={`font-mono font-bold text-sm ${record.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                            <span className={`font-sans tabular-nums font-bold text-sm ${record.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}`}>
                                                 {record.type === 'INCOME' ? '+' : '-'} R$ {record.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                             </span>
                                         </td>
@@ -523,7 +1026,7 @@ export default function AdminFinancePage() {
 
             {/* Upload de Nota de Custo */}
             {noteModalOpen && (
-                <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 xl:left-[292px] bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#1c1e2e] border border-white/10 rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 relative">
                         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-rose-500/30 to-transparent"></div>
                         <div className="bg-black/30 px-8 py-5 border-b border-white/10 flex items-center justify-between">
@@ -587,9 +1090,126 @@ export default function AdminFinancePage() {
                 </div>
             )}
 
+            {/* Billing Modal */}
+            {billingModalOpen && (() => {
+                const eligibleContracts = contracts.filter(c => {
+                    const cClientId = c.clientId || c.client?.id;
+                    if (!billingForm.clientId || String(cClientId) !== String(billingForm.clientId)) return false;
+                    const isActive = !c.status || String(c.status).toUpperCase() === "ACTIVE";
+                    const isSigned = Boolean(c.signedAt);
+                    return isActive && isSigned;
+                });
+
+                return (
+                <div className="fixed inset-0 xl:left-[292px] bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#1c1e2e] border border-blue-500/20 rounded-[32px] w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 relative">
+                        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/60 to-transparent"></div>
+                        <div className="bg-black/30 px-8 py-5 border-b border-white/10 flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-blue-300 font-bold">Mercado Pago Econti</p>
+                                <h3 className="text-xl font-bold text-white">Gerar cobrança por link</h3>
+                            </div>
+                            <button type="button" onClick={() => setBillingModalOpen(false)} className="text-slate-400 hover:text-white text-2xl font-light cursor-pointer">&times;</button>
+                        </div>
+                        <form onSubmit={handleCreateBilling} className="p-8 space-y-5">
+                            {billingError && <div role="alert" className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{billingError}</div>}
+                            <label className="flex flex-col gap-2">
+                                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Cliente</span>
+                                <div className="relative">
+                                    <select
+                                        required
+                                        value={billingForm.clientId}
+                                        onChange={e => handleBillingClientChange(e.target.value)}
+                                        className="w-full bg-[#111322] border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none text-sm appearance-none pr-8 cursor-pointer"
+                                    >
+                                        <option value="">Selecione um cliente</option>
+                                        {clients.map(client => <option key={client.id} value={client.id}>{client.name} — {client.email}</option>)}
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 text-xs">▼</div>
+                                </div>
+                            </label>
+
+                            <label className="flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Contrato Vinculado (Opcional)</span>
+                                    {billingForm.clientId && (
+                                        <span className="text-[10px] text-slate-500">
+                                            {eligibleContracts.length} contrato{eligibleContracts.length === 1 ? "" : "s"} ativo(s) e assinado(s)
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="relative">
+                                    <select
+                                        value={billingForm.contractId}
+                                        onChange={e => handleBillingContractChange(e.target.value)}
+                                        disabled={!billingForm.clientId}
+                                        className="w-full bg-[#111322] border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none text-sm appearance-none pr-8 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                    >
+                                        <option value="">Cobrança avulsa (sem contrato)</option>
+                                        {eligibleContracts.map(contract => (
+                                            <option key={contract.id} value={contract.id}>
+                                                Contrato #{contract.id} — Dia {contract.paymentDay || 25} (R$ {Number(contract.monthlyValue || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 text-xs">▼</div>
+                                </div>
+                                {billingForm.contractId && (
+                                    <p className="text-[11px] text-blue-400/90 font-medium">
+                                        Valor, vencimento e descrição sugerida preenchidos com base no contrato. Você pode editá-los livremente.
+                                    </p>
+                                )}
+                            </label>
+
+                            <label className="flex flex-col gap-2">
+                                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Descrição</span>
+                                <input
+                                    required
+                                    value={billingForm.description}
+                                    onChange={e => setBillingForm({ ...billingForm, description: e.target.value })}
+                                    className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm"
+                                    placeholder="Ex.: Mensalidade de setembro"
+                                />
+                            </label>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Valor (R$)</span>
+                                    <input
+                                        required
+                                        inputMode="decimal"
+                                        value={billingForm.amount}
+                                        onChange={e => setBillingForm({ ...billingForm, amount: e.target.value })}
+                                        className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-sans tabular-nums"
+                                        placeholder="0,00"
+                                    />
+                                </label>
+                                <label className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Vencimento (opcional)</span>
+                                    <input
+                                        type="date"
+                                        value={billingForm.dueDate}
+                                        onChange={e => setBillingForm({ ...billingForm, dueDate: e.target.value })}
+                                        className="w-full bg-[#111322] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm font-sans tabular-nums"
+                                    />
+                                </label>
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                                <button type="button" onClick={() => setBillingModalOpen(false)} className="px-5 py-3 text-sm font-bold text-slate-400 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 transition cursor-pointer">Cancelar</button>
+                                <button type="submit" disabled={billingAction === "create"} className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white rounded-xl transition shadow-lg cursor-pointer disabled:opacity-50 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500">
+                                    {billingAction === "create" && <Loader2 size={16} className="animate-spin" />}
+                                    Criar link de pagamento
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                );
+            })()}
+
             {/* Record Modal (Receita/Despesa) */}
             {modalOpen && (
-                <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 xl:left-[292px] bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#1c1e2e] border border-white/10 rounded-[32px] w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 relative">
                         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
                         <div className="bg-black/30 px-8 py-5 border-b border-white/10 flex items-center justify-between">
