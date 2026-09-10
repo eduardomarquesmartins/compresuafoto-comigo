@@ -682,14 +682,11 @@ export default function ProposalsPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-zinc-200/90 pb-6">
                 <div>
                     <span className="text-xs font-black tracking-[0.22em] uppercase text-blue-600">
-                        Gestão Comercial &bull; Fase 2
+                        Gestão Comercial &bull;
                     </span>
                     <h1 className="text-3xl font-extrabold text-zinc-950 tracking-tight mt-1">
-                        Pipeline de Propostas
+                        Propostas
                     </h1>
-                    <p className="text-xs text-zinc-600 mt-1">
-                        Acompanhe o fluxo comercial: Proposta &rarr; Aprovação &rarr; Contrato &rarr; Assinatura &rarr; Cobrança
-                    </p>
                 </div>
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
