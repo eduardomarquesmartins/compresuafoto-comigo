@@ -40,6 +40,7 @@ import {
     getOrCreateProposalContract,
     getProposals,
     updatePendingContract,
+    updateProposalPaymentDay,
 } from "@/lib/api";
 
 interface Proposal {
@@ -51,6 +52,7 @@ interface Proposal {
     total?: number | string | null;
     status?: string | null;
     proposalType?: string | null;
+    paymentDay?: number | null;
     publicToken?: string | null;
     acceptedAt?: string | null;
     declinedAt?: string | null;
@@ -207,10 +209,12 @@ export default function CommercialHubPage() {
 
     // Contract Edit Modal State
     const [editingContract, setEditingContract] = useState<Contract | null>(null);
+    const [editingProposalPayment, setEditingProposalPayment] = useState<Proposal | null>(null);
     const [editPaymentDay, setEditPaymentDay] = useState<number>(25);
     const [editObservation, setEditObservation] = useState<string>("");
     const [editAdditionalScope, setEditAdditionalScope] = useState<string>("");
     const [savingContract, setSavingContract] = useState(false);
+    const [savingProposalPayment, setSavingProposalPayment] = useState(false);
 
     // Confirmation Modal for Deletions
     const [deleteModal, setDeleteModal] = useState<{
@@ -671,6 +675,41 @@ export default function CommercialHubPage() {
         setEditPaymentDay(Number(contract.paymentDay) || 25);
         setEditObservation(contract.observation || "");
         setEditAdditionalScope(contract.additionalScope || "");
+    };
+
+    const handleOpenEditProposalPayment = (proposal: Proposal) => {
+        setEditingProposalPayment(proposal);
+        setEditPaymentDay(Number(proposal.paymentDay) || 25);
+    };
+
+    const handleSaveProposalPayment = async () => {
+        if (!editingProposalPayment) return;
+        if (!Number.isInteger(editPaymentDay) || editPaymentDay < 1 || editPaymentDay > 31) {
+            setFeedbackAlert({ type: "error", message: "O dia de vencimento deve estar entre 1 e 31." });
+            return;
+        }
+        try {
+            setSavingProposalPayment(true);
+            const result = await updateProposalPaymentDay(editingProposalPayment.id, editPaymentDay);
+            setProposals((prev) => prev.map((proposal) => proposal.id === editingProposalPayment.id
+                ? { ...proposal, paymentDay: result.proposal.paymentDay }
+                : proposal));
+            if (result.contract) {
+                setContracts((prev) => prev.map((contract) => contract.id === result.contract.id
+                    ? { ...contract, ...result.contract }
+                    : contract));
+            }
+            setEditingProposalPayment(null);
+            setFeedbackAlert({ type: "success", message: "Dia de pagamento da proposta atualizado." });
+        } catch (error) {
+            const apiError = error as { response?: { data?: { error?: string } } };
+            setFeedbackAlert({
+                type: "error",
+                message: apiError.response?.data?.error || "Não foi possível alterar o dia de pagamento.",
+            });
+        } finally {
+            setSavingProposalPayment(false);
+        }
     };
 
     // Save Contract Changes
@@ -1173,20 +1212,17 @@ export default function CommercialHubPage() {
 
                                 const hasSignatureToken = Boolean(matchedContract?.signatureToken);
                                 const hasCopyLink = hasSignatureToken || Boolean(proposal.publicToken);
-                                const centerProposalDelete = hasCopyLink !== Boolean(matchedContract);
                                 const proposalToolGridCols = hasCopyLink
-                                    ? matchedContract
-                                        ? "grid-cols-2 lg:grid-cols-[2.5rem_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)]"
-                                        : "grid-cols-2 lg:grid-cols-[2.5rem_repeat(2,minmax(0,1fr))]"
-                                    : matchedContract
-                                        ? "grid-cols-2 lg:grid-cols-3"
-                                        : "grid-cols-2";
+                                    ? "grid-cols-2 lg:grid-cols-[2.5rem_repeat(3,minmax(0,1fr))]"
+                                    : "grid-cols-2 lg:grid-cols-3";
                                 const centerProposalDownload = !isPending &&
                                     ((hasSignatureToken && Boolean(proposal.publicToken)) ||
                                         (!hasSignatureToken && !proposal.publicToken));
                                 const isProcessing = actionInProgressId === proposal.id;
                                 const isDownloadingProposal = downloadingProposalId === proposal.id;
-                                const paymentDay = matchedContract ? Number(matchedContract.paymentDay) || 25 : null;
+                                const paymentDay = matchedContract
+                                    ? Number(matchedContract.paymentDay) || 25
+                                    : Number(proposal.paymentDay) || null;
 
                                 return (
                                     <div
@@ -1415,18 +1451,21 @@ export default function CommercialHubPage() {
                                                     <span className="min-w-0 truncate text-zinc-800 font-semibold">Editar</span>
                                                 </Link>
 
-                                                {matchedContract && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleOpenEditContract(matchedContract)}
-                                                        className="inline-flex h-8.5 w-full min-w-0 items-center justify-center gap-1 overflow-hidden rounded-lg border border-zinc-300 bg-white hover:bg-zinc-50 hover:border-zinc-400 px-2 text-xs font-semibold text-zinc-800 shadow-2xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 whitespace-nowrap"
-                                                        title={isSigned ? "Ver dia de vencimento" : "Ajustar dia de vencimento"}
-                                                        aria-label={isSigned ? "Ver dia de vencimento" : "Ajustar dia de vencimento"}
-                                                    >
-                                                        <Calendar size={12} className="text-zinc-700 shrink-0" aria-hidden="true" />
-                                                        <span className="min-w-0 truncate text-zinc-800 font-semibold">Pagamento</span>
-                                                    </button>
-                                                )}
+                                                <button
+                                                    type="button"
+                                                    disabled={proposal.status === "DECLINED" || Boolean(matchedContract?.signedAt)}
+                                                    onClick={() => matchedContract
+                                                        ? handleOpenEditContract(matchedContract)
+                                                        : handleOpenEditProposalPayment(proposal)}
+                                                    className="inline-flex h-8.5 w-full min-w-0 items-center justify-center gap-1 overflow-hidden rounded-lg border border-zinc-300 bg-white hover:bg-zinc-50 hover:border-zinc-400 px-2 text-xs font-semibold text-zinc-800 shadow-2xs transition-colors cursor-pointer disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 disabled:hover:border-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 whitespace-nowrap"
+                                                    title={matchedContract?.signedAt
+                                                        ? "Contrato assinado: alteração exige aditivo"
+                                                        : "Ajustar dia de pagamento"}
+                                                    aria-label="Ajustar dia de pagamento"
+                                                >
+                                                    <Calendar size={12} className="text-zinc-700 shrink-0" aria-hidden="true" />
+                                                    <span className="min-w-0 truncate text-zinc-800 font-semibold">Pagamento</span>
+                                                </button>
 
                                                 <button
                                                     type="button"
@@ -1437,7 +1476,7 @@ export default function CommercialHubPage() {
                                                             title: `Proposta de ${clientName}`,
                                                         })
                                                     }
-                                                    className={`${centerProposalDelete ? "col-span-2 w-1/2 min-w-[6.5rem] justify-self-center lg:col-span-1 lg:w-full" : "w-full min-w-0"} inline-flex h-8.5 items-center justify-center gap-1 overflow-hidden rounded-lg border border-rose-600 bg-rose-600 px-2 text-xs font-semibold text-white shadow-2xs hover:bg-rose-700 hover:border-rose-700 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 whitespace-nowrap`}
+                                                    className="inline-flex h-8.5 w-full min-w-0 items-center justify-center gap-1 overflow-hidden rounded-lg border border-rose-600 bg-rose-600 px-2 text-xs font-semibold text-white shadow-2xs hover:bg-rose-700 hover:border-rose-700 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 whitespace-nowrap"
                                                     title="Excluir proposta"
                                                     aria-label="Excluir proposta"
                                                 >
@@ -1889,6 +1928,37 @@ export default function CommercialHubPage() {
             )}
 
             {/* Modal: Editar Data de Pagamento / Termos do Contrato */}
+            {editingProposalPayment && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 backdrop-blur-xs p-4" role="dialog" aria-modal="true">
+                    <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl">
+                        <div className="flex items-start justify-between border-b border-zinc-100 pb-4">
+                            <div>
+                                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#0044ff]">Proposta #{editingProposalPayment.id}</span>
+                                <h3 className="mt-0.5 text-lg font-bold text-zinc-950">{getClientDisplayName(editingProposalPayment)}</h3>
+                                <p className="text-xs text-zinc-500">O dia escolhido será usado ao gerar o contrato.</p>
+                            </div>
+                            <button type="button" onClick={() => setEditingProposalPayment(null)} className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100" aria-label="Fechar modal"><X size={18} /></button>
+                        </div>
+                        <label className="mt-5 block text-xs font-semibold text-zinc-700" htmlFor="proposal-payment-day">Dia de pagamento (1 a 31)</label>
+                        <input
+                            id="proposal-payment-day"
+                            type="number"
+                            min={1}
+                            max={31}
+                            value={editPaymentDay}
+                            onChange={(event) => setEditPaymentDay(Number(event.target.value))}
+                            className="mt-2 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-[#0044ff]"
+                        />
+                        <div className="mt-6 flex justify-end gap-2 border-t border-zinc-100 pt-4">
+                            <button type="button" onClick={() => setEditingProposalPayment(null)} className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700">Cancelar</button>
+                            <button type="button" onClick={handleSaveProposalPayment} disabled={savingProposalPayment} className="inline-flex items-center gap-1.5 rounded-xl bg-[#0044ff] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">
+                                {savingProposalPayment ? <Loader2 size={14} className="animate-spin" /> : <FileCheck2 size={14} />}
+                                {savingProposalPayment ? "Salvando..." : "Salvar pagamento"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {editingContract && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 backdrop-blur-xs p-4 animate-in fade-in duration-150"

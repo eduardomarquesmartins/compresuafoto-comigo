@@ -87,7 +87,11 @@ const createContractFromApprovedProposal = async (tx, proposal, { clientId, paym
     if (existing) return existing;
     const startDate = new Date(), durationMonths = 6, endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + durationMonths);
-    return tx.contract.create({ data: { proposalId: linkedProposal.id, clientId: linkedProposal.clientId, scope: parseServicesSnapshot(linkedProposal.selectedServices), monthlyValue: Number(linkedProposal.total), durationMonths, paymentDay: parsePaymentDay(paymentDay), startDate, endDate, status: 'PENDING_SIGNATURE', contractDate: new Date().toLocaleDateString('pt-BR'), signatureToken: crypto.randomBytes(24).toString('hex') }, include: { client: true } });
+    const resolvedPaymentDay = parsePaymentDay(paymentDay ?? linkedProposal.paymentDay);
+    if (linkedProposal.paymentDay !== resolvedPaymentDay) {
+        await tx.proposal.update({ where: { id: linkedProposal.id }, data: { paymentDay: resolvedPaymentDay } });
+    }
+    return tx.contract.create({ data: { proposalId: linkedProposal.id, clientId: linkedProposal.clientId, scope: parseServicesSnapshot(linkedProposal.selectedServices), monthlyValue: Number(linkedProposal.total), durationMonths, paymentDay: resolvedPaymentDay, startDate, endDate, status: 'PENDING_SIGNATURE', contractDate: new Date().toLocaleDateString('pt-BR'), signatureToken: crypto.randomBytes(24).toString('hex') }, include: { client: true } });
 };
 const approveAndGetContract = async (proposalId, action, qualification = null) => {
     try {
@@ -297,6 +301,36 @@ exports.deleteProposal = async (req, res) => {
     } catch (err) {
         console.error('[DELETE PROPOSAL ERROR]:', err);
         res.status(500).json({ error: 'Erro ao apagar proposta.' });
+    }
+};
+
+exports.updateProposalPaymentDay = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (!Number.isInteger(id)) return res.status(400).json({ error: 'Proposta inválida.' });
+        const paymentDay = parsePaymentDay(req.body?.paymentDay);
+        const result = await prisma.$transaction(async (tx) => {
+            const proposal = await tx.proposal.findUnique({ where: { id }, include: { contract: true } });
+            if (!proposal || proposal.status === 'DELETED') throw Object.assign(new Error('Proposta não encontrada.'), { status: 404 });
+            if (proposal.status === 'DECLINED') throw Object.assign(new Error('Propostas recusadas não podem ser alteradas.'), { status: 409 });
+            if (proposal.contract?.signedAt) throw Object.assign(new Error('O contrato já foi assinado; alteração do vencimento exige aditivo.'), { status: 409 });
+
+            let contract = null;
+            if (proposal.contract) {
+                const changed = await tx.contract.updateMany({
+                    where: { id: proposal.contract.id, status: 'PENDING_SIGNATURE', signedAt: null },
+                    data: { paymentDay }
+                });
+                if (changed.count !== 1) throw Object.assign(new Error('Somente contratos pendentes de assinatura podem ser alterados.'), { status: 409 });
+                contract = await tx.contract.findUnique({ where: { id: proposal.contract.id }, include: { client: true } });
+            }
+
+            const updatedProposal = await tx.proposal.update({ where: { id }, data: { paymentDay } });
+            return { proposal: updatedProposal, contract };
+        });
+        res.json(result);
+    } catch (err) {
+        res.status(err.status || 500).json({ error: err.message || 'Erro ao atualizar dia de pagamento da proposta.' });
     }
 };
 

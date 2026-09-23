@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { _internals } = require('../controllers/proposalController');
+const proposalController = require('../controllers/proposalController');
 const contractController = require('../controllers/contractController');
 const prisma = require('../lib/prisma');
 
@@ -66,6 +67,7 @@ test('unlinked public acceptance creates one Client and reuses one Contract on r
         transaction: prisma.$transaction,
         proposalFind: prisma.proposal.findUnique,
         proposalUpdateMany: prisma.proposal.updateMany,
+        proposalUpdate: prisma.proposal.update,
         clientCreate: prisma.client.create,
         contractFind: prisma.contract.findUnique,
         contractCreate: prisma.contract.create
@@ -82,6 +84,7 @@ test('unlinked public acceptance creates one Client and reuses one Contract on r
         Object.assign(proposal, data);
         return { count: 1 };
     };
+    prisma.proposal.update = async ({ data }) => Object.assign(proposal, data);
     prisma.client.create = async ({ data }) => {
         if (client) { const error = new Error('unique email'); error.code = 'P2002'; throw error; }
         clientCreates += 1;
@@ -108,6 +111,7 @@ test('unlinked public acceptance creates one Client and reuses one Contract on r
         prisma.$transaction = original.transaction;
         prisma.proposal.findUnique = original.proposalFind;
         prisma.proposal.updateMany = original.proposalUpdateMany;
+        prisma.proposal.update = original.proposalUpdate;
         prisma.client.create = original.clientCreate;
         prisma.contract.findUnique = original.contractFind;
         prisma.contract.create = original.contractCreate;
@@ -135,7 +139,7 @@ test('concurrent legacy creation with proposalId persists exactly one linked con
         assert.equal(successfulCreates, 1);
         assert.equal(first.id, second.id);
         assert.equal(first.proposalId, 44);
-        assert.equal(first.paymentDay, 25);
+        assert.equal(first.paymentDay, 8);
     } finally {
         prisma.$transaction = original.transaction;
         prisma.proposal.findUnique = original.proposalFind;
@@ -177,5 +181,93 @@ test('sending a proposal for signature confirms it and uses the contract payment
         prisma.proposal.findUnique = original.proposalFind;
         prisma.proposal.updateMany = original.proposalUpdateMany;
         prisma.contract.create = original.contractCreate;
+    }
+});
+
+test('proposal payment-day update persists on an unlinked proposal', async () => {
+    const original = {
+        transaction: prisma.$transaction,
+        proposalFind: prisma.proposal.findUnique,
+        proposalUpdate: prisma.proposal.update
+    };
+    const proposal = { id: 51, status: 'APPROVED', paymentDay: null, contract: null };
+    prisma.$transaction = async (callback) => callback(prisma);
+    prisma.proposal.findUnique = async () => proposal;
+    prisma.proposal.update = async ({ data }) => Object.assign(proposal, data);
+    const response = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    try {
+        await proposalController.updateProposalPaymentDay({ params: { id: '51' }, body: { paymentDay: 12 } }, response);
+        assert.equal(response.statusCode, 200);
+        assert.equal(response.body.proposal.paymentDay, 12);
+        assert.equal(proposal.paymentDay, 12);
+    } finally {
+        prisma.$transaction = original.transaction;
+        prisma.proposal.findUnique = original.proposalFind;
+        prisma.proposal.update = original.proposalUpdate;
+    }
+});
+
+test('proposal payment-day update also synchronizes its pending contract', async () => {
+    const original = {
+        transaction: prisma.$transaction,
+        proposalFind: prisma.proposal.findUnique,
+        proposalUpdate: prisma.proposal.update,
+        contractUpdateMany: prisma.contract.updateMany,
+        contractFind: prisma.contract.findUnique
+    };
+    const contract = { id: 62, proposalId: 61, status: 'PENDING_SIGNATURE', signedAt: null, paymentDay: 25 };
+    const proposal = { id: 61, status: 'APPROVED', paymentDay: 25, contract };
+    prisma.$transaction = async (callback) => callback(prisma);
+    prisma.proposal.findUnique = async () => proposal;
+    prisma.proposal.update = async ({ data }) => Object.assign(proposal, data);
+    prisma.contract.updateMany = async ({ data }) => {
+        Object.assign(contract, data);
+        return { count: 1 };
+    };
+    prisma.contract.findUnique = async () => contract;
+    const response = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    try {
+        await proposalController.updateProposalPaymentDay({ params: { id: '61' }, body: { paymentDay: 18 } }, response);
+        assert.equal(response.statusCode, 200);
+        assert.equal(proposal.paymentDay, 18);
+        assert.equal(contract.paymentDay, 18);
+        assert.equal(response.body.contract.paymentDay, 18);
+    } finally {
+        prisma.$transaction = original.transaction;
+        prisma.proposal.findUnique = original.proposalFind;
+        prisma.proposal.update = original.proposalUpdate;
+        prisma.contract.updateMany = original.contractUpdateMany;
+        prisma.contract.findUnique = original.contractFind;
+    }
+});
+
+test('proposal payment-day update refuses to mutate a signed contract', async () => {
+    const original = { transaction: prisma.$transaction, proposalFind: prisma.proposal.findUnique };
+    prisma.$transaction = async (callback) => callback(prisma);
+    prisma.proposal.findUnique = async () => ({
+        id: 71,
+        status: 'APPROVED',
+        contract: { id: 72, status: 'SIGNED', signedAt: new Date() }
+    });
+    const response = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(body) { this.body = body; return this; }
+    };
+    try {
+        await proposalController.updateProposalPaymentDay({ params: { id: '71' }, body: { paymentDay: 10 } }, response);
+        assert.equal(response.statusCode, 409);
+        assert.match(response.body.error, /aditivo/);
+    } finally {
+        prisma.$transaction = original.transaction;
+        prisma.proposal.findUnique = original.proposalFind;
     }
 });

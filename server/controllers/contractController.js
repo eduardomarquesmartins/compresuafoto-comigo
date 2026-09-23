@@ -216,6 +216,10 @@ const getOrCreateLinkedProposalContract = async (proposalId, supplied = {}, { ap
             if (proposal.status !== 'APPROVED' || !proposal.clientId) throw Object.assign(new Error('A proposta deve estar aprovada e vinculada a um cliente.'), { status: 409 });
             if (proposal.contract) return verify(proposal.contract);
             if (supplied.durationMonths !== undefined && Number(supplied.durationMonths) !== 6) throw Object.assign(new Error('Vigência incompatível com o snapshot da proposta.'), { status: 409 });
+            const paymentDay = parsePaymentDay(supplied.paymentDay ?? proposal.paymentDay);
+            if (supplied.paymentDay !== undefined && Number(proposal.paymentDay) !== paymentDay) {
+                await tx.proposal.update({ where: { id: proposal.id }, data: { paymentDay } });
+            }
             const startDate = new Date(), endDate = new Date(startDate);
             endDate.setMonth(endDate.getMonth() + 6);
             return tx.contract.create({ data: {
@@ -226,7 +230,7 @@ const getOrCreateLinkedProposalContract = async (proposalId, supplied = {}, { ap
                 additionalScope: typeof supplied.additionalScope === 'string' ? supplied.additionalScope.trim() || null : null,
                 monthlyValue: Number(proposal.total),
                 durationMonths: 6,
-                paymentDay: parsePaymentDay(supplied.paymentDay),
+                paymentDay,
                 startDate,
                 endDate,
                 status: 'PENDING_SIGNATURE',
@@ -258,9 +262,15 @@ exports.updatePendingContract = async (req, res) => {
         }
         if (paymentDay !== undefined) data.paymentDay = parsePaymentDay(paymentDay);
         if (!Object.keys(data).length) return res.status(400).json({ error: 'Informe ao menos um campo editável.' });
-        const changed = await prisma.contract.updateMany({ where: { id, status: 'PENDING_SIGNATURE', signedAt: null }, data });
-        if (changed.count !== 1) return res.status(409).json({ error: 'Somente contratos pendentes de assinatura podem ser alterados.' });
-        const contract = await prisma.contract.findUnique({ where: { id }, include: { client: true } });
+        const contract = await prisma.$transaction(async (tx) => {
+            const changed = await tx.contract.updateMany({ where: { id, status: 'PENDING_SIGNATURE', signedAt: null }, data });
+            if (changed.count !== 1) throw Object.assign(new Error('Somente contratos pendentes de assinatura podem ser alterados.'), { status: 409 });
+            const updated = await tx.contract.findUnique({ where: { id }, include: { client: true } });
+            if (paymentDay !== undefined && updated.proposalId) {
+                await tx.proposal.updateMany({ where: { id: updated.proposalId }, data: { paymentDay: updated.paymentDay } });
+            }
+            return updated;
+        });
         res.json(contract);
     } catch (err) {
         res.status(err.status || 500).json({ error: err.message || 'Erro ao atualizar contrato.' });

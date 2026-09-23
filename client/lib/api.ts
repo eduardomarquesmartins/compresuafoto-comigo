@@ -268,6 +268,11 @@ export const linkProposalClient = async (id: number, clientId?: number) => {
     return response.data;
 };
 
+export const updateProposalPaymentDay = async (id: number, paymentDay: number) => {
+    const response = await api.patch(`proposals/${id}/payment-day`, { paymentDay });
+    return response.data;
+};
+
 export const getOrCreateProposalContract = async (id: number, data?: { clientId?: number; paymentDay?: number }) => {
     const response = await api.post(`proposals/${id}/contract`, data);
     return response.data;
