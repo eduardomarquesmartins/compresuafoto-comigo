@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Plus, Mail, Send, CheckCircle2, Loader2, Trash2 } from 'lucide-react';
-import { sendProposalEmail, downloadProposalPdf, createProposal, getClients, getProposal, updateProposal } from '@/lib/api';
+import { ArrowLeft, Plus, Mail, Send, CheckCircle2, FileSignature, Loader2, Trash2 } from 'lucide-react';
+import { sendProposalEmail, downloadProposalPdf, createProposal, getClients, getProposal, sendContractSignatureLink, updateProposal } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ProposalCover from "@/components/proposals/ProposalCover";
@@ -265,6 +265,8 @@ export default function NewProposalPage() {
     const [selectedClientId, setSelectedClientId] = useState("");
     const [clientName, setClientName] = useState("");
     const [clientEmail, setClientEmail] = useState('');
+    const [sendProposalByEmail, setSendProposalByEmail] = useState(false);
+    const [sendForSignature, setSendForSignature] = useState(false);
     const [proposalType, setProposalType] = useState<ProposalType>('empresarial');
     const [isDownloading, setIsDownloading] = useState(false);
     const [isLoadingProposal, setIsLoadingProposal] = useState(false);
@@ -346,6 +348,8 @@ export default function NewProposalPage() {
     };
 
     const handleServiceToggle = (item: ProposalItem, category: string) => {
+        setIsManualTotal(false);
+        setTotalFinalDraft('');
         const alreadySelected = selectedServices.some(s => s.id === item.id);
         if (alreadySelected) {
             setSelectedServices(prev => prev.filter(s => s.id !== item.id));
@@ -373,6 +377,8 @@ export default function NewProposalPage() {
         const parsedPrice = parseMoneyInput(newPrice);
         if (parsedPrice === null && newPrice.trim() !== '') return;
 
+        setIsManualTotal(false);
+        setTotalFinalDraft('');
         setSelectedServices(prev => prev.map(service => (
             service.id === id
                 ? { ...service, price: parsedPrice ?? 0 }
@@ -382,6 +388,8 @@ export default function NewProposalPage() {
 
     const handleQuantityChange = (id: string, quantity: number) => {
         const normalizedQuantity = normalizeQuantity(quantity);
+        setIsManualTotal(false);
+        setTotalFinalDraft('');
         setSelectedServices(prev => prev.map(service => (
             service.id === id
                 ? { ...service, quantity: normalizedQuantity }
@@ -390,6 +398,8 @@ export default function NewProposalPage() {
     };
 
     const handleRemoveService = (id: string) => {
+        setIsManualTotal(false);
+        setTotalFinalDraft('');
         setSelectedServices(prev => prev.filter(service => service.id !== id));
         setPriceDrafts(prev => {
             const next = { ...prev };
@@ -423,6 +433,8 @@ export default function NewProposalPage() {
             quantity: 1
         };
 
+        setIsManualTotal(false);
+        setTotalFinalDraft('');
         setSelectedServices(prev => [...prev, newService]);
         setPriceDrafts(prev => ({ ...prev, [customId]: String(price) }));
         setCustomService({
@@ -460,14 +472,47 @@ export default function NewProposalPage() {
             return;
         }
 
+        if (sendProposalByEmail && !clientEmail.trim()) {
+            alert('Para enviar a proposta por e-mail, informe o e-mail de envio.');
+            return;
+        }
+
+        if (sendForSignature && (!selectedClientId || !clientEmail)) {
+            alert('Para enviar para assinatura, selecione uma cliente cadastrada com e-mail.');
+            return;
+        }
+
         try {
             setIsDownloading(true);
             const finalTotal = isManualTotal && parsedManualTotal !== null ? parsedManualTotal : subtotal;
 
-            if (clientEmail) {
+            const proposalPayload = {
+                clientId: selectedClientId ? Number(selectedClientId) : undefined,
+                clientName,
+                clientEmail: clientEmail || undefined,
+                selectedServices,
+                total: finalTotal,
+                proposalType
+            };
+
+            const savedProposal = editingProposalId
+                ? await updateProposal(editingProposalId, proposalPayload)
+                : await createProposal(proposalPayload);
+
+            if (sendForSignature) {
+                await sendContractSignatureLink({
+                    proposalId: savedProposal.id,
+                    clientId: Number(selectedClientId),
+                    delivery: 'email'
+                });
+                setEmailStatus('success');
+                setTimeout(() => setEmailStatus('idle'), 5000);
+            }
+
+            if (sendProposalByEmail && clientEmail.trim()) {
                 setEmailStatus('idle');
                 await sendProposalEmail({
-                    email: clientEmail,
+                    email: clientEmail.trim(),
                     clientName,
                     selectedServices,
                     total: finalTotal,
@@ -475,21 +520,6 @@ export default function NewProposalPage() {
                 });
                 setEmailStatus('success');
                 setTimeout(() => setEmailStatus('idle'), 5000);
-            }
-
-            const proposalPayload = {
-                clientId: selectedClientId ? Number(selectedClientId) : undefined,
-                clientName,
-                clientEmail,
-                selectedServices,
-                total: finalTotal,
-                proposalType
-            };
-
-            if (editingProposalId) {
-                await updateProposal(editingProposalId, proposalPayload);
-            } else {
-                await createProposal(proposalPayload);
             }
 
             const blob = await downloadProposalPdf({
@@ -509,7 +539,7 @@ export default function NewProposalPage() {
             window.URL.revokeObjectURL(url);
 
             setTimeout(() => {
-                router.push(`/admin/proposals?updated=${Date.now()}`);
+                router.push(`/admin/commercial?updated=${Date.now()}`);
             }, 250);
         } catch (error) {
             console.error('Erro na acao:', error);
@@ -609,7 +639,7 @@ export default function NewProposalPage() {
             <div className="max-w-6xl mx-auto space-y-10 pb-72 md:pb-80 xl:pb-44 print:hidden relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                        <Link href="/admin/proposals" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4 text-sm font-bold uppercase tracking-widest">
+                        <Link href="/admin/commercial" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4 text-sm font-bold uppercase tracking-widest">
                             <ArrowLeft className="w-4 h-4" />
                             Voltar
                         </Link>
@@ -628,7 +658,13 @@ export default function NewProposalPage() {
                         </div>
                         <div>
                             <p className="font-bold leading-tight">Sucesso!</p>
-                            <p className="text-sm opacity-90">Proposta enviada para o e-mail do cliente.</p>
+                            <p className="text-sm opacity-90">
+                                {sendForSignature && sendProposalByEmail
+                                    ? "Proposta e link do contrato enviados por e-mail."
+                                    : sendForSignature
+                                        ? "Link do contrato enviado por e-mail."
+                                        : "Proposta enviada para o e-mail do cliente."}
+                            </p>
                         </div>
                     </div>
                 )}
@@ -678,36 +714,63 @@ export default function NewProposalPage() {
                 </div>
 
                 <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-2xl">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <Plus className="w-5 h-5 text-blue-500" />
+                    <div className="flex items-center justify-between flex-wrap gap-3 mb-2">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <Plus className="w-5 h-5 text-blue-500" />
+                            </div>
+                            <h3 className="text-xl font-bold uppercase tracking-widest text-slate-200">Dados do Cliente / Lead</h3>
                         </div>
-                        <h3 className="text-xl font-bold uppercase tracking-widest text-slate-200">Dados do Cliente</h3>
+                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            Vínculo Opcional
+                        </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3 md:col-span-2">
-                            <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Cliente vinculado</label>
+                            <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1 flex items-center justify-between">
+                                <span>Cliente Cadastrado (Opcional)</span>
+                                <span className="text-[10px] text-slate-400 font-normal lowercase tracking-normal">
+                                    (vincule agora ou deixe para vincular depois)
+                                </span>
+                            </label>
                             <select
                                 value={selectedClientId}
                                 onChange={e => handleClientSelect(e.target.value)}
                                 className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
                             >
-                                <option value="">Sem vínculo / preencher manualmente</option>
+                                <option value="">Sem cliente vinculado agora (criar como lead / vincular mais tarde)</option>
                                 {clients.map(client => (
                                     <option key={client.id} value={client.id}>
                                         {client.name} {client.email ? `- ${client.email}` : ""}
                                     </option>
                                 ))}
                             </select>
+                            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs leading-relaxed text-slate-400 flex items-start gap-2.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                                <p>
+                                    {selectedClientId ? (
+                                        <span>
+                                            <strong className="text-slate-200 font-bold">Cliente vinculado:</strong> Os dados e contratos associados serão registrados no cadastro deste cliente.
+                                        </span>
+                                    ) : (
+                                        <span>
+                                            <strong className="text-slate-200 font-bold">Vínculo opcional:</strong> Você pode gerar e enviar a proposta livremente apenas informando o nome abaixo. O vínculo ao cadastro pode ser feito mais tarde ou no momento do fechamento.
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
                         </div>
+
                         <div className="space-y-3">
-                            <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">Nome / Razão Social do Cliente</label>
+                            <label className="text-xs font-bold uppercase text-slate-500 tracking-widest ml-1">
+                                Nome / Razão Social do Cliente ou Lead *
+                            </label>
                             <input
                                 type="text"
                                 value={clientName}
                                 onChange={e => setClientName(e.target.value)}
-                                placeholder="Ex: Empresa Conti Marketing, não @ do Instagram"
+                                placeholder="Ex: Empresa Conti Marketing ou Nome do Lead"
                                 className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
                             />
                         </div>
@@ -723,6 +786,48 @@ export default function NewProposalPage() {
                                 placeholder="contato@empresa.com"
                                 className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all outline-none"
                             />
+                        </div>
+
+                        <div className="md:col-span-2 space-y-3">
+                            <label className={`flex items-start gap-3 rounded-2xl border p-4 cursor-pointer transition-colors ${
+                                sendProposalByEmail
+                                    ? 'border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/15'
+                                    : 'border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-950/60'
+                            }`}>
+                                <input
+                                    type="checkbox"
+                                    checked={sendProposalByEmail}
+                                    onChange={event => setSendProposalByEmail(event.target.checked)}
+                                    className="mt-0.5 h-4 w-4 accent-blue-500 rounded border-slate-700 bg-slate-950"
+                                />
+                                <span>
+                                    <span className="flex items-center gap-2 text-sm font-bold text-white">
+                                        <Mail size={16} className="text-blue-400" />
+                                        Enviar proposta por e-mail
+                                    </span>
+
+                                </span>
+                            </label>
+
+                            <label className={`flex items-start gap-3 rounded-2xl border p-4 cursor-pointer transition-colors ${
+                                sendForSignature
+                                    ? 'border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/15'
+                                    : 'border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-950/60'
+                            }`}>
+                                <input
+                                    type="checkbox"
+                                    checked={sendForSignature}
+                                    onChange={event => setSendForSignature(event.target.checked)}
+                                    className="mt-0.5 h-4 w-4 accent-blue-500 rounded border-slate-700 bg-slate-950"
+                                />
+                                <span>
+                                    <span className="flex items-center gap-2 text-sm font-bold text-white">
+                                        <FileSignature size={16} className="text-blue-400" />
+                                        Enviar contrato para assinatura junto com a proposta
+                                    </span>
+
+                                </span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -947,9 +1052,19 @@ export default function NewProposalPage() {
                                 </>
                             ) : (
                                 <>
-                                    {clientEmail ? <Send size={20} /> : <ArrowLeft className="rotate-[-90deg]" size={20} />}
+                                    {sendForSignature ? (
+                                        <FileSignature size={20} />
+                                    ) : sendProposalByEmail && clientEmail ? (
+                                        <Send size={20} />
+                                    ) : (
+                                        <ArrowLeft className="rotate-[-90deg]" size={20} />
+                                    )}
                                     <span className="text-sm">
-                                        {editingProposalId ? (clientEmail ? 'Salvar, Enviar e Baixar' : 'Salvar e Baixar') : (clientEmail ? 'Enviar e Baixar' : 'Baixar Proposta')}
+                                        {sendForSignature
+                                            ? (sendProposalByEmail ? 'Gerar, Enviar e Assinar' : 'Gerar e enviar assinatura')
+                                            : editingProposalId
+                                                ? (sendProposalByEmail && clientEmail ? 'Salvar, Enviar e Baixar' : 'Salvar e Baixar')
+                                                : (sendProposalByEmail && clientEmail ? 'Enviar e Baixar' : 'Baixar Proposta')}
                                     </span>
                                 </>
                             )}

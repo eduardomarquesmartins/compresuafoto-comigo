@@ -32,6 +32,13 @@ const transitionProposal = (proposal, action, { allowUnlinked = false } = {}) =>
 };
 const qualificationError = (message) => Object.assign(new Error(message), { status: 400 });
 const requiredText = (value) => typeof value === 'string' && value.trim();
+const parsePaymentDay = (value) => {
+    const parsed = value === undefined || value === null || value === '' ? 25 : Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 31) {
+        throw Object.assign(new Error('Dia de pagamento deve estar entre 1 e 31.'), { status: 400 });
+    }
+    return parsed;
+};
 const validateQualification = (payload = {}) => {
     // These are the Client model fields. Do not infer a client from an e-mail:
     // public acceptance is only allowed to create the client for this proposal.
@@ -57,14 +64,30 @@ const validateQualification = (payload = {}) => {
         ...(requiredText(payload.signerDocument) ? { signerDocument: payload.signerDocument.trim() } : {})
     };
 };
-const createContractFromApprovedProposal = async (tx, proposal) => {
+const createContractFromApprovedProposal = async (tx, proposal, { clientId, paymentDay } = {}) => {
     if (!proposal) throw Object.assign(new Error('Proposta não encontrada.'), { status: 404 });
-    if (proposal.status !== 'APPROVED' || !proposal.clientId) throw Object.assign(new Error('A proposta deve estar aprovada e vinculada a um cliente.'), { status: 409 });
-    const existing = await tx.contract.findUnique({ where: { proposalId: proposal.id }, include: { client: true } });
+    if (proposal.status !== 'APPROVED') throw Object.assign(new Error('A proposta deve estar aprovada antes de gerar o contrato.'), { status: 409 });
+    const suppliedClientId = clientId === undefined || clientId === null || clientId === '' ? null : parseInt(clientId, 10);
+    if (clientId !== undefined && !Number.isInteger(suppliedClientId)) throw Object.assign(new Error('clientId inválido.'), { status: 400 });
+    if (proposal.clientId && suppliedClientId && proposal.clientId !== suppliedClientId) throw Object.assign(new Error('Cliente incompatível com a proposta.'), { status: 409 });
+    if (!proposal.clientId && !suppliedClientId) throw Object.assign(new Error('Selecione um cliente para gerar o contrato.'), { status: 400 });
+
+    let linkedProposal = proposal;
+    if (!proposal.clientId) {
+        const client = await tx.client.findUnique({ where: { id: suppliedClientId } });
+        if (!client) throw Object.assign(new Error('Cliente não encontrado.'), { status: 404 });
+        const changed = await tx.proposal.updateMany({
+            where: { id: proposal.id, status: 'APPROVED', clientId: null },
+            data: { clientId: client.id, clientName: client.name, clientEmail: client.email }
+        });
+        if (changed.count !== 1) throw Object.assign(new Error('A proposta foi alterada enquanto o contrato era gerado.'), { status: 409 });
+        linkedProposal = await tx.proposal.findUnique({ where: { id: proposal.id }, include: { client: true } });
+    }
+    const existing = await tx.contract.findUnique({ where: { proposalId: linkedProposal.id }, include: { client: true } });
     if (existing) return existing;
     const startDate = new Date(), durationMonths = 6, endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + durationMonths);
-    return tx.contract.create({ data: { proposalId: proposal.id, clientId: proposal.clientId, scope: parseServicesSnapshot(proposal.selectedServices), monthlyValue: Number(proposal.total), durationMonths, paymentDay: 25, startDate, endDate, status: 'PENDING_SIGNATURE', contractDate: new Date().toLocaleDateString('pt-BR'), signatureToken: crypto.randomBytes(24).toString('hex') }, include: { client: true } });
+    return tx.contract.create({ data: { proposalId: linkedProposal.id, clientId: linkedProposal.clientId, scope: parseServicesSnapshot(linkedProposal.selectedServices), monthlyValue: Number(linkedProposal.total), durationMonths, paymentDay: parsePaymentDay(paymentDay), startDate, endDate, status: 'PENDING_SIGNATURE', contractDate: new Date().toLocaleDateString('pt-BR'), signatureToken: crypto.randomBytes(24).toString('hex') }, include: { client: true } });
 };
 const approveAndGetContract = async (proposalId, action, qualification = null) => {
     try {
@@ -90,14 +113,14 @@ const approveAndGetContract = async (proposalId, action, qualification = null) =
                 throw Object.assign(new Error('A proposta foi aceita por outra solicitação.'), { status: 409, code: 'ACCEPTANCE_RACE' });
             }
 
-            const data = transitionProposal(current, action);
+            const data = transitionProposal(current, action, { allowUnlinked: action === 'approve' });
             if (current.status === 'PENDING') {
                 // The status predicate is the compare-and-set: a competing terminal
                 // transition cannot overwrite this one after it commits.
                 const changed = await tx.proposal.updateMany({ where: { id: proposalId, status: 'PENDING' }, data });
                 if (changed.count === 1) {
                     const proposal = await tx.proposal.findUnique({ where: { id: proposalId }, include: { client: true } });
-                    return { proposal, contract: action === 'decline' ? null : await createContractFromApprovedProposal(tx, proposal) };
+                    return { proposal, contract: action === 'decline' || !proposal.clientId ? null : await createContractFromApprovedProposal(tx, proposal) };
                 }
             }
             const terminal = await tx.proposal.findUnique({ where: { id: proposalId }, include: { client: true } });
@@ -108,7 +131,7 @@ const approveAndGetContract = async (proposalId, action, qualification = null) =
                 const proposal = action === 'accept' && !terminal.acceptedAt
                     ? await tx.proposal.update({ where: { id: proposalId }, data: { acceptedAt: new Date() }, include: { client: true } })
                     : terminal;
-                return { proposal, contract: await createContractFromApprovedProposal(tx, proposal) };
+                return { proposal, contract: proposal.clientId ? await createContractFromApprovedProposal(tx, proposal) : null };
             }
             throw Object.assign(new Error('Ação conflitante para o estado atual da proposta.'), { status: 409 });
         });
@@ -168,7 +191,7 @@ exports.createProposal = async (req, res) => {
                 selectedServices: JSON.stringify(selectedServices),
                 total,
                 proposalType,
-                status: 'PENDING',
+                status: 'APPROVED',
                 publicToken: createPublicToken()
             },
             include: {
@@ -186,6 +209,7 @@ exports.updateProposal = async (req, res) => {
     try {
         const { id } = req.params;
         const { clientId, clientName, clientEmail, selectedServices, total, proposalType } = req.body;
+        const proposalId = parseInt(id);
         const parsedClientId = clientId ? parseInt(clientId) : null;
         const matchedClient = parsedClientId
             ? await prisma.client.findUnique({ where: { id: parsedClientId } })
@@ -193,20 +217,42 @@ exports.updateProposal = async (req, res) => {
                 ? await prisma.client.findUnique({ where: { email: clientEmail } })
                 : null;
 
-        const existing = await prisma.proposal.findUnique({ where: { id: parseInt(id) }, include: { contract: true } });
+        const existing = await prisma.proposal.findUnique({ where: { id: proposalId }, include: { contract: true, client: true } });
         if (!existing || existing.status === 'DELETED') return res.status(404).json({ error: 'Proposta não encontrada.' });
-        if (existing.status === 'APPROVED' || existing.status === 'DECLINED' || existing.contract) return res.status(409).json({ error: 'Propostas aprovadas, recusadas ou com contrato não podem ser alteradas.' });
+        if (existing.status === 'DECLINED' || existing.contract?.signedAt) return res.status(409).json({ error: 'Propostas recusadas ou contratos já assinados não podem ser alterados.' });
+        if (existing.contract && parsedClientId && parsedClientId !== existing.contract.clientId) {
+            return res.status(409).json({ error: 'O cliente de uma proposta já contratada não pode ser alterado antes da assinatura.' });
+        }
+
+        const contractClient = existing.contract ? existing.client : null;
         const data = {
-                clientId: matchedClient?.id || null,
-                clientName: matchedClient?.name || clientName,
-                clientEmail: matchedClient?.email || clientEmail,
+                clientId: contractClient?.id || matchedClient?.id || null,
+                clientName: contractClient?.name || matchedClient?.name || clientName,
+                clientEmail: contractClient?.email || matchedClient?.email || clientEmail,
                 selectedServices: JSON.stringify(selectedServices),
                 total,
                 ...(proposalType ? { proposalType } : {})
         };
-        const changed = await prisma.proposal.updateMany({ where: { id: parseInt(id), status: 'PENDING', contract: { is: null } }, data });
-        if (changed.count !== 1) return res.status(409).json({ error: 'A proposta foi finalizada ou contratada durante a atualização.' });
-        const proposal = await prisma.proposal.findUnique({ where: { id: parseInt(id) }, include: { client: true } });
+
+        const proposal = await prisma.$transaction(async (tx) => {
+            const changed = await tx.proposal.updateMany({
+                where: { id: proposalId, status: existing.status },
+                data
+            });
+            if (changed.count !== 1) throw Object.assign(new Error('A proposta foi finalizada durante a atualização.'), { status: 409 });
+
+            if (existing.contract) {
+                await tx.contract.updateMany({
+                    where: { id: existing.contract.id, signedAt: null },
+                    data: {
+                        scope: parseServicesSnapshot(selectedServices),
+                        monthlyValue: Number(total)
+                    }
+                });
+            }
+
+            return tx.proposal.findUnique({ where: { id: proposalId }, include: { client: true, contract: true } });
+        });
 
         res.json({
             ...proposal,
@@ -257,7 +303,7 @@ exports.deleteProposal = async (req, res) => {
 exports.approveProposal = async (req, res) => {
     try {
         const result = await approveAndGetContract(parseInt(req.params.id, 10), 'approve');
-        res.json({ ...result.proposal, contract: result.contract, signatureLink: buildSignatureLink(result.contract.signatureToken) });
+        res.json({ ...result.proposal, contract: result.contract, signatureLink: result.contract?.signatureToken ? buildSignatureLink(result.contract.signatureToken) : null });
     } catch (err) {
         console.error('[APPROVE PROPOSAL ERROR]:', err);
         res.status(err.status || 500).json({ error: err.message || 'Erro ao aprovar proposta.' });
@@ -271,7 +317,7 @@ exports.getOrCreateProposalContract = async (req, res) => {
         try {
             result = await prisma.$transaction(async (tx) => {
                 const proposal = await tx.proposal.findUnique({ where: { id: proposalId }, include: { client: true } });
-                const contract = await createContractFromApprovedProposal(tx, proposal);
+                const contract = await createContractFromApprovedProposal(tx, proposal, req.body);
                 return { proposal, contract };
             });
         } catch (error) {
@@ -369,4 +415,4 @@ exports.getProposalById = async (req, res) => {
     }
 };
 
-exports._internals = { createPublicToken, isPublicToken, parseServicesSnapshot, transitionProposal, validateQualification, publicProposal, approveAndGetContract };
+exports._internals = { createPublicToken, isPublicToken, parseServicesSnapshot, parsePaymentDay, transitionProposal, validateQualification, publicProposal, approveAndGetContract };

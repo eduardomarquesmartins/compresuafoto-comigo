@@ -64,7 +64,13 @@ const getContractPdfPayload = (contract) => ({
     signerName: contract.signedName || contract.client?.signerName || '',
     signerDocument: contract.signedDocument || contract.client?.signerDocument || '',
     signedSignatureData: contract.signedSignatureData || '',
-    scope: contract.scope,
+    // The proposal snapshot remains immutable in `scope`; pending-contract
+    // additions are rendered alongside it without changing that snapshot.
+    scope: [
+        contract.scope,
+        contract.additionalScope ? `Escopo adicional:\n${contract.additionalScope}` : '',
+        contract.observation ? `Observações adicionais: ${contract.observation}` : ''
+    ].filter(Boolean).join('\n'),
     monthlyValue: contract.monthlyValue,
     durationMonths: contract.durationMonths,
     paymentDay: contract.paymentDay,
@@ -167,27 +173,67 @@ const proposalScopeSnapshot = (value) => {
     } catch { return String(value || 'Serviços conforme proposta'); }
 };
 
-const getOrCreateLinkedProposalContract = async (proposalId, supplied = {}) => {
+const getOrCreateLinkedProposalContract = async (proposalId, supplied = {}, { approvePending = false } = {}) => {
     const id = parseInt(proposalId, 10);
     if (!Number.isInteger(id)) throw Object.assign(new Error('proposalId inválido.'), { status: 400 });
-    const proposal = await prisma.proposal.findUnique({ where: { id }, include: { client: true, contract: { include: { client: true } } } });
-    if (!proposal || proposal.status === 'DELETED') throw Object.assign(new Error('Proposta não encontrada.'), { status: 404 });
-    if (proposal.status !== 'APPROVED' || !proposal.clientId) throw Object.assign(new Error('A proposta deve estar aprovada e vinculada a um cliente.'), { status: 409 });
-    if (supplied.clientId && parseInt(supplied.clientId, 10) !== proposal.clientId) throw Object.assign(new Error('Cliente incompatível com a proposta.'), { status: 409 });
-    if (supplied.durationMonths !== undefined && Number(supplied.durationMonths) !== 6) throw Object.assign(new Error('Vigência incompatível com o snapshot da proposta.'), { status: 409 });
-    if (supplied.paymentDay !== undefined && Number(supplied.paymentDay) !== 25) throw Object.assign(new Error('Dia de pagamento incompatível com o snapshot da proposta.'), { status: 409 });
+    const suppliedClientId = supplied.clientId === undefined || supplied.clientId === null || supplied.clientId === '' ? null : parseInt(supplied.clientId, 10);
+    if (supplied.clientId !== undefined && !Number.isInteger(suppliedClientId)) throw Object.assign(new Error('clientId inválido.'), { status: 400 });
     const verify = (contract) => {
         if (supplied.scope && supplied.scope !== contract.scope) throw Object.assign(new Error('Escopo incompatível com o snapshot da proposta.'), { status: 409 });
         if (supplied.monthlyValue !== undefined && Number(supplied.monthlyValue) !== Number(contract.monthlyValue)) throw Object.assign(new Error('Valor incompatível com o snapshot da proposta.'), { status: 409 });
         if (supplied.durationMonths !== undefined && Number(supplied.durationMonths) !== Number(contract.durationMonths)) throw Object.assign(new Error('Vigência incompatível com o contrato vinculado.'), { status: 409 });
-        if (supplied.paymentDay !== undefined && Number(supplied.paymentDay) !== Number(contract.paymentDay)) throw Object.assign(new Error('Dia de pagamento incompatível com o contrato vinculado.'), { status: 409 });
         return contract;
     };
-    if (proposal.contract) return verify(proposal.contract);
-    const startDate = new Date(), endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + 6);
     try {
-        return await prisma.contract.create({ data: { proposalId: proposal.id, clientId: proposal.clientId, scope: proposalScopeSnapshot(proposal.selectedServices), monthlyValue: Number(proposal.total), durationMonths: 6, paymentDay: 25, startDate, endDate, status: 'PENDING_SIGNATURE', contractDate: new Date().toLocaleDateString('pt-BR'), signatureToken: crypto.randomBytes(24).toString('hex') }, include: { client: true } });
+        return await prisma.$transaction(async (tx) => {
+            let proposal = await tx.proposal.findUnique({ where: { id }, include: { client: true, contract: { include: { client: true } } } });
+            if (!proposal || proposal.status === 'DELETED') throw Object.assign(new Error('Proposta não encontrada.'), { status: 404 });
+            if (proposal.clientId && suppliedClientId && proposal.clientId !== suppliedClientId) throw Object.assign(new Error('Cliente incompatível com a proposta.'), { status: 409 });
+
+            if (!proposal.clientId && suppliedClientId) {
+                const client = await tx.client.findUnique({ where: { id: suppliedClientId } });
+                if (!client) throw Object.assign(new Error('Cliente não encontrado.'), { status: 404 });
+                const changed = await tx.proposal.updateMany({
+                    where: { id, status: proposal.status, clientId: null },
+                    data: { clientId: client.id, clientName: client.name, clientEmail: client.email }
+                });
+                if (changed.count !== 1) throw Object.assign(new Error('A proposta foi alterada enquanto o contrato era gerado.'), { status: 409 });
+                proposal = await tx.proposal.findUnique({ where: { id }, include: { client: true, contract: { include: { client: true } } } });
+            }
+
+            // Legacy send-link requests may still approve a pending proposal, but
+            // now may choose its client in the same transaction.
+            if (proposal.status === 'PENDING' && approvePending) {
+                if (!proposal.clientId) throw Object.assign(new Error('Selecione um cliente antes de enviar para assinatura.'), { status: 400 });
+                const changed = await tx.proposal.updateMany({
+                    where: { id, status: 'PENDING', clientId: proposal.clientId },
+                    data: { status: 'APPROVED', approvedAt: new Date() }
+                });
+                if (changed.count !== 1) throw Object.assign(new Error('A proposta foi alterada enquanto o link era preparado.'), { status: 409 });
+                proposal = await tx.proposal.findUnique({ where: { id }, include: { client: true, contract: { include: { client: true } } } });
+            }
+
+            if (proposal.status !== 'APPROVED' || !proposal.clientId) throw Object.assign(new Error('A proposta deve estar aprovada e vinculada a um cliente.'), { status: 409 });
+            if (proposal.contract) return verify(proposal.contract);
+            if (supplied.durationMonths !== undefined && Number(supplied.durationMonths) !== 6) throw Object.assign(new Error('Vigência incompatível com o snapshot da proposta.'), { status: 409 });
+            const startDate = new Date(), endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + 6);
+            return tx.contract.create({ data: {
+                proposalId: proposal.id,
+                clientId: proposal.clientId,
+                scope: proposalScopeSnapshot(proposal.selectedServices),
+                observation: typeof supplied.observation === 'string' ? supplied.observation.trim() || null : null,
+                additionalScope: typeof supplied.additionalScope === 'string' ? supplied.additionalScope.trim() || null : null,
+                monthlyValue: Number(proposal.total),
+                durationMonths: 6,
+                paymentDay: parsePaymentDay(supplied.paymentDay),
+                startDate,
+                endDate,
+                status: 'PENDING_SIGNATURE',
+                contractDate: new Date().toLocaleDateString('pt-BR'),
+                signatureToken: crypto.randomBytes(24).toString('hex')
+            }, include: { client: true } });
+        });
     } catch (error) {
         if (error.code !== 'P2002') throw error;
         const contract = await prisma.contract.findUnique({ where: { proposalId: id }, include: { client: true } });
@@ -196,12 +242,37 @@ const getOrCreateLinkedProposalContract = async (proposalId, supplied = {}) => {
     }
 };
 
+exports.updatePendingContract = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (!Number.isInteger(id)) return res.status(400).json({ error: 'Contrato inválido.' });
+        const { observation, additionalScope, paymentDay } = req.body;
+        const data = {};
+        if (observation !== undefined) {
+            if (observation !== null && typeof observation !== 'string') return res.status(400).json({ error: 'Observação inválida.' });
+            data.observation = observation?.trim() || null;
+        }
+        if (additionalScope !== undefined) {
+            if (additionalScope !== null && typeof additionalScope !== 'string') return res.status(400).json({ error: 'Escopo adicional inválido.' });
+            data.additionalScope = additionalScope?.trim() || null;
+        }
+        if (paymentDay !== undefined) data.paymentDay = parsePaymentDay(paymentDay);
+        if (!Object.keys(data).length) return res.status(400).json({ error: 'Informe ao menos um campo editável.' });
+        const changed = await prisma.contract.updateMany({ where: { id, status: 'PENDING_SIGNATURE', signedAt: null }, data });
+        if (changed.count !== 1) return res.status(409).json({ error: 'Somente contratos pendentes de assinatura podem ser alterados.' });
+        const contract = await prisma.contract.findUnique({ where: { id }, include: { client: true } });
+        res.json(contract);
+    } catch (err) {
+        res.status(err.status || 500).json({ error: err.message || 'Erro ao atualizar contrato.' });
+    }
+};
+
 exports.generateContract = async (req, res) => {
     try {
         const { clientName, clientDocument, scope, monthlyValue, durationMonths, paymentDay } = req.body;
 
-        if (!clientName || !clientDocument || !scope) {
-            return res.status(400).json({ error: 'Nome/Razao social, CPF/CNPJ e escopo sao obrigatorios.' });
+        if (!clientName || !scope) {
+            return res.status(400).json({ error: 'Nome/Razao social e escopo sao obrigatorios.' });
         }
 
         parsePositiveMoney(monthlyValue, 'Valor mensal');
@@ -245,9 +316,9 @@ exports.getContracts = async (req, res) => {
 
 exports.createContract = async (req, res) => {
     try {
-        const { clientId, proposalId, scope, monthlyValue, durationMonths, paymentDay, startDate, contractDate } = req.body;
+        const { clientId, proposalId, scope, monthlyValue, durationMonths, paymentDay, observation, additionalScope, startDate, contractDate } = req.body;
         if (proposalId) {
-            const contract = await getOrCreateLinkedProposalContract(proposalId, { clientId, scope, monthlyValue, durationMonths, paymentDay });
+            const contract = await getOrCreateLinkedProposalContract(proposalId, { clientId, scope, monthlyValue, durationMonths, paymentDay, observation, additionalScope });
             return res.status(200).json(contract);
         }
         if (!clientId || !scope || !monthlyValue) {
@@ -300,6 +371,8 @@ exports.sendSignatureLink = async (req, res) => {
             monthlyValue,
             durationMonths,
             paymentDay,
+            observation,
+            additionalScope,
             startDate,
             contractDate,
             proposalId,
@@ -317,7 +390,11 @@ exports.sendSignatureLink = async (req, res) => {
         let client;
         let linkedContract = null;
         if (proposalId) {
-            linkedContract = await getOrCreateLinkedProposalContract(proposalId, { clientId, scope, monthlyValue, durationMonths, paymentDay });
+            linkedContract = await getOrCreateLinkedProposalContract(
+                proposalId,
+                { clientId, scope, monthlyValue, durationMonths, paymentDay, observation, additionalScope },
+                { approvePending: true }
+            );
             if (linkedContract.signedAt || !linkedContract.signatureToken) return res.status(409).json({ error: 'O contrato vinculado não está disponível para nova assinatura.' });
             client = linkedContract.client;
         } else try {
@@ -400,9 +477,8 @@ exports.sendSignatureLink = async (req, res) => {
 exports.deleteContract = async (req, res) => {
     try {
         const { id } = req.params;
-        const contract = await prisma.contract.findUnique({ where: { id: parseInt(id, 10) }, select: { proposalId: true } });
+        const contract = await prisma.contract.findUnique({ where: { id: parseInt(id, 10) }, select: { id: true } });
         if (!contract) return res.status(404).json({ error: 'Contrato não encontrado.' });
-        if (contract.proposalId) return res.status(409).json({ error: 'Contratos vinculados a proposta não podem ser excluídos; o vínculo é auditável.' });
         await prisma.contract.delete({
             where: { id: parseInt(id, 10) }
         });

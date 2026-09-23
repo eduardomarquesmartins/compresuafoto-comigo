@@ -102,6 +102,7 @@ test('unlinked public acceptance creates one Client and reuses one Contract on r
         assert.equal(clientCreates, 1);
         assert.equal(contractCreates, 1);
         assert.equal(proposal.clientId, 18);
+        assert.equal(first.contract.paymentDay, 25);
         assert.equal(first.contract.id, retry.contract.id);
     } finally {
         prisma.$transaction = original.transaction;
@@ -114,10 +115,11 @@ test('unlinked public acceptance creates one Client and reuses one Contract on r
 });
 
 test('concurrent legacy creation with proposalId persists exactly one linked contract', async () => {
-    const original = { proposalFind: prisma.proposal.findUnique, contractFind: prisma.contract.findUnique, contractCreate: prisma.contract.create };
+    const original = { transaction: prisma.$transaction, proposalFind: prisma.proposal.findUnique, contractFind: prisma.contract.findUnique, contractCreate: prisma.contract.create };
     let persisted = null;
     let successfulCreates = 0;
-    prisma.proposal.findUnique = async () => ({ id: 44, clientId: 9, status: 'APPROVED', total: 300, selectedServices: JSON.stringify([{ name: 'SEO' }]), contract: persisted, client: { id: 9, name: 'Cliente' } });
+    prisma.proposal.findUnique = async () => ({ id: 44, clientId: 9, status: 'APPROVED', total: 300, paymentDay: 8, selectedServices: JSON.stringify([{ name: 'SEO' }]), contract: persisted, client: { id: 9, name: 'Cliente' } });
+    prisma.$transaction = async (callback) => callback(prisma);
     prisma.contract.findUnique = async () => persisted;
     prisma.contract.create = async ({ data }) => {
         if (persisted) { const error = new Error('unique'); error.code = 'P2002'; throw error; }
@@ -133,9 +135,47 @@ test('concurrent legacy creation with proposalId persists exactly one linked con
         assert.equal(successfulCreates, 1);
         assert.equal(first.id, second.id);
         assert.equal(first.proposalId, 44);
+        assert.equal(first.paymentDay, 25);
     } finally {
+        prisma.$transaction = original.transaction;
         prisma.proposal.findUnique = original.proposalFind;
         prisma.contract.findUnique = original.contractFind;
+        prisma.contract.create = original.contractCreate;
+    }
+});
+
+test('sending a proposal for signature confirms it and uses the contract payment day default', async () => {
+    const original = {
+        transaction: prisma.$transaction,
+        proposalFind: prisma.proposal.findUnique,
+        proposalUpdateMany: prisma.proposal.updateMany,
+        contractCreate: prisma.contract.create
+    };
+    const proposal = {
+        id: 45,
+        clientId: 10,
+        status: 'PENDING',
+        total: 500,
+        selectedServices: JSON.stringify([{ name: 'Gestão de redes' }]),
+        client: { id: 10, name: 'Cliente' },
+        contract: null
+    };
+    prisma.$transaction = async (callback) => callback(prisma);
+    prisma.proposal.findUnique = async () => ({ ...proposal });
+    prisma.proposal.updateMany = async ({ where, data }) => {
+        assert.equal(where.status, 'PENDING');
+        Object.assign(proposal, data);
+        return { count: 1 };
+    };
+    prisma.contract.create = async ({ data }) => ({ id: 72, ...data, client: proposal.client });
+    try {
+        const contract = await contractController._internals.getOrCreateLinkedProposalContract(45, {}, { approvePending: true });
+        assert.equal(proposal.status, 'APPROVED');
+        assert.equal(contract.paymentDay, 25);
+    } finally {
+        prisma.$transaction = original.transaction;
+        prisma.proposal.findUnique = original.proposalFind;
+        prisma.proposal.updateMany = original.proposalUpdateMany;
         prisma.contract.create = original.contractCreate;
     }
 });

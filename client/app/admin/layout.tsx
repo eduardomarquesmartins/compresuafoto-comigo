@@ -8,8 +8,10 @@ import api from "@/lib/api";
 import AdminUserMenu from "@/components/AdminUserMenu";
 import logoAdmin from "./logo-admin.jpg";
 import {
+    Activity,
     ArrowUpRight,
     Bell,
+    Briefcase,
     Calendar,
     CalendarPlus,
     ClipboardCheck,
@@ -22,7 +24,6 @@ import {
     Mail,
     Menu,
     MonitorPlay,
-    Activity,
     ScrollText,
     ShieldAlert,
     ShoppingBag,
@@ -52,8 +53,7 @@ const econtiNavSections: NavSection[] = [
         items: [
             { href: "/admin/control", label: "Visão geral", icon: LayoutDashboard },
             { href: "/admin/clients", label: "Clientes", icon: Users },
-            { href: "/admin/proposals", label: "Propostas", icon: FileText },
-            { href: "/admin/contracts", label: "Contratos e Assinaturas", icon: ScrollText },
+            { href: "/admin/commercial", label: "Comercial", icon: Briefcase },
             { href: "/admin/emails", label: "E-mails", icon: Mail },
             { href: "/admin/presentation", label: "Apresentação", icon: MonitorPlay }
         ]

@@ -225,12 +225,12 @@ export const downloadProposalPdf = async (data: { clientName: string; selectedSe
     return response.data;
 };
 
-export const createProposal = async (data: { clientId?: number; clientName: string; clientEmail?: string; selectedServices: any[]; total: number; proposalType?: string }) => {
+export const createProposal = async (data: { clientId?: number; clientName?: string; clientEmail?: string; selectedServices: any[]; total: number; proposalType?: string }) => {
     const response = await api.post('proposals', data);
     return response.data;
 };
 
-export const updateProposal = async (id: number | string, data: { clientId?: number; clientName: string; clientEmail?: string; selectedServices: any[]; total: number; proposalType?: string }) => {
+export const updateProposal = async (id: number | string, data: { clientId?: number; clientName?: string; clientEmail?: string; selectedServices: any[]; total: number; proposalType?: string }) => {
     const response = await api.put(`proposals/${id}`, data);
     return response.data;
 };
@@ -268,8 +268,8 @@ export const linkProposalClient = async (id: number, clientId?: number) => {
     return response.data;
 };
 
-export const getOrCreateProposalContract = async (id: number) => {
-    const response = await api.post(`proposals/${id}/contract`);
+export const getOrCreateProposalContract = async (id: number, data?: { clientId?: number; paymentDay?: number }) => {
+    const response = await api.post(`proposals/${id}/contract`, data);
     return response.data;
 };
 
@@ -308,6 +308,7 @@ export const downloadContractPdf = async (data: {
 };
 
 export const sendContractSignatureLink = async (data: {
+    proposalId?: number;
     clientId?: number;
     clientName?: string;
     clientEmail?: string;
@@ -316,15 +317,26 @@ export const sendContractSignatureLink = async (data: {
     clientCityState?: string;
     signerName?: string;
     signerDocument?: string;
-    scope: string;
-    monthlyValue: number;
-    durationMonths: string;
-    paymentDay: string;
+    scope?: string;
+    monthlyValue?: number;
+    durationMonths?: string;
+    paymentDay?: string;
+    observation?: string;
+    additionalScope?: string;
     startDate?: string;
     contractDate?: string;
     delivery?: 'email' | 'copy';
 }) => {
     const response = await api.post('contracts/send-sign-link', data);
+    return response.data;
+};
+
+export const updatePendingContract = async (id: number, data: {
+    observation?: string | null;
+    additionalScope?: string | null;
+    paymentDay?: string | number;
+}) => {
+    const response = await api.patch(`contracts/${id}`, data);
     return response.data;
 };
 

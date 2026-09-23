@@ -7,7 +7,6 @@ import {
     ArrowRight,
     Check,
     CheckCircle2,
-    ChevronRight,
     Clock,
     Copy,
     DollarSign,
@@ -27,7 +26,6 @@ import {
     XCircle,
 } from "lucide-react";
 import {
-    approveProposal,
     deleteProposal,
     getBillingCharges,
     getClients,
@@ -35,6 +33,7 @@ import {
     getOrCreateProposalContract,
     getProposals,
     linkProposalClient,
+    sendContractSignatureLink,
 } from "@/lib/api";
 
 type ProposalStatus = "PENDING" | "APPROVED" | "DECLINED" | "DELETED";
@@ -571,21 +570,28 @@ export default function ProposalsPage() {
     };
 
     const handleApprove = async (proposal: Proposal) => {
-        if (!proposal.clientId && !proposal.client?.id) {
+        const clientId = proposal.clientId || proposal.client?.id;
+        const clientEmail = proposal.client?.email || proposal.clientEmail;
+        if (!clientId) {
             setFeedbackAlert({
                 type: "info",
-                message: "Antes de aprovar, vincule um cliente a esta proposta pelo menu de seleção.",
+                message: "Antes de enviar para assinatura, vincule uma cliente a esta proposta.",
             });
             return;
         }
 
-        if (!confirm(`Deseja aprovar a proposta de ${proposal.client?.name || proposal.clientName}? O contrato será gerado automaticamente.`)) {
+        if (!clientEmail) {
+            setFeedbackAlert({ type: "info", message: "Cadastre o e-mail da cliente antes de enviar o contrato para assinatura." });
+            return;
+        }
+
+        if (!confirm(`Enviar o contrato de ${proposal.client?.name || proposal.clientName} para assinatura agora?`)) {
             return;
         }
 
         try {
             setActionInProgressId(proposal.id);
-            const result = await approveProposal(proposal.id);
+            const result = await sendContractSignatureLink({ proposalId: proposal.id, clientId, delivery: "email" });
 
             setProposals((prev) =>
                 prev.map((p) => (p.id === proposal.id ? { ...p, status: "APPROVED", approvedAt: new Date().toISOString() } : p))
@@ -600,7 +606,7 @@ export default function ProposalsPage() {
 
             setFeedbackAlert({
                 type: "success",
-                message: "Proposta aprovada com sucesso! Contrato gerado para assinatura.",
+                message: "Contrato criado e link de assinatura enviado para a cliente.",
             });
         } catch (error: any) {
             console.error("Erro ao aprovar proposta:", error);
@@ -682,11 +688,14 @@ export default function ProposalsPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-zinc-200/90 pb-6">
                 <div>
                     <span className="text-xs font-black tracking-[0.22em] uppercase text-blue-600">
-                        Gestão Comercial &bull;
+                        Gestão Comercial &bull; Fase 2
                     </span>
                     <h1 className="text-3xl font-extrabold text-zinc-950 tracking-tight mt-1">
-                        Propostas
+                        Propostas comerciais
                     </h1>
+                    <p className="text-xs text-zinc-600 mt-1">
+                        Crie a proposta, envie o contrato para assinatura e acompanhe o retorno em um único lugar.
+                    </p>
                 </div>
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
@@ -945,7 +954,7 @@ export default function ProposalsPage() {
                             <div className="flex items-center gap-2">
                                 <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
                                 <h3 className="text-xs font-black uppercase tracking-[0.16em] text-amber-900">
-                                    1. Aguardando Decisão
+                                    1. Prontas para assinatura
                                 </h3>
                             </div>
                             <span className="text-xs font-bold text-amber-900 bg-amber-100/80 border border-amber-200 px-2 py-0.5 rounded-md tabular-nums">
@@ -982,7 +991,7 @@ export default function ProposalsPage() {
                             <div className="flex items-center gap-2">
                                 <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
                                 <h3 className="text-xs font-black uppercase tracking-[0.16em] text-blue-900">
-                                    2. Aprovada &bull; Gerar Contrato
+                                    2. Contrato em preparação
                                 </h3>
                             </div>
                             <span className="text-xs font-bold text-blue-900 bg-blue-100/80 border border-blue-200 px-2 py-0.5 rounded-md tabular-nums">
@@ -1019,7 +1028,7 @@ export default function ProposalsPage() {
                             <div className="flex items-center gap-2">
                                 <span className="h-2.5 w-2.5 rounded-full bg-indigo-600" />
                                 <h3 className="text-xs font-black uppercase tracking-[0.16em] text-indigo-900">
-                                    3. Aguardando Assinatura
+                                    3. Aguardando assinatura
                                 </h3>
                             </div>
                             <span className="text-xs font-bold text-indigo-900 bg-indigo-100/80 border border-indigo-200 px-2 py-0.5 rounded-md tabular-nums">
@@ -1099,7 +1108,6 @@ export default function ProposalsPage() {
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">Cliente</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">Tipo & Data</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">Total</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">Etapas (5)</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">Status</th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600 text-right">Ações</th>
                                 </tr>
@@ -1153,133 +1161,36 @@ export default function ProposalsPage() {
                                                 <span className="inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200">
                                                     {PROPOSAL_TYPE_NAMES[proposal.proposalType || "empresarial"] || proposal.proposalType || "Orçamento"}
                                                 </span>
-                                                <p className="text-xs text-zinc-500 mt-1.5 font-sans tabular-nums">
+                                                <p className="text-xs text-zinc-500 mt-1.5 tabular-nums">
                                                     {formatDate(proposal.createdAt)}
                                                 </p>
                                             </td>
 
                                             {/* Total */}
                                             <td className="px-6 py-5">
-                                                <span className="font-bold text-zinc-950 text-base font-sans tabular-nums">
+                                                <span className="font-bold text-zinc-950 text-base tabular-nums">
                                                     {formatMoney(proposal.total)}
                                                 </span>
                                             </td>
 
-                                            {/* Stepper Pipeline (5 steps with unequivocal current state) */}
-                                            <td className="px-6 py-5 whitespace-nowrap">
-                                                <div className="flex items-center gap-1.5 flex-nowrap">
-                                                    {getProposalStageSteps(pipeline).map((step, idx, arr) => {
-                                                        if (step.state === "completed") {
-                                                            return (
-                                                                <React.Fragment key={step.stepNumber}>
-                                                                    <span
-                                                                        title={step.tooltip}
-                                                                        className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/90 whitespace-nowrap transition-colors"
-                                                                    >
-                                                                        <Check size={11} className="text-emerald-600 stroke-[2.5]" />
-                                                                        <span>{step.label}</span>
-                                                                    </span>
-                                                                    {idx < arr.length - 1 && (
-                                                                        <ChevronRight size={12} className="text-zinc-300 shrink-0 select-none" aria-hidden="true" />
-                                                                    )}
-                                                                </React.Fragment>
-                                                            );
-                                                        }
-
-                                                        if (step.state === "declined") {
-                                                            return (
-                                                                <React.Fragment key={step.stepNumber}>
-                                                                    <span
-                                                                        title={step.tooltip}
-                                                                        className="inline-flex items-center gap-1.5 h-6 px-2.5 rounded-md text-[10px] font-black bg-rose-600 text-white border border-rose-700 shadow-xs ring-2 ring-rose-500/30 whitespace-nowrap"
-                                                                    >
-                                                                        <XCircle size={11} className="text-white shrink-0" />
-                                                                        <span>{step.label}</span>
-                                                                        <span className="text-[8px] font-black uppercase tracking-wider bg-white/20 px-1 py-0.5 rounded leading-none">
-                                                                            Recusada
-                                                                        </span>
-                                                                    </span>
-                                                                    {idx < arr.length - 1 && (
-                                                                        <ChevronRight size={12} className="text-zinc-300 shrink-0 select-none" aria-hidden="true" />
-                                                                    )}
-                                                                </React.Fragment>
-                                                            );
-                                                        }
-
-                                                        if (step.state === "current") {
-                                                            const colorMap: Record<string, string> = {
-                                                                amber: "bg-amber-500 text-white border-amber-600 ring-amber-400/35",
-                                                                indigo: "bg-indigo-600 text-white border-indigo-700 ring-indigo-500/35",
-                                                                teal: "bg-teal-600 text-white border-teal-700 ring-teal-500/35",
-                                                                blue: "bg-blue-600 text-white border-blue-700 ring-blue-500/35",
-                                                                emerald: "bg-emerald-600 text-white border-emerald-700 ring-emerald-500/35",
-                                                                rose: "bg-rose-600 text-white border-rose-700 ring-rose-500/35",
-                                                            };
-                                                            const colorClass = colorMap[step.colorVariant || "blue"] || "bg-blue-600 text-white border-blue-700 ring-blue-500/35";
-
-                                                            return (
-                                                                <React.Fragment key={step.stepNumber}>
-                                                                    <span
-                                                                        title={step.tooltip}
-                                                                        className={`inline-flex items-center gap-1.5 h-6 px-2.5 rounded-md text-[10px] font-black border shadow-xs ring-2 whitespace-nowrap ${colorClass}`}
-                                                                    >
-                                                                        {step.colorVariant === "emerald" ? (
-                                                                            <Check size={11} className="text-white stroke-[2.5] shrink-0" />
-                                                                        ) : (
-                                                                            <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse shrink-0" />
-                                                                        )}
-                                                                        <span>{step.label}</span>
-                                                                        {step.badgeText && (
-                                                                            <span className="text-[8px] font-black uppercase tracking-wider bg-white/25 px-1 py-0.5 rounded leading-none">
-                                                                                {step.badgeText}
-                                                                            </span>
-                                                                        )}
-                                                                    </span>
-                                                                    {idx < arr.length - 1 && (
-                                                                        <ChevronRight size={12} className="text-zinc-300 shrink-0 select-none" aria-hidden="true" />
-                                                                    )}
-                                                                </React.Fragment>
-                                                            );
-                                                        }
-
-                                                        // Future / upcoming step
-                                                        return (
-                                                            <React.Fragment key={step.stepNumber}>
-                                                                <span
-                                                                    title={step.tooltip}
-                                                                    className="inline-flex items-center justify-center h-6 px-2 rounded-md text-[10px] font-medium bg-zinc-50/80 text-zinc-400 border border-zinc-200/70 border-dashed whitespace-nowrap"
-                                                                >
-                                                                    {step.label}
-                                                                </span>
-                                                                {idx < arr.length - 1 && (
-                                                                    <ChevronRight size={12} className="text-zinc-300 shrink-0 select-none" aria-hidden="true" />
-                                                                )}
-                                                            </React.Fragment>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </td>
-
-                                            {/* Main Status Badge */}
+                                            {/* Status Badge */}
                                             <td className="px-6 py-5">
-                                                {pipeline.isApproved ? (
+                                                {pipeline.isSigned ? (
                                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                                        <CheckCircle2 size={12} /> Aprovada
-                                                    </span>
-                                                ) : pipeline.isDeclined ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-800 border border-rose-200">
-                                                        <XCircle size={12} /> Recusada
+                                                        <CheckCircle2 size={12} className="text-emerald-700 shrink-0" />
+                                                        Concluído
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black tracking-wider uppercase bg-amber-50 text-amber-800 border border-amber-200">
-                                                        <Clock size={12} /> Pendente
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
+                                                        <Clock size={12} className="text-amber-700 shrink-0" />
+                                                        Pendente
                                                     </span>
                                                 )}
                                             </td>
 
-                                            {/* Unified Table Action Toolbar */}
+                                             {/* Unified Table Action Toolbar */}
                                             <td className="px-6 py-5">
-                                                <div className="flex items-center justify-end gap-1 p-1 bg-zinc-50 border border-zinc-200/90 rounded-xl w-fit ml-auto shadow-xs">
+                                                <div className="flex items-center justify-end gap-1.5 p-1 bg-zinc-50 border border-zinc-200/90 rounded-xl w-fit ml-auto shadow-xs">
                                                     {/* Copy Public Link */}
                                                     <button
                                                         type="button"
@@ -1287,29 +1198,61 @@ export default function ProposalsPage() {
                                                         disabled={!publicPath}
                                                         aria-label={publicPath ? "Copiar link da proposta" : PUBLIC_LINK_UNAVAILABLE}
                                                         title={publicPath ? "Copiar link da proposta" : PUBLIC_LINK_UNAVAILABLE}
-                                                        className="h-8 w-8 flex items-center justify-center rounded-lg border border-transparent hover:border-zinc-200 hover:bg-white text-zinc-600 hover:text-zinc-900 active:bg-zinc-100 transition-all focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-45 disabled:cursor-not-allowed"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 shadow-2xs hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-950 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:bg-zinc-100 disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed"
                                                     >
                                                         {copiedToken === proposal.publicToken ? (
-                                                            <Check size={14} className="text-emerald-700" />
+                                                            <Check size={14} className="text-emerald-700 shrink-0" strokeWidth={2.5} />
                                                         ) : (
-                                                            <Copy size={14} />
+                                                            <Copy size={14} className="text-zinc-700 shrink-0" strokeWidth={2} />
                                                         )}
                                                     </button>
 
                                                     {/* Open Public Proposal */}
-                                                    {publicPath ? <Link href={publicPath} target="_blank" aria-label="Abrir proposta pública em nova guia" title="Abrir proposta pública em nova guia" className="h-8 w-8 flex items-center justify-center rounded-lg border border-transparent hover:border-zinc-200 hover:bg-white text-zinc-600 hover:text-zinc-900 active:bg-zinc-100 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"><ExternalLink size={14} /></Link> : <button type="button" disabled aria-label={PUBLIC_LINK_UNAVAILABLE} title={PUBLIC_LINK_UNAVAILABLE} className="h-8 w-8 flex items-center justify-center rounded-lg text-zinc-400 opacity-45 cursor-not-allowed"><ExternalLink size={14} /></button>}
+                                                    {publicPath ? (
+                                                        <Link
+                                                            href={publicPath}
+                                                            target="_blank"
+                                                            aria-label="Abrir proposta pública em nova guia"
+                                                            title="Abrir proposta pública em nova guia"
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 shadow-2xs hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-950 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                                        >
+                                                            <ExternalLink size={14} className="text-zinc-700 shrink-0" />
+                                                        </Link>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            disabled
+                                                            aria-label={PUBLIC_LINK_UNAVAILABLE}
+                                                            title={PUBLIC_LINK_UNAVAILABLE}
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-100 text-zinc-400 shadow-none cursor-not-allowed"
+                                                        >
+                                                            <ExternalLink size={14} className="text-zinc-400 shrink-0" />
+                                                        </button>
+                                                    )}
 
                                                     {/* WhatsApp */}
-                                                    {whatsappUrl ? <a
-                                                        href={whatsappUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        aria-label="Enviar proposta pelo WhatsApp"
-                                                        title="Enviar proposta pelo WhatsApp"
-                                                        className="h-8 w-8 flex items-center justify-center rounded-lg border border-transparent hover:border-emerald-200 hover:bg-emerald-50 text-emerald-700 hover:text-emerald-800 active:bg-emerald-100 transition-all focus-visible:ring-2 focus-visible:ring-emerald-500"
-                                                    >
-                                                        <MessageCircle size={14} />
-                                                    </a> : <button type="button" disabled aria-label={PUBLIC_LINK_UNAVAILABLE} title={PUBLIC_LINK_UNAVAILABLE} className="h-8 w-8 flex items-center justify-center rounded-lg text-zinc-400 opacity-45 cursor-not-allowed"><MessageCircle size={14} /></button>}
+                                                    {whatsappUrl ? (
+                                                        <a
+                                                            href={whatsappUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            aria-label="Enviar proposta pelo WhatsApp"
+                                                            title="Enviar proposta pelo WhatsApp"
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-emerald-700 shadow-2xs hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-800 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                                                        >
+                                                            <MessageCircle size={14} className="shrink-0" />
+                                                        </a>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            disabled
+                                                            aria-label={PUBLIC_LINK_UNAVAILABLE}
+                                                            title={PUBLIC_LINK_UNAVAILABLE}
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-100 text-zinc-400 shadow-none cursor-not-allowed"
+                                                        >
+                                                            <MessageCircle size={14} className="text-zinc-400 shrink-0" />
+                                                        </button>
+                                                    )}
 
                                                     {/* Primary Action Button based on Stage */}
                                                     {pipeline.isPending ? (
@@ -1317,15 +1260,16 @@ export default function ProposalsPage() {
                                                             type="button"
                                                             onClick={() => handleApprove(proposal)}
                                                             disabled={actionInProgressId === proposal.id}
-                                                            aria-label="Aprovar proposta e gerar contrato"
-                                                            title="Aprovar proposta e gerar contrato"
-                                                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 active:bg-blue-800 transition-all focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+                                                            aria-label="Enviar contrato para assinatura"
+                                                            title="Enviar contrato para assinatura"
+                                                            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600 px-2.5 text-xs font-semibold shadow-2xs transition-colors cursor-pointer disabled:bg-zinc-100 disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                                                         >
                                                             {actionInProgressId === proposal.id ? (
-                                                                <Loader2 size={14} className="animate-spin text-white" />
+                                                                <Loader2 size={13} className="animate-spin text-zinc-400 shrink-0" />
                                                             ) : (
-                                                                <CheckCircle2 size={14} />
+                                                                <Check size={13} strokeWidth={2.5} className="shrink-0" />
                                                             )}
+                                                            <span>Aprovar</span>
                                                         </button>
                                                     ) : pipeline.isApproved && !pipeline.hasContract ? (
                                                         <button
@@ -1334,13 +1278,14 @@ export default function ProposalsPage() {
                                                             disabled={actionInProgressId === proposal.id}
                                                             aria-label="Gerar contrato vinculado"
                                                             title="Gerar contrato vinculado"
-                                                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-600 active:bg-indigo-800 transition-all focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50"
+                                                            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0044ff] hover:bg-[#0039d6] text-white border border-[#0044ff] px-2.5 text-xs font-semibold shadow-2xs transition-colors cursor-pointer disabled:bg-zinc-100 disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                                                         >
                                                             {actionInProgressId === proposal.id ? (
-                                                                <Loader2 size={14} className="animate-spin text-white" />
+                                                                <Loader2 size={13} className="animate-spin text-zinc-400 shrink-0" />
                                                             ) : (
-                                                                <FileSignature size={14} />
+                                                                <FileSignature size={13} className="shrink-0" />
                                                             )}
+                                                            <span>Gerar Contrato</span>
                                                         </button>
                                                     ) : pipeline.hasContract && pipeline.contract?.signatureToken ? (
                                                         <Link
@@ -1348,9 +1293,10 @@ export default function ProposalsPage() {
                                                             target="_blank"
                                                             aria-label="Abrir tela de assinatura do contrato"
                                                             title="Abrir tela de assinatura do contrato"
-                                                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-teal-600 hover:bg-teal-700 text-white border border-teal-600 active:bg-teal-800 transition-all focus-visible:ring-2 focus-visible:ring-teal-500"
+                                                            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-600 px-2.5 text-xs font-semibold shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                                                         >
-                                                            <FileSignature size={14} />
+                                                            <FileSignature size={13} className="shrink-0" />
+                                                            <span>Assinar</span>
                                                         </Link>
                                                     ) : null}
 
@@ -1362,9 +1308,10 @@ export default function ProposalsPage() {
                                                         href={`/admin/proposals/new?edit=${proposal.id}`}
                                                         aria-label="Editar orçamento"
                                                         title="Editar orçamento"
-                                                        className="h-8 w-8 flex items-center justify-center rounded-lg border border-transparent hover:border-zinc-200 hover:bg-white text-zinc-600 hover:text-zinc-900 active:bg-zinc-100 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                                                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 px-2.5 text-xs font-semibold text-zinc-800 shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                                                     >
-                                                        <Pencil size={14} />
+                                                        <Pencil size={12} className="text-zinc-700 shrink-0" />
+                                                        <span>Editar</span>
                                                     </Link>
 
                                                     {/* Delete */}
@@ -1374,9 +1321,10 @@ export default function ProposalsPage() {
                                                         disabled={actionInProgressId === proposal.id}
                                                         aria-label="Excluir proposta"
                                                         title={actionInProgressId === proposal.id ? "Aguarde a ação em andamento para excluir" : "Excluir proposta"}
-                                                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white border border-rose-600 active:border-rose-800 transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-1 disabled:bg-rose-400 disabled:border-rose-400 disabled:opacity-75 disabled:cursor-not-allowed"
+                                                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 text-xs font-semibold text-zinc-700 shadow-2xs hover:bg-rose-50 hover:border-rose-300 hover:text-rose-600 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 disabled:bg-zinc-100 disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed"
                                                     >
-                                                        <Trash2 size={14} className="text-white" />
+                                                        <Trash2 size={13} className="text-rose-600 shrink-0" />
+                                                        <span>Excluir</span>
                                                     </button>
                                                 </div>
                                             </td>
@@ -1437,7 +1385,7 @@ function ProposalCard({
                 <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200">
                     {typeLabel}
                 </span>
-                <span className="text-lg font-bold text-zinc-950 font-sans tabular-nums">
+                <span className="text-lg font-bold text-zinc-950 tabular-nums">
                     {formatMoney(proposal.total)}
                 </span>
             </div>
@@ -1474,7 +1422,7 @@ function ProposalCard({
             <div className="pt-2 border-t border-zinc-100 space-y-2">
                 <div className="flex items-center justify-between text-[10px] text-zinc-500 font-extrabold uppercase tracking-wider">
                     <span>Etapas</span>
-                    <span className="text-zinc-500 font-sans tabular-nums text-xs">{formatDate(proposal.createdAt)}</span>
+                    <span className="text-zinc-500 tabular-nums text-xs">{formatDate(proposal.createdAt)}</span>
                 </div>
 
                 <div className="grid grid-cols-5 gap-1 text-center">
@@ -1547,8 +1495,8 @@ function ProposalCard({
                         type="button"
                         onClick={() => onApprove(proposal)}
                         disabled={actionInProgressId === proposal.id}
-                        aria-label="Aprovar proposta e gerar contrato"
-                        title="Aprovar proposta e gerar contrato"
+                        aria-label="Enviar contrato para assinatura"
+                        title="Enviar contrato para assinatura"
                         className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-2.5 text-xs font-bold uppercase tracking-wider transition-all shadow-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {actionInProgressId === proposal.id ? (
@@ -1556,7 +1504,7 @@ function ProposalCard({
                         ) : (
                             <CheckCircle2 size={14} />
                         )}
-                        Aprovar Proposta
+                        Enviar para assinatura
                     </button>
                 ) : pipeline.isApproved && !pipeline.hasContract ? (
                     <button
@@ -1572,7 +1520,7 @@ function ProposalCard({
                         ) : (
                             <FileSignature size={14} />
                         )}
-                        Gerar Contrato
+                        Preparar contrato
                     </button>
                 ) : pipeline.awaitingSignature && pipeline.contract?.signatureToken ? (
                     <Link
@@ -1599,7 +1547,7 @@ function ProposalCard({
                 ) : null}
 
                 {/* Compact Unified Secondary Actions Toolbar */}
-                <div className="flex items-center justify-between gap-1 p-1 bg-zinc-50 border border-zinc-200/90 rounded-xl shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 p-1.5 bg-zinc-50 border border-zinc-200/90 rounded-xl shadow-xs">
                     {/* Utilitárias: Copiar link, Abrir proposta, WhatsApp */}
                     <div className="flex items-center gap-1">
                         {/* Copy Public Link */}
@@ -1609,44 +1557,74 @@ function ProposalCard({
                             disabled={!publicPath}
                             aria-label={publicPath ? "Copiar link público da proposta" : PUBLIC_LINK_UNAVAILABLE}
                             title={publicPath ? "Copiar link público da proposta" : PUBLIC_LINK_UNAVAILABLE}
-                            className="h-8 w-8 flex items-center justify-center rounded-lg border border-transparent hover:border-zinc-200 hover:bg-white text-zinc-600 hover:text-zinc-900 active:bg-zinc-100 transition-all focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-45 disabled:cursor-not-allowed"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 shadow-2xs hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-950 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:bg-zinc-100 disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed"
                         >
                             {copiedToken === proposal.publicToken ? (
-                                <Check size={14} className="text-emerald-700" />
+                                <Check size={14} className="text-emerald-700 shrink-0" strokeWidth={2.5} />
                             ) : (
-                                <Copy size={14} />
+                                <Copy size={14} className="text-zinc-700 shrink-0" strokeWidth={2} />
                             )}
                         </button>
 
                         {/* Open Public Proposal */}
-                        {publicPath ? <Link href={publicPath} target="_blank" aria-label="Abrir proposta pública em nova guia" title="Abrir proposta pública em nova guia" className="h-8 w-8 flex items-center justify-center rounded-lg border border-transparent hover:border-zinc-200 hover:bg-white text-zinc-600 hover:text-zinc-900 active:bg-zinc-100 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"><ExternalLink size={14} /></Link> : <button type="button" disabled aria-label={PUBLIC_LINK_UNAVAILABLE} title={PUBLIC_LINK_UNAVAILABLE} className="h-8 w-8 flex items-center justify-center rounded-lg text-zinc-400 opacity-45 cursor-not-allowed"><ExternalLink size={14} /></button>}
+                        {publicPath ? (
+                            <Link
+                                href={publicPath}
+                                target="_blank"
+                                aria-label="Abrir proposta pública em nova guia"
+                                title="Abrir proposta pública em nova guia"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 shadow-2xs hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-950 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                            >
+                                <ExternalLink size={14} className="text-zinc-700 shrink-0" />
+                            </Link>
+                        ) : (
+                            <button
+                                type="button"
+                                disabled
+                                aria-label={PUBLIC_LINK_UNAVAILABLE}
+                                title={PUBLIC_LINK_UNAVAILABLE}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-100 text-zinc-400 shadow-none cursor-not-allowed"
+                            >
+                                <ExternalLink size={14} className="text-zinc-400 shrink-0" />
+                            </button>
+                        )}
 
                         {/* WhatsApp (wa.me) */}
-                        {whatsappUrl ? <a
-                            href={whatsappUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="Enviar link da proposta pelo WhatsApp"
-                            title="Enviar link da proposta pelo WhatsApp"
-                            className="h-8 w-8 flex items-center justify-center rounded-lg border border-transparent hover:border-emerald-200 hover:bg-emerald-50 text-emerald-700 hover:text-emerald-800 active:bg-emerald-100 transition-all focus-visible:ring-2 focus-visible:ring-emerald-500"
-                        >
-                            <MessageCircle size={14} />
-                        </a> : <button type="button" disabled aria-label={PUBLIC_LINK_UNAVAILABLE} title={PUBLIC_LINK_UNAVAILABLE} className="h-8 w-8 flex items-center justify-center rounded-lg text-zinc-400 opacity-45 cursor-not-allowed"><MessageCircle size={14} /></button>}
+                        {whatsappUrl ? (
+                            <a
+                                href={whatsappUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Enviar link da proposta pelo WhatsApp"
+                                title="Enviar link da proposta pelo WhatsApp"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-emerald-700 shadow-2xs hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-800 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                            >
+                                <MessageCircle size={14} className="shrink-0" />
+                            </a>
+                        ) : (
+                            <button
+                                type="button"
+                                disabled
+                                aria-label={PUBLIC_LINK_UNAVAILABLE}
+                                title={PUBLIC_LINK_UNAVAILABLE}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-100 text-zinc-400 shadow-none cursor-not-allowed"
+                            >
+                                <MessageCircle size={14} className="text-zinc-400 shrink-0" />
+                            </button>
+                        )}
                     </div>
 
-                    {/* Vertical Divider */}
-                    <div className="h-4 w-[1px] bg-zinc-200 mx-0.5" aria-hidden="true" />
-
                     {/* Ações de Edição e Destrutiva */}
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                         {/* Edit */}
                         <Link
                             href={`/admin/proposals/new?edit=${proposal.id}`}
                             aria-label="Editar orçamento da proposta"
                             title="Editar orçamento da proposta"
-                            className="h-8 w-8 flex items-center justify-center rounded-lg border border-transparent hover:border-zinc-200 hover:bg-white text-zinc-600 hover:text-zinc-900 active:bg-zinc-100 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 px-2.5 text-xs font-semibold text-zinc-800 shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
-                            <Pencil size={14} />
+                            <Pencil size={12} className="text-zinc-700 shrink-0" />
+                            <span>Editar</span>
                         </Link>
 
                         {/* Delete */}
@@ -1656,9 +1634,10 @@ function ProposalCard({
                             disabled={actionInProgressId === proposal.id}
                             aria-label="Excluir proposta comercial"
                             title={actionInProgressId === proposal.id ? "Aguarde a ação em andamento para excluir" : "Excluir proposta comercial"}
-                            className="h-8 w-8 flex items-center justify-center rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white border border-rose-600 active:border-rose-800 transition-all shadow-xs focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-1 disabled:bg-rose-400 disabled:border-rose-400 disabled:opacity-75 disabled:cursor-not-allowed"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 text-xs font-semibold text-zinc-700 shadow-2xs hover:bg-rose-50 hover:border-rose-300 hover:text-rose-600 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 disabled:bg-zinc-100 disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed"
                         >
-                            <Trash2 size={14} className="text-white" />
+                            <Trash2 size={13} className="text-rose-600 shrink-0" />
+                            <span>Excluir</span>
                         </button>
                     </div>
                 </div>

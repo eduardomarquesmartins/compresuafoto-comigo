@@ -8,6 +8,7 @@ router.use(authenticate, isAdmin);
 router.get('/', contractController.getContracts);
 router.post('/', contractController.createContract);
 router.post('/send-sign-link', contractController.sendSignatureLink);
+router.patch('/:id', contractController.updatePendingContract);
 router.delete('/:id', contractController.deleteContract);
 router.post('/generate', contractController.generateContract);
 router.get('/:id/pdf', contractController.getContractPdfById);

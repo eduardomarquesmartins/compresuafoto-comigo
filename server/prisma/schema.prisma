@@ -126,12 +126,15 @@ model CouponUsage {
 model Proposal {
   id               Int      @id @default(autoincrement())
   clientId         Int?
-  clientName       String
+  clientName       String?
   clientEmail      String?
   selectedServices String
   total            Float
   status           String   @default("PENDING")
   proposalType     String   @default("empresarial")
+  // Kept nullable only so historical proposals remain readable. New proposal
+  // writes intentionally never set this value.
+  paymentDay       Int?
   publicToken      String   @unique
   acceptedAt       DateTime?
   declinedAt       DateTime?
@@ -167,6 +170,8 @@ model Contract {
   clientId       Int
   proposalId     Int?     @unique
   scope          String
+  additionalScope String?
+  observation    String?
   monthlyValue   Float
   durationMonths Int      @default(6)
   paymentDay     Int      @default(25)

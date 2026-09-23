@@ -199,34 +199,58 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
                 }
 
                 items.forEach(item => {
-                    // Check if we need a new page for an item
-                    if (currentY > doc.page.height - 120) {
+                    const quantity = getServiceQuantity(item.quantity);
+                    const unitPrice = Number(item.price) || 0;
+                    const lineTotal = unitPrice * quantity;
+                    const itemName = quantity > 1 ? `${quantity}x ${item.name}` : item.name;
+                    const priceStr = `R$ ${lineTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                    const priceX = doc.page.width - 155;
+                    const priceWidth = 100;
+                    const nameWidth = priceX - 65 - 15;
+                    const quantityText = `${quantity} x R$ ${unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+                    doc.font('Helvetica-Bold').fontSize(13);
+                    const nameHeight = doc.heightOfString(itemName, { width: nameWidth });
+                    const priceHeight = doc.heightOfString(priceStr, { width: priceWidth, align: 'right' });
+                    let itemHeight = Math.max(nameHeight, priceHeight);
+                    let quantityHeight = 0;
+                    let descriptionHeight = 0;
+                    if (quantity > 1) {
+                        doc.font('Helvetica').fontSize(9);
+                        quantityHeight = doc.heightOfString(quantityText, { width: nameWidth });
+                        itemHeight += 5 + quantityHeight;
+                    }
+                    if (item.description) {
+                        doc.font('Helvetica').fontSize(10);
+                        descriptionHeight = doc.heightOfString(item.description, { width: nameWidth });
+                        itemHeight += 5 + descriptionHeight;
+                    }
+
+                    // Reserve the measured space before drawing so a wrapped item stays together.
+                    if (currentY + itemHeight > doc.page.height - 85) {
                         doc.addPage({ margins: { top: 55, left: 55, right: 55, bottom: 20 } });
                         drawHeaderFooter(doc, dateStr, theme.title);
                         currentY = 90;
                     }
 
-                    const quantity = getServiceQuantity(item.quantity);
-                    const unitPrice = Number(item.price) || 0;
-                    const lineTotal = unitPrice * quantity;
-                    const itemName = quantity > 1 ? `${quantity}x ${item.name}` : item.name;
-
-                    doc.fillColor(SLATE_900).fontSize(13).font('Helvetica-Bold')
-                        .text(itemName, 65, currentY);
-                    const priceStr = `R$ ${lineTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-                    doc.text(priceStr, 55, currentY, { align: 'right' });
+                    const itemY = currentY;
+                    doc.fillColor(SLATE_900).font('Helvetica-Bold').fontSize(13)
+                        .text(itemName, 65, itemY, { width: nameWidth });
+                    doc.text(priceStr, priceX, itemY, { width: priceWidth, align: 'right' });
+                    currentY = itemY + Math.max(nameHeight, priceHeight);
 
                     if (quantity > 1) {
-                        currentY += 13;
+                        currentY += 5;
                         doc.fillColor(SLATE_400).fontSize(9).font('Helvetica')
-                            .text(`${quantity} x R$ ${unitPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 65, currentY, { width: doc.page.width - 250 });
+                            .text(quantityText, 65, currentY, { width: nameWidth });
+                        currentY += quantityHeight;
                     }
 
                     if (item.description) {
-                        currentY += 16;
+                        currentY += 5;
                         doc.fillColor(SLATE_400).fontSize(10).font('Helvetica')
-                            .text(item.description, 65, currentY, { width: doc.page.width - 250 });
-                        currentY += doc.heightOfString(item.description, { width: doc.page.width - 250 });
+                            .text(item.description, 65, currentY, { width: nameWidth });
+                        currentY += descriptionHeight;
                     }
                     currentY += 15;
                 });
