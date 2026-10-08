@@ -72,7 +72,9 @@ const getContractedServicesText = (scope) => {
 };
 
 const buildObjectParagraph = (scope) => {
-    const planName = getScopeLineValue(scope, 'Plano contratado') || 'Gestão de Redes Sociais';
+    const scopeText = String(scope || '');
+    const inferredPlan = scopeText.match(/Pacote\s+\d{2}(?:\s*\+\s*Audiovisual)?/i)?.[0];
+    const planName = getScopeLineValue(scope, 'Plano contratado') || inferredPlan || 'Gestão de Redes Sociais';
     const weeklyPosts = getScopeLineValue(scope, 'Quantidade de postagens');
     const weeklyPostsNumber = parseInt(weeklyPosts, 10);
     const paidTraffic = getScopeFlag(scope, 'Gestão de tráfego pago \\(Meta Ads\\)');
@@ -101,7 +103,11 @@ const buildObjectParagraph = (scope) => {
         return `1.1. O presente contrato tem por objeto a prestação de serviços de marketing digital, design, tráfego pago, produção de conteúdo e/ou audiovisual conforme plano ${planName}${servicesText}.${notesText}`;
     }
 
-    return `1.1. O presente contrato tem por objeto a prestação de serviços do plano ${planName}, contemplando ${weeklyPosts}, ${paidTrafficText} e ${audiovisualText}.${notesText}`;
+    const servicesText = services.length
+        ? `, conforme os serviços e entregas descritos na proposta aprovada:\n${services.map((service) => `- ${service}`).join('\n')}`
+        : '';
+
+    return `1.1. O presente contrato tem por objeto a prestação de serviços do plano ${planName}, contemplando ${weeklyPosts}, ${paidTrafficText} e ${audiovisualText}${servicesText}.${notesText}`;
 };
 
 const buildEventObjectParagraph = (scope) => {

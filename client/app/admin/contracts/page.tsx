@@ -46,6 +46,11 @@ interface ProposalServiceItem {
     description?: string;
 }
 
+const proposalCategoryDescriptions: Record<string, string> = {
+    "Social Media": "Postagens Facebook e Instagram, organização de feed, análise de mercado, estratégia, designer (cards), copyright, pesquisa do mês através do forms, Trello para organização.",
+    "Social Media + Audiovisual": "Postagens Facebook e Instagram, organização de feed, análise de mercado, estratégia, designer (cards), copyright, pesquisa do mês através do forms, Trello para organização, social media, + fotografias, vídeos e drone (uma vez ao mês) + cadastro Google meu negócio."
+};
+
 const initialForm = {
     clientId: "",
     clientName: "",
@@ -141,9 +146,9 @@ const getContractFieldsFromProposalServices = (services: any[]) => {
         const text = getProposalServiceText(service);
         return text.includes("social media") || text.includes("pacote");
     });
-    const postsService = selectedServices.find((service) => /\d+\s+postage/.test(getProposalServiceText(service)));
+    const postsService = selectedServices.find((service) => /\d+\s+postagen/.test(getProposalServiceText(service)));
     const postsMatch = postsService
-        ? getProposalServiceText(postsService).match(/(\d+)\s+postage/)
+        ? getProposalServiceText(postsService).match(/(\d+)\s+postagen/)
         : null;
     const includesPaidTraffic = selectedServices.some((service) => {
         const text = getProposalServiceText(service);
@@ -172,7 +177,10 @@ const formatProposalServicesForContract = (services: any[]) => {
             const price = Number(service?.price) || 0;
             const priceText = price.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
             const category = service?.category ? ` (${service.category})` : "";
-            const description = service?.description ? ` - ${service.description}` : "";
+            const details = [service?.description, proposalCategoryDescriptions[service?.category || ""]]
+                .filter((value, index, all) => value && all.indexOf(value) === index)
+                .join("; ");
+            const description = details ? ` - ${details}` : "";
 
             return `- ${quantityLabel}${service?.name || "Serviço"}${category}: R$ ${priceText}${description}`;
         })
@@ -395,21 +403,17 @@ export default function AdminContractsPage() {
     const selectedClient = clients.find((client) => String(client.id) === form.clientId);
     const resolvedClientEmail = (form.clientEmail || selectedClient?.email || "").trim();
 
-    const resolvedScope = isProposalLinked
-        ? [
-            `Tipo de proposta: ${form.proposalType || "empresarial"}.`,
-            form.proposalServices.trim() ? `Serviços contratados:\n${form.proposalServices.trim()}` : "",
-            form.observation.trim() ? `Observações adicionais: ${form.observation.trim()}` : ""
-        ].filter(Boolean).join("\n\n")
-        : [
-            `Tipo de proposta: ${form.proposalType || "empresarial"}.`,
-            `Plano contratado: ${form.planName || "não informado"}.`,
-            `Quantidade de postagens: ${form.weeklyPosts || "0"} postagens semanais para Instagram/Facebook.`,
-            `Gestão de tráfego pago (Meta Ads): ${yesNo(form.includesPaidTraffic)}.`,
-            `Audiovisual incluso no plano: ${yesNo(form.includesAudiovisual)}.`,
-            form.proposalServices.trim() ? `Serviços contratados:\n${form.proposalServices.trim()}` : "",
-            form.scope.trim() ? `Observações adicionais: ${form.scope.trim()}` : ""
-        ].filter(Boolean).join("\n");
+    const resolvedScope = [
+        `Tipo de proposta: ${form.proposalType || "empresarial"}.`,
+        `Plano contratado: ${form.planName || "não informado"}.`,
+        `Quantidade de postagens: ${form.weeklyPosts || "0"} postagens semanais para Instagram/Facebook.`,
+        `Gestão de tráfego pago (Meta Ads): ${yesNo(form.includesPaidTraffic)}.`,
+        `Audiovisual incluso no plano: ${yesNo(form.includesAudiovisual)}.`,
+        form.proposalServices.trim() ? `Serviços contratados:\n${form.proposalServices.trim()}` : "",
+        isProposalLinked
+            ? (form.observation.trim() ? `Observações adicionais: ${form.observation.trim()}` : "")
+            : (form.scope.trim() ? `Observações adicionais: ${form.scope.trim()}` : "")
+    ].filter(Boolean).join("\n");
 
     const getSignaturePayload = (delivery: "email" | "copy") => ({
         proposalId: selectedProposalId ? Number(selectedProposalId) : undefined,

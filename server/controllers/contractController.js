@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const contractService = require('../services/contractService');
+const { proposalScopeSnapshot } = require('../services/proposalScope');
 const emailService = require('../services/email');
 const prisma = require('../lib/prisma');
 
@@ -166,13 +167,6 @@ const resolveContractClient = async ({
     });
 };
 
-const proposalScopeSnapshot = (value) => {
-    try {
-        const services = typeof value === 'string' ? JSON.parse(value) : value;
-        return Array.isArray(services) ? services.map(s => s.name || s.serviceName || s.description || String(s)).join('; ') || 'Serviços conforme proposta' : String(value || 'Serviços conforme proposta');
-    } catch { return String(value || 'Serviços conforme proposta'); }
-};
-
 const getOrCreateLinkedProposalContract = async (proposalId, supplied = {}, { approvePending = false } = {}) => {
     const id = parseInt(proposalId, 10);
     if (!Number.isInteger(id)) throw Object.assign(new Error('proposalId inválido.'), { status: 400 });
@@ -225,7 +219,7 @@ const getOrCreateLinkedProposalContract = async (proposalId, supplied = {}, { ap
             return tx.contract.create({ data: {
                 proposalId: proposal.id,
                 clientId: proposal.clientId,
-                scope: proposalScopeSnapshot(proposal.selectedServices),
+                scope: proposalScopeSnapshot(proposal.selectedServices, proposal.proposalType),
                 observation: typeof supplied.observation === 'string' ? supplied.observation.trim() || null : null,
                 additionalScope: typeof supplied.additionalScope === 'string' ? supplied.additionalScope.trim() || null : null,
                 monthlyValue: Number(proposal.total),

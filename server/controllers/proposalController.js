@@ -1,5 +1,6 @@
 const emailService = require('../services/email');
 const pdfService = require('../services/pdfService');
+const { proposalScopeSnapshot } = require('../services/proposalScope');
 const prisma = require('../lib/prisma');
 const crypto = require('crypto');
 
@@ -7,12 +8,6 @@ const createPublicToken = () => crypto.randomBytes(32).toString('base64url');
 const isPublicToken = (token) => /^[A-Za-z0-9_-]{40,}$/.test(String(token || ''));
 const getClientBaseUrl = () => String(process.env.ECONTI_PUBLIC_URL || process.env.CLIENT_URL || 'https://econticomigo.com.br').replace(/\/+$/, '');
 const buildSignatureLink = (token) => `${getClientBaseUrl()}/assinar-contrato/${token}`;
-const parseServicesSnapshot = (value) => {
-    try {
-        const services = typeof value === 'string' ? JSON.parse(value) : value;
-        return Array.isArray(services) ? services.map(s => s.name || s.serviceName || s.description || String(s)).join('; ') || 'Serviços conforme proposta' : String(value || 'Serviços conforme proposta');
-    } catch { return String(value || 'Serviços conforme proposta'); }
-};
 const transitionProposal = (proposal, action, { allowUnlinked = false } = {}) => {
     if (!proposal || proposal.status === 'DELETED') throw Object.assign(new Error('Proposta não encontrada.'), { status: 404 });
     if (action === 'approve' || action === 'accept') {
@@ -91,7 +86,7 @@ const createContractFromApprovedProposal = async (tx, proposal, { clientId, paym
     if (linkedProposal.paymentDay !== resolvedPaymentDay) {
         await tx.proposal.update({ where: { id: linkedProposal.id }, data: { paymentDay: resolvedPaymentDay } });
     }
-    return tx.contract.create({ data: { proposalId: linkedProposal.id, clientId: linkedProposal.clientId, scope: parseServicesSnapshot(linkedProposal.selectedServices), monthlyValue: Number(linkedProposal.total), durationMonths, paymentDay: resolvedPaymentDay, startDate, endDate, status: 'PENDING_SIGNATURE', contractDate: new Date().toLocaleDateString('pt-BR'), signatureToken: crypto.randomBytes(24).toString('hex') }, include: { client: true } });
+    return tx.contract.create({ data: { proposalId: linkedProposal.id, clientId: linkedProposal.clientId, scope: proposalScopeSnapshot(linkedProposal.selectedServices, linkedProposal.proposalType), monthlyValue: Number(linkedProposal.total), durationMonths, paymentDay: resolvedPaymentDay, startDate, endDate, status: 'PENDING_SIGNATURE', contractDate: new Date().toLocaleDateString('pt-BR'), signatureToken: crypto.randomBytes(24).toString('hex') }, include: { client: true } });
 };
 const approveAndGetContract = async (proposalId, action, qualification = null) => {
     try {
@@ -249,7 +244,7 @@ exports.updateProposal = async (req, res) => {
                 await tx.contract.updateMany({
                     where: { id: existing.contract.id, signedAt: null },
                     data: {
-                        scope: parseServicesSnapshot(selectedServices),
+                        scope: proposalScopeSnapshot(selectedServices, proposalType || existing.proposalType),
                         monthlyValue: Number(total)
                     }
                 });
@@ -449,4 +444,4 @@ exports.getProposalById = async (req, res) => {
     }
 };
 
-exports._internals = { createPublicToken, isPublicToken, parseServicesSnapshot, parsePaymentDay, transitionProposal, validateQualification, publicProposal, approveAndGetContract };
+exports._internals = { createPublicToken, isPublicToken, proposalScopeSnapshot, parsePaymentDay, transitionProposal, validateQualification, publicProposal, approveAndGetContract };
