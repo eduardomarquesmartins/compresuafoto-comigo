@@ -1,0 +1,36 @@
+name: Keep Supabase project active
+
+on:
+  schedule:
+    # 08:17, 14:17 and 20:17 in Brazil (UTC-3).
+    - cron: '17 11,17,23 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: server
+        run: npx prisma generate --schema prisma/schema.prisma
+
+      - name: Run read-only database query
+        working-directory: server
+        run: node scripts/supabaseKeepalive.js
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
