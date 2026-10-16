@@ -19,6 +19,7 @@ import {
   CardPriority,
   BoardBackgroundType,
   BoardVisibility,
+  Attachment,
   CustomField,
   CustomFieldType,
   CustomFieldOption,
