@@ -2,6 +2,7 @@
 const nextConfig = {
     async redirects() {
         return [
+            { source: '/admin', destination: '/admin/control', permanent: false },
             { source: '/events/:path*', destination: '/compresuafoto/events/:path*', permanent: true },
             { source: '/event/:path*', destination: '/compresuafoto/events/:path*', permanent: true },
             { source: '/register', destination: '/compresuafoto/register', permanent: true },

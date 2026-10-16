@@ -179,13 +179,15 @@ export default function AdminDemandsPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
                     <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Tarefas e acompanhamento</span>
+                    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">Demandas da operação</h1>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">Priorize entregas, responsáveis e prazos em uma fila única de trabalho.</p>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
                     className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-slate-950 px-4 py-3 rounded-lg font-bold uppercase tracking-widest text-[10px] transition-colors cursor-pointer"
                 >
                     <Plus size={16} />
-                    Nova Demanda
+                    Nova demanda
                 </button>
             </div>
 

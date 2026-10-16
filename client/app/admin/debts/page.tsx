@@ -180,13 +180,15 @@ export default function AdminDebtsPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
                     <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Dívidas e acordos</span>
+                    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">Negociação de dívidas</h1>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">Compare valores, acompanhe acordos e organize as pendências por titular.</p>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
                     className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-lg font-bold uppercase tracking-widest text-[10px] transition-colors cursor-pointer"
                 >
                     <Plus size={16} />
-                    Adicionar Débito
+                    Adicionar dívida
                 </button>
             </div>
 

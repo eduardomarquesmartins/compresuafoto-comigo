@@ -17,18 +17,18 @@ import {
     ClipboardCheck,
     DollarSign,
     FileSpreadsheet,
-    FileText,
     Home,
     LayoutDashboard,
     LogOut,
     Mail,
     Menu,
     MonitorPlay,
-    ScrollText,
+    Settings,
     ShieldAlert,
     ShoppingBag,
     Tag,
     Users,
+    UserRound,
     X,
     type LucideIcon
 } from "lucide-react";
@@ -45,9 +45,41 @@ type NavSection = {
     items: NavItem[];
 };
 
-const kontiUrl = process.env.NEXT_PUBLIC_KONTI_URL || "https://konti.econticomigo.com.br";
-
 const econtiNavSections: NavSection[] = [
+    {
+        label: "Início",
+        items: [
+            { href: "/admin/control", label: "Visão geral", icon: LayoutDashboard }
+        ]
+    },
+    {
+        label: "Operação",
+        items: [
+            { href: "/admin/clients", label: "Clientes", icon: Users },
+            { href: "/admin/commercial", label: "Comercial", icon: Briefcase },
+            { href: "/admin/emails", label: "E-mails", icon: Mail },
+            { href: "/admin/presentation", label: "Apresentação", icon: MonitorPlay }
+        ]
+    },
+    {
+        label: "Gestão",
+        items: [
+            { href: "/admin/finance", label: "Financeiro", icon: DollarSign },
+            { href: "/admin/debts", label: "Dívidas", icon: ShieldAlert },
+            { href: "/admin/demands", label: "Demandas", icon: ClipboardCheck },
+            { href: "/admin/collaborators", label: "Colaboradores", icon: Users },
+            { href: "/admin/imports", label: "Importações", icon: FileSpreadsheet }
+        ]
+    },
+    {
+        label: "Ferramentas",
+        items: [
+            { href: "/konti", label: "KONTI", icon: Activity, external: true }
+        ]
+    }
+];
+
+const econtiPresentationNavSections: NavSection[] = [
     {
         label: "Operação",
         items: [
@@ -71,7 +103,7 @@ const econtiNavSections: NavSection[] = [
     {
         label: "Ferramentas",
         items: [
-            { href: kontiUrl, label: "KONTI", icon: Activity, external: true }
+            { href: "/konti", label: "KONTI", icon: Activity, external: true }
         ]
     }
 ];
@@ -107,7 +139,17 @@ const getRouteMeta = (pathname: string, navSections: NavSection[]) => {
         .flatMap(section => section.items.map(item => ({ ...item, section: section.label })))
         .find(item => isCurrentRoute(pathname, item.href));
 
-    return currentItem ?? {
+    if (currentItem) return currentItem;
+
+    if (pathname.endsWith("/profile")) {
+        return { href: pathname, label: "Meu perfil", icon: UserRound, section: "Conta" };
+    }
+
+    if (pathname.endsWith("/settings")) {
+        return { href: pathname, label: "Configurações", icon: Settings, section: "Conta" };
+    }
+
+    return {
         href: pathname,
         label: "Admin",
         icon: LayoutDashboard,
@@ -119,11 +161,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const pathname = usePathname();
     const router = useRouter();
     const isPhotoAdmin = pathname.startsWith("/compresuafoto/admin");
+    const isPresentationPage = pathname === "/admin/presentation";
+    const isContractsPage = pathname.startsWith("/admin/contracts");
+    const isGeneralAdminExperience = !isPhotoAdmin && !isPresentationPage && !isContractsPage && !pathname.startsWith("/admin/commercial") && pathname !== "/admin/login";
     const adminBasePath = isPhotoAdmin ? "/compresuafoto/admin" : "/admin";
     const loginPath = `${adminBasePath}/login`;
     const dashboardPath = isPhotoAdmin ? "/compresuafoto/admin/dashboard" : "/admin/control";
     const publicSitePath = isPhotoAdmin ? "/compresuafoto" : "/";
-    const navSections = isPhotoAdmin ? photoNavSections : econtiNavSections;
+    const navSections = isPhotoAdmin
+        ? photoNavSections
+        : isPresentationPage
+            ? econtiPresentationNavSections
+            : econtiNavSections;
     const [isAuthorized, setIsAuthorized] = useState(pathname === loginPath);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [activeRequests, setActiveRequests] = useState(0);
@@ -204,7 +253,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     return (
-        <div className="admin-shell min-h-dvh text-zinc-900 selection:bg-[#0044ff]/20">
+        <div className={`admin-shell min-h-dvh text-zinc-900 selection:bg-[#0044ff]/20 ${isPresentationPage ? "admin-presentation-shell" : ""} ${isGeneralAdminExperience ? "admin-general-shell" : ""}`}>
             <div className="admin-grid-background fixed inset-0 -z-10 pointer-events-none" />
                 {activeRequests > 0 && (
                     <div className="admin-global-loading" role="status" aria-live="polite">
@@ -213,24 +262,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 )}
 
             <header className="xl:hidden sticky top-0 z-40 border-b border-zinc-200 bg-white/92 px-4 py-3 backdrop-blur-xl">
-                <div className="flex items-center justify-between relative h-12">
-                    <Link href={dashboardPath} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-12 w-48 flex items-center justify-center overflow-hidden">
-                        <Image src={logoAdmin} alt={isPhotoAdmin ? "Compre Sua Foto admin" : "Econti admin"} className="h-28 w-auto object-contain" />
-                    </Link>
-
-                    <button
-                        type="button"
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="admin-icon-button"
-                        title={sidebarOpen ? "Fechar menu" : "Abrir menu"}
-                        aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}
-                    >
-                        {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
-                    </button>
-                </div>
+                {isPresentationPage ? (
+                    <div className="relative flex h-12 items-center justify-between">
+                        <Link href={dashboardPath} className="absolute left-1/2 top-1/2 flex h-12 w-48 -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden">
+                            <Image src={logoAdmin} alt="Econti admin" className="h-28 w-auto object-contain" />
+                        </Link>
+                        <button type="button" onClick={() => setSidebarOpen(!sidebarOpen)} className="admin-icon-button" title={sidebarOpen ? "Fechar menu" : "Abrir menu"} aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}>
+                            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+                        </button>
+                    </div>
+                ) : (
+                    <div className="flex min-h-12 items-center gap-3">
+                        <button type="button" onClick={() => setSidebarOpen(!sidebarOpen)} className="admin-icon-button shrink-0" title={sidebarOpen ? "Fechar menu" : "Abrir menu"} aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}>
+                            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+                        </button>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">{routeMeta.section}</p>
+                            <p className="truncate text-sm font-semibold text-zinc-950">{routeMeta.label}</p>
+                        </div>
+                        <Link href={dashboardPath} className="admin-mobile-brand" aria-label="Ir ao início do painel">
+                            {isPhotoAdmin ? "CSF" : "E&C"}
+                        </Link>
+                    </div>
+                )}
             </header>
 
-            <div className="relative flex min-h-dvh xl:pl-[292px]">
+            <div className={`relative flex min-h-dvh ${isPresentationPage ? "xl:pl-[292px]" : "xl:pl-[264px]"}`}>
                 {sidebarOpen && (
                     <button
                         type="button"
@@ -243,15 +300,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <aside
                     className={`
                         admin-sidebar
-                        fixed inset-y-0 left-0 z-50 flex h-dvh w-[292px] max-w-[86vw] flex-col
+                        fixed inset-y-0 left-0 z-50 flex h-dvh max-w-[86vw] flex-col
                         border-r border-zinc-200 bg-white/94 backdrop-blur-2xl
+                        ${isPresentationPage ? "w-[292px]" : "w-[264px]"}
                         transition-transform duration-300 ease-out
                         ${sidebarOpen ? "translate-x-0" : "-translate-x-full xl:translate-x-0"}
                     `}
                 >
-                    <div className="border-b border-zinc-200 h-20 flex justify-center items-center overflow-hidden">
-                        <Link href={dashboardPath} className="relative w-full h-full flex justify-center items-center">
-                            <Image src={logoAdmin} alt={isPhotoAdmin ? "Compre Sua Foto" : "Econti"} className="absolute h-48 w-auto object-contain transition-transform hover:scale-105 duration-200" />
+                    <div className={`${isPresentationPage ? "h-20 border-b border-zinc-200 flex justify-center items-center overflow-hidden" : "admin-brand flex h-20 items-center overflow-hidden border-b border-zinc-200 px-6"}`}>
+                        <Link href={dashboardPath} className={isPresentationPage ? "relative flex h-full w-full items-center justify-center" : "relative flex h-full w-full items-center"}>
+                            {isPresentationPage ? (
+                                <Image src={logoAdmin} alt="Econti" className="absolute h-48 w-auto object-contain transition-transform duration-200 hover:scale-105" />
+                            ) : isPhotoAdmin ? (
+                                <span className="admin-brand-wordmark"><strong>COMPRE SUA FOTO</strong><small>PAINEL DE VENDAS</small></span>
+                            ) : isContractsPage ? (
+                                <span className="admin-brand-wordmark"><strong>E<span>&</span>CONTI</strong><small>MARKETING DIGITAL</small></span>
+                            ) : (
+                                <Image
+                                    src="/logo.png"
+                                    alt="& CONTI Marketing Digital"
+                                    width={514}
+                                    height={145}
+                                    priority
+                                    className="h-auto w-[194px] max-w-full object-contain object-left"
+                                />
+                            )}
                         </Link>
                     </div>
 
@@ -274,7 +347,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="admin-nav-link"
-                                                        title="Abrir KONTI em uma nova guia"
+                                                        title="Abrir KONTI em uma nova aba"
                                                     >
                                                         <Icon size={16} />
                                                         <span className="truncate">{item.label}</span>
@@ -314,6 +387,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 <main className="relative z-10 min-w-0 flex-1 px-4 py-5 md:px-6 md:py-6 xl:px-9">
                     <div className="mx-auto w-full max-w-[1500px]">
+                        {!isPresentationPage && (
+                            <header className="admin-context-bar mb-8 hidden items-center justify-between border-b border-zinc-200 pb-4 xl:flex">
+                                <div className="flex items-center gap-3">
+                                    <span className="admin-context-icon"><RouteIcon size={17} /></span>
+                                    <div>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{routeMeta.section}</p>
+                                        <p className="mt-0.5 text-sm font-semibold text-zinc-900">{routeMeta.label}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs text-zinc-500">Área administrativa</span>
+                                    <AdminUserMenu />
+                                </div>
+                            </header>
+                        )}
                         {children}
                     </div>
                 </main>
@@ -1671,11 +1759,582 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         line-height: 1.02 !important;
                     }
 
-                    .admin-shell main [class*="xl:grid-cols-"],
-                    .admin-shell main [class*="lg:grid-cols-3"],
-                    .admin-shell main [class*="lg:grid-cols-4"] {
+                    .admin-shell.admin-presentation-shell main [class*="xl:grid-cols-"],
+                    .admin-shell.admin-presentation-shell main [class*="lg:grid-cols-3"],
+                    .admin-shell.admin-presentation-shell main [class*="lg:grid-cols-4"] {
                         grid-template-columns: minmax(0, 1fr) !important;
                     }
+                }
+
+                /* A bespoke workspace for the operational admin; Presentation keeps its existing layout. */
+                .admin-shell:not(.admin-presentation-shell) {
+                    --workspace-paper: #f3f2ee;
+                    --workspace-panel: #fffefa;
+                    --workspace-ink: #17191d;
+                    --workspace-muted: #77766f;
+                    --workspace-line: #deddd6;
+                    --workspace-blue: #0758d8;
+                    background: var(--workspace-paper) !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-grid-background {
+                    display: none;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) > header {
+                    border-color: #303238 !important;
+                    background: #17191d !important;
+                    color: #f7f6f1;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-mobile-brand {
+                    display: grid;
+                    width: 38px;
+                    height: 38px;
+                    flex: 0 0 auto;
+                    place-items: center;
+                    border: 1px solid #37404d;
+                    border-radius: 9px;
+                    background: #202b39;
+                    color: #8ec4ff;
+                    font-size: 0.68rem;
+                    font-weight: 800;
+                    letter-spacing: -0.04em;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-icon-button {
+                    border-color: #3a3d43 !important;
+                    border-radius: 9px !important;
+                    background: #22252a !important;
+                    color: #f5f4ef !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-sidebar {
+                    width: 264px;
+                    border-right: 1px solid #292c31 !important;
+                    background: #17191d !important;
+                    color: #f6f5f1;
+                    backdrop-filter: none;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-brand {
+                    border-color: #303238 !important;
+                }
+
+                .admin-brand-wordmark {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.25rem;
+                    color: #f7f6f1;
+                    line-height: 1;
+                }
+
+                .admin-brand-wordmark strong {
+                    font-size: 1.28rem;
+                    font-weight: 760;
+                    letter-spacing: -0.065em;
+                }
+
+                .admin-brand-wordmark strong span {
+                    color: #1688ff;
+                }
+
+                .admin-brand-wordmark small {
+                    color: #999ba1;
+                    font-size: 0.52rem;
+                    font-weight: 700;
+                    letter-spacing: 0.22em;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-section-label {
+                    padding: 0 0.7rem;
+                    color: #777a81 !important;
+                    font-family: var(--font-geist), sans-serif !important;
+                    font-size: 0.64rem !important;
+                    font-weight: 750 !important;
+                    letter-spacing: 0.13em !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-nav-link {
+                    min-height: 40px;
+                    border: 1px solid transparent;
+                    border-radius: 8px;
+                    padding: 0.58rem 0.72rem;
+                    color: #b6b8bd;
+                    font-size: 0.84rem;
+                    font-weight: 520;
+                    transition: color .16s ease, background .16s ease, border-color .16s ease;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-nav-link:hover {
+                    border-color: #393c43;
+                    background: #22252a;
+                    color: #fff;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-nav-link.is-active {
+                    border-color: #315d9a;
+                    background: #203957;
+                    color: #fff;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-nav-link.is-active > svg {
+                    color: #75b8ff;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-nav-link.is-active > span:last-child {
+                    background: #70b4ff !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-nav-link.is-danger {
+                    color: #d8a5a1 !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-nav-link.is-danger:hover {
+                    border-color: #533438 !important;
+                    background: #342326 !important;
+                    color: #ffcfca !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) aside > div:last-child {
+                    border-color: #303238 !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main {
+                    min-height: 100dvh;
+                    background: var(--workspace-paper) !important;
+                    padding: 1rem 1.25rem 4rem !important;
+                    color: var(--workspace-ink);
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main > div {
+                    max-width: 1580px !important;
+                }
+
+                .admin-context-bar {
+                    min-height: 56px;
+                    border-color: #deddd6 !important;
+                }
+
+                .admin-context-icon {
+                    display: grid;
+                    width: 36px;
+                    height: 36px;
+                    place-items: center;
+                    border: 1px solid #d8d7d0;
+                    border-radius: 9px;
+                    background: #fffefa;
+                    color: #0758d8;
+                }
+
+                .admin-context-bar > div:last-child > span {
+                    color: #77766f !important;
+                }
+
+                .admin-context-bar button[aria-label="Abrir menu do administrador"] {
+                    width: 36px;
+                    height: 36px;
+                    border: 1px solid #d8d7d0;
+                    border-radius: 9px;
+                    background: #fffefa;
+                    color: #17191d;
+                    box-shadow: none;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-context-bar [class*="bg-[#0b0b0d]"] {
+                    border-color: #deddd6 !important;
+                    background: #fffefa !important;
+                    box-shadow: 0 16px 40px rgba(20, 24, 30, 0.16) !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-context-bar [class*="bg-[#0b0b0d]"] .text-white {
+                    color: #17191d !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) .admin-context-bar [class*="bg-[#0b0b0d]"] a:hover {
+                    background: #f1f3f7 !important;
+                    color: #0758d8 !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main h1 {
+                    max-width: none;
+                    color: var(--workspace-ink) !important;
+                    font-size: clamp(1.8rem, 2.5vw, 2.35rem) !important;
+                    font-weight: 730 !important;
+                    line-height: 1.08 !important;
+                    letter-spacing: -0.055em !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main h2 {
+                    color: var(--workspace-ink) !important;
+                    font-weight: 680 !important;
+                    letter-spacing: -0.035em !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main h3,
+                .admin-shell:not(.admin-presentation-shell) main h4 {
+                    color: var(--workspace-ink) !important;
+                    font-weight: 630 !important;
+                    letter-spacing: -0.02em !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-page-stack {
+                    gap: 1.25rem;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-page-stack > section,
+                .admin-shell:not(.admin-presentation-shell) main .admin-page-stack > header,
+                .admin-shell:not(.admin-presentation-shell) main .admin-card,
+                .admin-shell:not(.admin-presentation-shell) main .admin-hero-card,
+                .admin-shell:not(.admin-presentation-shell) main .admin-metric-card,
+                .admin-shell:not(.admin-presentation-shell) main .admin-command-panel,
+                .admin-shell:not(.admin-presentation-shell) main .admin-loading-card {
+                    border-color: var(--workspace-line) !important;
+                    border-radius: 12px !important;
+                    background: var(--workspace-panel) !important;
+                    box-shadow: 0 1px 2px rgba(20, 24, 30, 0.035), 0 8px 24px rgba(20, 24, 30, 0.025) !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-page-stack > section.admin-metric-grid,
+                .admin-shell:not(.admin-presentation-shell) main .admin-page-stack > section.admin-dashboard-panels {
+                    border: 0 !important;
+                    border-radius: 0 !important;
+                    background: transparent !important;
+                    box-shadow: none !important;
+                    padding: 0 !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-card::before,
+                .admin-shell:not(.admin-presentation-shell) main .admin-hero-card::before,
+                .admin-shell:not(.admin-presentation-shell) main .admin-metric-card::before {
+                    display: none;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-metric-card {
+                    min-height: 148px;
+                    padding: 1.2rem !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-metric-card:hover {
+                    transform: translateY(-1px);
+                    border-color: #b6c9e5 !important;
+                    box-shadow: 0 8px 22px rgba(20, 24, 30, 0.06) !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main [class*="rounded-3xl"],
+                .admin-shell:not(.admin-presentation-shell) main [class*="rounded-2xl"],
+                .admin-shell:not(.admin-presentation-shell) main [class*="rounded-xl"] {
+                    border-radius: 12px !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main [class*="shadow-2xl"],
+                .admin-shell:not(.admin-presentation-shell) main [class*="shadow-xl"],
+                .admin-shell:not(.admin-presentation-shell) main [class*="shadow-lg"] {
+                    box-shadow: 0 12px 36px rgba(20, 24, 30, 0.13) !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-overline,
+                .admin-shell:not(.admin-presentation-shell) main .admin-kicker,
+                .admin-shell:not(.admin-presentation-shell) main .admin-microcopy,
+                .admin-shell:not(.admin-presentation-shell) main .admin-metric-label {
+                    color: #73736d !important;
+                    font-family: var(--font-geist), sans-serif !important;
+                    font-size: 0.68rem !important;
+                    font-weight: 700 !important;
+                    letter-spacing: 0.1em !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main p.text-white,
+                .admin-shell:not(.admin-presentation-shell) main h1.text-white,
+                .admin-shell:not(.admin-presentation-shell) main h2.text-white,
+                .admin-shell:not(.admin-presentation-shell) main h3.text-white,
+                .admin-shell:not(.admin-presentation-shell) main label.text-white,
+                .admin-shell:not(.admin-presentation-shell) main span.text-white,
+                .admin-shell:not(.admin-presentation-shell) main .text-slate-200,
+                .admin-shell:not(.admin-presentation-shell) main .text-slate-300,
+                .admin-shell:not(.admin-presentation-shell) main .text-slate-400,
+                .admin-shell:not(.admin-presentation-shell) main .text-slate-500,
+                .admin-shell:not(.admin-presentation-shell) main .text-zinc-300,
+                .admin-shell:not(.admin-presentation-shell) main .text-zinc-400,
+                .admin-shell:not(.admin-presentation-shell) main .text-zinc-500 {
+                    color: #656660 !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .text-zinc-950,
+                .admin-shell:not(.admin-presentation-shell) main .text-zinc-900,
+                .admin-shell:not(.admin-presentation-shell) main .text-slate-900,
+                .admin-shell:not(.admin-presentation-shell) main .text-slate-950 {
+                    color: var(--workspace-ink) !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-primary-button,
+                .admin-shell:not(.admin-presentation-shell) main a[class*="bg-blue-"],
+                .admin-shell:not(.admin-presentation-shell) main button[class*="bg-blue-"],
+                .admin-shell:not(.admin-presentation-shell) main a[class*="from-blue-"],
+                .admin-shell:not(.admin-presentation-shell) main button[class*="from-blue-"] {
+                    min-height: 40px;
+                    border: 1px solid #0758d8 !important;
+                    border-radius: 8px !important;
+                    background: #0758d8 !important;
+                    box-shadow: none !important;
+                    color: #fff !important;
+                    font-size: 0.82rem !important;
+                    font-weight: 650 !important;
+                    letter-spacing: 0 !important;
+                    text-transform: none !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-primary-button *,
+                .admin-shell:not(.admin-presentation-shell) main a[class*="bg-blue-"] *,
+                .admin-shell:not(.admin-presentation-shell) main button[class*="bg-blue-"] * {
+                    color: #fff !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-primary-button:hover,
+                .admin-shell:not(.admin-presentation-shell) main a[class*="bg-blue-"]:hover,
+                .admin-shell:not(.admin-presentation-shell) main button[class*="bg-blue-"]:hover {
+                    border-color: #0649b5 !important;
+                    background: #0649b5 !important;
+                    transform: translateY(-1px);
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-secondary-button {
+                    min-height: 40px;
+                    border: 1px solid #d6d5ce !important;
+                    border-radius: 8px !important;
+                    background: #fffefa !important;
+                    color: #30323a !important;
+                    font-size: 0.82rem !important;
+                    font-weight: 600 !important;
+                    letter-spacing: 0 !important;
+                    text-transform: none !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-secondary-button:hover {
+                    border-color: #aebbd0 !important;
+                    background: #f4f7fb !important;
+                    color: #0758d8 !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main input,
+                .admin-shell:not(.admin-presentation-shell) main textarea,
+                .admin-shell:not(.admin-presentation-shell) main select {
+                    min-height: 42px;
+                    border: 1px solid #d6d5ce !important;
+                    border-radius: 8px !important;
+                    background: #fffefa !important;
+                    box-shadow: none !important;
+                    color: #25272d !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main textarea {
+                    min-height: 88px;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main input:focus,
+                .admin-shell:not(.admin-presentation-shell) main textarea:focus,
+                .admin-shell:not(.admin-presentation-shell) main select:focus {
+                    border-color: #4d8ce6 !important;
+                    box-shadow: 0 0 0 3px rgba(7, 88, 216, 0.11) !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main table {
+                    min-width: 700px;
+                    border-collapse: separate !important;
+                    border-spacing: 0 !important;
+                    background: var(--workspace-panel) !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main div:has(> table) {
+                    overflow-x: auto !important;
+                    border: 1px solid var(--workspace-line);
+                    border-radius: 12px !important;
+                    background: var(--workspace-panel) !important;
+                    box-shadow: none !important;
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main th {
+                    height: 44px;
+                    border-bottom: 1px solid #e8e7e1 !important;
+                    background: #f6f5f1 !important;
+                    color: #676860 !important;
+                    font-size: 0.66rem !important;
+                    font-weight: 700 !important;
+                    letter-spacing: 0.07em !important;
+                    text-transform: uppercase;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main td {
+                    border-bottom: 1px solid #ecebe6 !important;
+                    color: #373940 !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main tbody tr,
+                .admin-shell:not(.admin-presentation-shell) main tbody tr:nth-child(even) {
+                    background: #fffefa !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main tbody tr:hover {
+                    background: #f6f8fb !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main .admin-empty-state {
+                    border: 1px dashed #d1d0c9 !important;
+                    border-radius: 12px !important;
+                    background: #faf9f5 !important;
+                    box-shadow: none !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main div.fixed.inset-0 > div {
+                    border: 1px solid var(--workspace-line) !important;
+                    border-radius: 14px !important;
+                    background: var(--workspace-panel) !important;
+                    box-shadow: 0 24px 60px rgba(20, 24, 30, 0.22) !important;
+                }
+
+                .admin-shell:not(.admin-presentation-shell) main button:focus-visible,
+                .admin-shell:not(.admin-presentation-shell) main a:focus-visible,
+                .admin-shell:not(.admin-presentation-shell) main input:focus-visible,
+                .admin-shell:not(.admin-presentation-shell) main select:focus-visible,
+                .admin-shell:not(.admin-presentation-shell) main textarea:focus-visible {
+                    outline: 2px solid #397be0 !important;
+                    outline-offset: 2px !important;
+                }
+
+                @media (min-width: 1280px) {
+                    .admin-shell:not(.admin-presentation-shell) main {
+                        padding: 1.6rem 2.25rem 4rem !important;
+                    }
+                }
+
+                @media (max-width: 767px) {
+                    .admin-shell:not(.admin-presentation-shell) main {
+                        padding: 1rem 0.9rem 3rem !important;
+                    }
+                }
+
+                @media (min-width: 768px) and (max-width: 1279px) {
+                    .admin-shell:not(.admin-presentation-shell) main [class*="md:grid-cols-2"] {
+                        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                    }
+                }
+
+                /* Shared visual language for the general admin. Presentation and
+                   Contracts intentionally keep their current page layouts. */
+                .admin-general-shell {
+                    --admin-ink: #1d2026;
+                    --admin-muted: #6c7079;
+                    --admin-paper: #fffefa;
+                    --admin-line: #e5e3dc;
+                    background: #f3f2ee !important;
+                }
+
+                .admin-general-shell .admin-grid-background {
+                    background:
+                        radial-gradient(ellipse at 82% 0%, rgba(7, 88, 216, 0.045), transparent 34%),
+                        linear-gradient(180deg, #f6f5f1 0%, #f1f0eb 100%) !important;
+                }
+
+                .admin-general-shell main [class*="bg-[#161826"],
+                .admin-general-shell main [class*="bg-[#12141d"],
+                .admin-general-shell main [class*="bg-[#121320"],
+                .admin-general-shell main [class*="bg-[#0f111a"],
+                .admin-general-shell main [class*="bg-[#1f2136"],
+                .admin-general-shell main [class*="bg-slate-900"],
+                .admin-general-shell main [class*="bg-slate-950"],
+                .admin-general-shell main [class*="from-[#161826"] {
+                    background: var(--admin-paper) !important;
+                    background-image: none !important;
+                    border-color: var(--admin-line) !important;
+                    box-shadow: 0 1px 2px rgba(24, 27, 32, 0.04), 0 12px 28px -24px rgba(24, 27, 32, 0.22) !important;
+                }
+
+                .admin-general-shell main [class*="bg-slate-800"] {
+                    background: #f4f3ef !important;
+                    border-color: var(--admin-line) !important;
+                }
+
+                .admin-general-shell main .text-white,
+                .admin-general-shell main .text-slate-100,
+                .admin-general-shell main .text-slate-200,
+                .admin-general-shell main .text-slate-300 {
+                    color: var(--admin-ink) !important;
+                }
+
+                .admin-general-shell main .text-slate-400,
+                .admin-general-shell main .text-slate-500,
+                .admin-general-shell main .text-zinc-400,
+                .admin-general-shell main .text-zinc-500 {
+                    color: var(--admin-muted) !important;
+                }
+
+                .admin-general-shell main .text-red-100,
+                .admin-general-shell main .text-rose-100,
+                .admin-general-shell main .text-amber-100,
+                .admin-general-shell main .text-amber-50 {
+                    color: #8f2c24 !important;
+                }
+
+                .admin-general-shell main .text-emerald-50,
+                .admin-general-shell main [class*="text-emerald-100"] {
+                    color: #17643b !important;
+                }
+
+                .admin-general-shell main h1,
+                .admin-general-shell main h2,
+                .admin-general-shell main h3,
+                .admin-general-shell main h4 {
+                    color: var(--admin-ink) !important;
+                }
+
+                .admin-general-shell main [class*="bg-[#17191d"] {
+                    color: #ffffff !important;
+                }
+
+                .admin-general-shell main [class*="bg-[#17191d"] .text-white,
+                .admin-general-shell main [class*="bg-[#17191d"] h1,
+                .admin-general-shell main [class*="bg-[#17191d"] h2,
+                .admin-general-shell main [class*="bg-[#17191d"] h3 {
+                    color: #ffffff !important;
+                }
+
+                .admin-general-shell main button[class*="bg-blue-"],
+                .admin-general-shell main a[class*="bg-blue-"],
+                .admin-general-shell main button[class*="bg-[#0044ff]"] *,
+                .admin-general-shell main a[class*="bg-[#0044ff]"] *,
+                .admin-general-shell main button[class*="bg-[#0758d8]"] *,
+                .admin-general-shell main a[class*="bg-[#0758d8]"] *,
+                .admin-general-shell main button[class*="bg-indigo-"],
+                .admin-general-shell main a[class*="bg-indigo-"],
+                .admin-general-shell main button[class*="bg-zinc-900"],
+                .admin-general-shell main button[class*="bg-rose-500"],
+                .admin-general-shell main button[class*="from-blue-"],
+                .admin-general-shell main a[class*="from-blue-"],
+                .admin-general-shell main .admin-primary-button {
+                    color: #ffffff !important;
+                }
+
+                .admin-general-shell main button[class*="bg-blue-"] *,
+                .admin-general-shell main a[class*="bg-blue-"] *,
+                .admin-general-shell main button[class*="bg-[#0044ff]"],
+                .admin-general-shell main a[class*="bg-[#0044ff]"],
+                .admin-general-shell main button[class*="bg-[#0758d8]"],
+                .admin-general-shell main a[class*="bg-[#0758d8]"],
+                .admin-general-shell main button[class*="bg-indigo-"] *,
+                .admin-general-shell main a[class*="bg-indigo-"] *,
+                .admin-general-shell main button[class*="bg-zinc-900"] *,
+                .admin-general-shell main button[class*="bg-rose-500"] *,
+                .admin-general-shell main button[class*="from-blue-"] *,
+                .admin-general-shell main a[class*="from-blue-"] *,
+                .admin-general-shell main .admin-primary-button * {
+                    color: #ffffff !important;
+                }
+
+                .admin-general-shell main input,
+                .admin-general-shell main textarea,
+                .admin-general-shell main select {
+                    color-scheme: light;
                 }
             `}</style>
         </div>

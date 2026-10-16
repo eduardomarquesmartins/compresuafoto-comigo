@@ -386,6 +386,13 @@ export const updateClient = async (id: number, data: any) => {
     return response.data;
 };
 
+export const uploadClientPhoto = async (id: number, file: File) => {
+    const formData = new FormData();
+    formData.append('photo', file);
+    const response = await api.put(`clients/${id}/photo`, formData);
+    return response.data;
+};
+
 export const deleteClient = async (id: number) => {
     const response = await api.delete(`clients/${id}`);
     return response.data;

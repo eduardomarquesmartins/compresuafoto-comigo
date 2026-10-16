@@ -248,6 +248,8 @@ export default function AdminEmailsPage() {
             <header className="flex flex-col gap-6 border-b border-black/10 pb-7 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <span className="text-sm font-extrabold uppercase tracking-[0.2em] text-blue-600">Comunicação com clientes</span>
+                    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">Central de e-mails</h1>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">Escolha os destinatários, revise a mensagem e acompanhe o resultado do envio.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <span className="hidden text-xs font-medium text-slate-500 sm:inline">{recipientsCount} destinatário{recipientsCount === 1 ? "" : "s"}</span>

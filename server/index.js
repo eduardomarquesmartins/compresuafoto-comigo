@@ -145,6 +145,7 @@ app.use('/api/excel', require('./routes/excelRoutes'));
 app.use('/api/debts', require('./routes/debtRoutes'));
 app.use('/api/demands', require('./routes/demandRoutes'));
 app.use('/api/collaborators', require('./routes/collaboratorRoutes'));
+app.use('/api/konti', require('./routes/kontiRoutes'));
 
 // Global Error Handler
 app.use((err, req, res, next) => {

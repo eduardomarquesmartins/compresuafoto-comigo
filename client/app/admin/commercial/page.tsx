@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import ClientAvatar from "@/components/ClientAvatar";
 import {
     AlertCircle,
     ArrowUpRight,
@@ -65,6 +66,7 @@ interface Proposal {
         email?: string;
         phone?: string;
         document?: string;
+        photoUrl?: string | null;
     } | null;
 }
 
@@ -92,6 +94,7 @@ interface Contract {
         email?: string;
         phone?: string;
         document?: string;
+        photoUrl?: string | null;
     } | null;
 }
 
@@ -99,6 +102,7 @@ interface Client {
     id: number;
     name: string;
     email?: string | null;
+    photoUrl?: string | null;
 }
 
 const PROPOSAL_TYPE_LABELS: Record<string, string> = {
@@ -190,7 +194,7 @@ export default function CommercialHubPage() {
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState<number>(0);
+    const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
     // Action In-Progress States
     const [actionInProgressId, setActionInProgressId] = useState<number | null>(null);
@@ -245,17 +249,21 @@ export default function CommercialHubPage() {
         else setRefreshing(true);
 
         try {
+            let hadLoadError = false;
             const [proposalsRes, contractsRes, clientsRes] = await Promise.all([
                 getProposals().catch((err) => {
                     console.warn("Falha ao carregar propostas:", err);
+                    hadLoadError = true;
                     return [];
                 }),
                 getContracts().catch((err) => {
                     console.warn("Falha ao carregar contratos:", err);
+                    hadLoadError = true;
                     return [];
                 }),
                 getClients().catch((err) => {
                     console.warn("Falha ao carregar clientes:", err);
+                    hadLoadError = true;
                     return [];
                 }),
             ]);
@@ -263,6 +271,12 @@ export default function CommercialHubPage() {
             setProposals(Array.isArray(proposalsRes) ? proposalsRes : []);
             setContracts(Array.isArray(contractsRes) ? contractsRes : []);
             setClients(Array.isArray(clientsRes) ? clientsRes : []);
+            if (hadLoadError) {
+                setFeedbackAlert({
+                    type: "error",
+                    message: "Parte dos dados comerciais não carregou. Confira a conexão e tente atualizar.",
+                });
+            }
         } catch (error) {
             console.error("Erro ao sincronizar Comercial:", error);
             setFeedbackAlert({
@@ -308,6 +322,7 @@ export default function CommercialHubPage() {
         const totalProposals = activeProposals.length;
         let pendingApprovalCount = 0;
         let approvedProposalsCount = 0;
+        let declinedProposalsCount = 0;
         let convertedRevenue = 0;
 
         proposals.forEach((p) => {
@@ -323,6 +338,10 @@ export default function CommercialHubPage() {
 
             if (isPending) {
                 pendingApprovalCount += 1;
+            }
+
+            if (p.status === "DECLINED" || Boolean(p.declinedAt)) {
+                declinedProposalsCount += 1;
             }
 
             if (isApproved) {
@@ -341,6 +360,7 @@ export default function CommercialHubPage() {
             totalProposals,
             pendingApprovalCount,
             approvedProposalsCount,
+            declinedProposalsCount,
             pendingContractsCount,
             signedContractsCount,
             convertedRevenue,
@@ -786,19 +806,51 @@ export default function CommercialHubPage() {
     };
 
     return (
-        <div className="admin-page-stack space-y-6 pb-16">
+        <div className="admin-page-stack commercial-hub space-y-6 pb-16">
+            <style jsx global>{`
+                .admin-shell .commercial-hub .commercial-signature-link,
+                .admin-shell .commercial-hub .commercial-signature-link * {
+                    color: #ffffff !important;
+                }
+
+                .admin-shell .commercial-hub button[class*="bg-[#0044ff]"],
+                .admin-shell .commercial-hub button[class*="bg-[#0044ff]"] *,
+                .admin-shell .commercial-hub a[class*="bg-[#0044ff]"],
+                .admin-shell .commercial-hub a[class*="bg-[#0044ff]"] *,
+                .admin-shell .commercial-hub button[class*="bg-[#0758d8]"],
+                .admin-shell .commercial-hub button[class*="bg-[#0758d8]"] *,
+                .admin-shell .commercial-hub a[class*="bg-[#0758d8]"],
+                .admin-shell .commercial-hub a[class*="bg-[#0758d8]"] *,
+                .admin-shell .commercial-hub button[class*="bg-blue-"],
+                .admin-shell .commercial-hub button[class*="bg-blue-"] *,
+                .admin-shell .commercial-hub a[class*="bg-blue-"],
+                .admin-shell .commercial-hub a[class*="bg-blue-"] * {
+                    color: #ffffff !important;
+                }
+
+                .admin-shell .commercial-hub button:disabled[class*="bg-[#0044ff]"],
+                .admin-shell .commercial-hub button:disabled[class*="bg-[#0044ff]"] *,
+                .admin-shell .commercial-hub button:disabled[class*="bg-[#0758d8]"],
+                .admin-shell .commercial-hub button:disabled[class*="bg-[#0758d8]"] *,
+                .admin-shell .commercial-hub button:disabled[class*="bg-blue-"],
+                .admin-shell .commercial-hub button:disabled[class*="bg-blue-"] * {
+                    color: #71717a !important;
+                }
+
+                .admin-shell .commercial-hub .commercial-delete-action,
+                .admin-shell .commercial-hub .commercial-delete-action * {
+                    color: #a51d35 !important;
+                }
+            `}</style>
             {}
-            <header className="rounded-2xl border border-zinc-300 bg-white p-5 sm:p-6 shadow-sm">
+            <header className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400">
-                                Comercial
-                            </span>
-                        </div>
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
-                            Propostas & Contratos
-                        </h1>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#0758d8]">Relacionamento e receita</p>
+                        <h1 className="text-2xl font-bold tracking-tight text-zinc-950 sm:text-3xl">Central Comercial</h1>
+                        <p className="max-w-2xl text-sm leading-6 text-zinc-500">
+                            Acompanhe oportunidades, valores e assinaturas em um único fluxo.
+                        </p>
                     </div>
 
                     <div className="flex items-center gap-2.5 shrink-0">
@@ -822,7 +874,7 @@ export default function CommercialHubPage() {
                             className="inline-flex h-9.5 items-center justify-center gap-2 rounded-xl bg-[#0044ff] px-4 text-sm font-semibold text-white shadow-2xs hover:bg-[#0039d6] active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0044ff]/40"
                         >
                             <Plus size={16} strokeWidth={2.5} />
-                            <span>Nova proposta</span>
+                            <span>Criar proposta</span>
                         </Link>
                     </div>
                 </div>
@@ -864,136 +916,43 @@ export default function CommercialHubPage() {
                 </div>
             )}
 
-            {/* KPI Metrics Grid - Clean, unified white strip with shared dividers */}
-            <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 rounded-2xl border border-zinc-300 bg-white shadow-sm overflow-hidden">
-                {/* Metric 1: Total Propostas */}
-                <div className="flex flex-col justify-between min-h-[142px] sm:min-h-[150px] min-w-0 bg-white p-4.5 sm:p-5 border-b border-r border-zinc-200 xl:border-b-0 hover:bg-zinc-50/60 transition-colors">
-                    <div className="flex items-start justify-between gap-2.5 min-w-0">
-                        <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-zinc-500 leading-snug line-clamp-2" title="Total Propostas">
-                            Total Propostas
-                        </span>
-                        <div className="flex h-8.5 w-8.5 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-700 shadow-2xs">
-                            <FileText size={16} />
-                        </div>
-                    </div>
-                    <div className="mt-3.5 pt-1 min-w-0">
-                        <p className="text-2xl sm:text-3xl xl:text-4xl font-bold tracking-tight text-zinc-950 tabular-nums truncate leading-none">
-                            {loading ? "..." : metrics.totalProposals}
-                        </p>
-                        <p className="text-xs sm:text-sm text-zinc-400 font-normal mt-1.5 truncate">
-                            Orçamentos gerados
-                        </p>
-                    </div>
-                </div>
-
-                {/* Metric 2: Aguardando Decisão */}
-                <div className="flex flex-col justify-between min-h-[142px] sm:min-h-[150px] min-w-0 bg-white p-4.5 sm:p-5 border-b border-zinc-200 md:border-r xl:border-b-0 hover:bg-zinc-50/60 transition-colors">
-                    <div className="flex items-start justify-between gap-2.5 min-w-0">
-                        <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-zinc-500 leading-snug line-clamp-2" title="Aguardando Decisão">
-                            Aguardando Decisão
-                        </span>
-                        <div className="flex h-8.5 w-8.5 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-700 shadow-2xs">
-                            <Clock size={16} />
-                        </div>
-                    </div>
-                    <div className="mt-3.5 pt-1 min-w-0">
-                        <p className="text-2xl sm:text-3xl xl:text-4xl font-bold tracking-tight text-zinc-950 tabular-nums truncate leading-none">
-                            {loading ? "..." : metrics.pendingApprovalCount}
-                        </p>
-                        <p className="text-xs sm:text-sm text-zinc-400 font-normal mt-1.5 truncate">
-                            Pendentes de cliente
-                        </p>
-                    </div>
-                </div>
-
-                {/* Metric 3: Aguardando Assinatura */}
-                <div className="flex flex-col justify-between min-h-[142px] sm:min-h-[150px] min-w-0 bg-white p-4.5 sm:p-5 border-b border-r border-zinc-200 md:border-r-0 xl:border-r xl:border-b-0 hover:bg-zinc-50/60 transition-colors">
-                    <div className="flex items-start justify-between gap-2.5 min-w-0">
-                        <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-zinc-500 leading-snug line-clamp-2" title="Aguardando Assinatura">
-                            Aguardando Assinatura
-                        </span>
-                        <div className="flex h-8.5 w-8.5 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-700 shadow-2xs">
-                            <FileSignature size={16} />
-                        </div>
-                    </div>
-                    <div className="mt-3.5 pt-1 min-w-0">
-                        <p className="text-2xl sm:text-3xl xl:text-4xl font-bold tracking-tight text-zinc-950 tabular-nums truncate leading-none">
-                            {loading ? "..." : metrics.pendingContractsCount}
-                        </p>
-                        <p className="text-xs sm:text-sm text-zinc-400 font-normal mt-1.5 truncate">
-                            Minutas em validação
-                        </p>
-                    </div>
-                </div>
-
-                {/* Metric 4: Formalizados */}
-                <div className="flex flex-col justify-between min-h-[142px] sm:min-h-[150px] min-w-0 bg-white p-4.5 sm:p-5 border-b border-zinc-200 md:border-b-0 md:border-r xl:border-b-0 hover:bg-zinc-50/60 transition-colors">
-                    <div className="flex items-start justify-between gap-2.5 min-w-0">
-                        <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-zinc-500 leading-snug line-clamp-2" title="Formalizados">
-                            Formalizados
-                        </span>
-                        <div className="flex h-8.5 w-8.5 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-700 shadow-2xs">
-                            <CheckCircle2 size={16} />
-                        </div>
-                    </div>
-                    <div className="mt-3.5 pt-1 min-w-0">
-                        <p className="text-2xl sm:text-3xl xl:text-4xl font-bold tracking-tight text-zinc-950 tabular-nums truncate leading-none">
-                            {loading ? "..." : metrics.signedContractsCount}
-                        </p>
-                        <p className="text-xs sm:text-sm text-zinc-400 font-normal mt-1.5 truncate">
-                            Assinaturas concluídas
-                        </p>
-                    </div>
-                </div>
-
-                {/* Metric 5: Volume Convertido */}
-                <div className="flex flex-col justify-between min-h-[142px] sm:min-h-[150px] min-w-0 bg-white p-4.5 sm:p-5 col-span-2 md:col-span-2 xl:col-span-1 hover:bg-zinc-50/60 transition-colors">
-                    <div className="flex items-start justify-between gap-2.5 min-w-0">
-                        <span className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-zinc-500 leading-snug line-clamp-2" title="Volume Convertido">
-                            Volume Convertido
-                        </span>
-                        <div className="flex h-8.5 w-8.5 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-700 shadow-2xs">
-                            <DollarSign size={16} />
-                        </div>
-                    </div>
-                    <div className="mt-3.5 pt-1 min-w-0">
-                        <p
-                            className="text-xl sm:text-2xl xl:text-3xl font-bold tracking-tight text-zinc-950 tabular-nums truncate leading-none"
-                            title={formatMoney(metrics.convertedRevenue)}
-                        >
-                            {loading ? "..." : formatMoney(metrics.convertedRevenue)}
-                        </p>
-                        <p className="text-xs sm:text-sm text-zinc-400 font-normal mt-1.5 truncate">
-                            Propostas aprovadas
-                        </p>
-                    </div>
-                </div>
-            </section>
-
             {/* Consolidated Workspace Panel */}
-            <section className="rounded-3xl border border-zinc-200/90 bg-zinc-50/70 p-5 sm:p-6 shadow-xs">
+            <section className="rounded-3xl border border-zinc-200 bg-white/70 p-4 shadow-sm sm:p-6">
+                <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <h2 className="text-lg font-bold tracking-tight text-zinc-950">Registros e próximos passos</h2>
+                        <p className="mt-0.5 text-sm text-zinc-500">Filtre a operação por etapa e encontre cada cliente com rapidez.</p>
+                    </div>
+                    <p className="text-xs font-medium text-zinc-500" aria-live="polite">
+                        {activeTab === "proposals"
+                            ? `${filteredProposals.length} ${filteredProposals.length === 1 ? "proposta" : "propostas"}`
+                            : `${filteredContracts.length} ${filteredContracts.length === 1 ? "contrato" : "contratos"}`}
+                    </p>
+                </div>
                 {/* Unified Control Bar */}
-                <div className="rounded-2xl border border-zinc-300 bg-white p-4 sm:p-5 shadow-sm">
+                <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
                     {/* Top Row: Segmented Switcher & Search */}
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-100 pb-4">
-                        {/* Tab Switcher */}
-                        <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-1 sm:pb-0">
+                        {/* One workspace with two focused work modes */}
+                        <div className="inline-flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-zinc-200 bg-[#f4f3f0] p-1" role="tablist" aria-label="Modo de trabalho comercial">
                             <button
                                 type="button"
+                                role="tab"
+                                aria-selected={activeTab === "proposals"}
                                 onClick={() => setActiveTab("proposals")}
-                                className={`group inline-flex items-center gap-2 pb-2 pt-1 text-sm sm:text-base font-semibold transition-all cursor-pointer border-b-2 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-t ${
+                                className={`group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                                     activeTab === "proposals"
-                                        ? "border-[#0044ff] text-zinc-950 font-bold"
-                                        : "border-transparent text-zinc-500 hover:text-zinc-900 hover:border-zinc-300"
+                                        ? "bg-white text-zinc-950 shadow-sm"
+                                        : "text-zinc-500 hover:text-zinc-900"
                                 }`}
                             >
-                                <FileText size={16} className={activeTab === "proposals" ? "text-[#0044ff]" : "text-zinc-400 group-hover:text-zinc-600"} />
-                                <span>Propostas</span>
+                                <FileText size={16} className={activeTab === "proposals" ? "text-[#0758d8]" : "text-zinc-400 group-hover:text-zinc-600"} />
+                                <span>Oportunidades</span>
                                 <span
                                     className={`rounded-full px-2 py-0.5 text-xs font-semibold transition-colors ${
                                         activeTab === "proposals"
-                                            ? "border border-[#0044ff] bg-white text-[#0044ff]"
-                                            : "border border-zinc-200 bg-white text-zinc-600"
+                                            ? "bg-[#edf4ff] text-[#0758d8]"
+                                            : "bg-white/70 text-zinc-500"
                                     }`}
                                 >
                                     {metrics.totalProposals}
@@ -1002,20 +961,22 @@ export default function CommercialHubPage() {
 
                             <button
                                 type="button"
+                                role="tab"
+                                aria-selected={activeTab === "contracts"}
                                 onClick={() => setActiveTab("contracts")}
-                                className={`group inline-flex items-center gap-2 pb-2 pt-1 text-sm sm:text-base font-semibold transition-all cursor-pointer border-b-2 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-t ${
+                                className={`group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                                     activeTab === "contracts"
-                                        ? "border-[#0044ff] text-zinc-950 font-bold"
-                                        : "border-transparent text-zinc-500 hover:text-zinc-900 hover:border-zinc-300"
+                                        ? "bg-white text-zinc-950 shadow-sm"
+                                        : "text-zinc-500 hover:text-zinc-900"
                                 }`}
                             >
-                                <ScrollText size={16} className={activeTab === "contracts" ? "text-[#0044ff]" : "text-zinc-400 group-hover:text-zinc-600"} />
-                                <span>Contratos & Assinaturas</span>
+                                <ScrollText size={16} className={activeTab === "contracts" ? "text-[#0758d8]" : "text-zinc-400 group-hover:text-zinc-600"} />
+                                <span>Formalização</span>
                                 <span
                                     className={`rounded-full px-2 py-0.5 text-xs font-semibold transition-colors ${
                                         activeTab === "contracts"
-                                            ? "border border-[#0044ff] bg-white text-[#0044ff]"
-                                            : "border border-zinc-200 bg-white text-zinc-600"
+                                            ? "bg-[#edf4ff] text-[#0758d8]"
+                                            : "bg-white/70 text-zinc-500"
                                     }`}
                                 >
                                     {contracts.length}
@@ -1028,6 +989,7 @@ export default function CommercialHubPage() {
                             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
                             <input
                                 type="text"
+                                aria-label={activeTab === "proposals" ? "Buscar propostas" : "Buscar contratos"}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder={
@@ -1098,7 +1060,7 @@ export default function CommercialHubPage() {
                                                 : "border border-zinc-200 bg-white text-zinc-700 shadow-2xs hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-950"
                                         }`}
                                     >
-                                        Recusadas
+                                        Recusadas ({metrics.declinedProposalsCount})
                                     </button>
                                 </>
                             ) : (
@@ -1181,314 +1143,103 @@ export default function CommercialHubPage() {
                                     : "Cadastre novas propostas para iniciar o ciclo comercial."}
                             </p>
                             <div className="mt-4">
-                                <Link
-                                    href="/admin/proposals/new"
-                                    className="inline-flex items-center gap-2 rounded-xl bg-[#0044ff] px-4 py-2 text-sm font-semibold text-white shadow-2xs hover:bg-[#0039d6] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0044ff]/40"
-                                >
-                                    <Plus size={16} />
-                                    Nova proposta
-                                </Link>
+                                {searchQuery || proposalFilter !== "ALL" ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => { setSearchQuery(""); setProposalFilter("ALL"); }}
+                                        className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-2xs transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                                    >
+                                        Limpar busca e filtros
+                                    </button>
+                                ) : (
+                                    <Link
+                                        href="/admin/proposals/new"
+                                        className="inline-flex items-center gap-2 rounded-xl bg-[#0044ff] px-4 py-2 text-sm font-semibold text-white shadow-2xs transition-colors hover:bg-[#0039d6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0044ff]/40"
+                                    >
+                                        <Plus size={16} />
+                                        Criar proposta
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     ) : (
-                        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="mt-6 overflow-hidden rounded-2xl border border-zinc-200 bg-white divide-y divide-zinc-100">
                             {paginatedProposals.map((proposal) => {
                                 const clientName = getClientDisplayName(proposal);
                                 const clientEmail = proposal.client?.email || proposal.clientEmail;
-                                const clientDoc = proposal.client?.document;
-                                const proposalType = getProposalTypeDisplay(proposal);
                                 const matchedContract = getMatchedContract(proposal);
-
                                 const isSigned = Boolean(matchedContract?.signedAt);
-                                const isApproved =
-                                    proposal.status === "APPROVED" ||
-                                    Boolean(proposal.approvedAt) ||
-                                    Boolean(proposal.acceptedAt) ||
-                                    isSigned;
-                                const isDeclined =
-                                    proposal.status === "DECLINED" || Boolean(proposal.declinedAt);
-                                const isPending =
-                                    !isApproved && !isDeclined && (proposal.status === "PENDING" || !proposal.status);
-
-                                const hasSignatureToken = Boolean(matchedContract?.signatureToken);
-                                const hasCopyLink = hasSignatureToken || Boolean(proposal.publicToken);
-                                const proposalToolGridCols = hasCopyLink
-                                    ? "grid-cols-2 lg:grid-cols-[2.5rem_repeat(3,minmax(0,1fr))]"
-                                    : "grid-cols-2 lg:grid-cols-3";
-                                const centerProposalDownload = !isPending &&
-                                    ((hasSignatureToken && Boolean(proposal.publicToken)) ||
-                                        (!hasSignatureToken && !proposal.publicToken));
+                                const isApproved = proposal.status === "APPROVED" || Boolean(proposal.approvedAt) || Boolean(proposal.acceptedAt) || isSigned;
+                                const isDeclined = proposal.status === "DECLINED" || Boolean(proposal.declinedAt);
+                                const isPending = !isApproved && !isDeclined && (proposal.status === "PENDING" || !proposal.status);
                                 const isProcessing = actionInProgressId === proposal.id;
                                 const isDownloadingProposal = downloadingProposalId === proposal.id;
-                                const paymentDay = matchedContract
-                                    ? Number(matchedContract.paymentDay) || 25
-                                    : Number(proposal.paymentDay) || null;
+                                const hasSignatureToken = Boolean(matchedContract?.signatureToken);
+                                const paymentDay = matchedContract ? Number(matchedContract.paymentDay) || 25 : Number(proposal.paymentDay) || null;
 
                                 return (
-                                    <div
-                                        key={proposal.id}
-                                        className="group flex flex-col justify-between rounded-2xl border border-zinc-300 bg-white p-5 sm:p-6 shadow-sm hover:border-zinc-400 hover:shadow-md transition-all h-full min-w-0 max-w-full overflow-hidden"
-                                    >
-                                        {/* Card Top & Information */}
-                                        <div className="space-y-4">
-                                            {/* Header: Client & Status */}
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="min-w-0 flex-1">
-                                                    <h3
-                                                        className="font-bold text-zinc-950 text-base sm:text-lg truncate"
-                                                        title={clientName}
-                                                    >
-                                                        {clientName}
-                                                    </h3>
-                                                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-zinc-500">
-                                                        {clientEmail && (
-                                                            <span className="truncate max-w-[190px]" title={clientEmail}>
-                                                                {clientEmail}
-                                                            </span>
-                                                        )}
-                                                        {clientDoc && (
-                                                            <span className="font-mono text-xs text-zinc-400 font-medium">
-                                                                {formatCpfCnpj(clientDoc)}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Single Status Badge (Pendente / Concluído) */}
-                                                <div className="shrink-0">
-                                                    {isSigned ? (
-                                                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-                                                            <CheckCircle2 size={13} /> Concluído
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
-                                                            <Clock size={13} /> Pendente
-                                                        </span>
-                                                    )}
-                                                </div>
+                                    <article key={proposal.id} className="group grid gap-4 px-4 py-4 transition-colors hover:bg-[#fbfaf7] sm:px-5 lg:grid-cols-[minmax(240px,1.5fr)_minmax(150px,.8fr)_minmax(190px,1fr)] lg:items-center lg:gap-6">
+                                        <div className="min-w-0">
+                                            <div className="flex min-w-0 items-center gap-2">
+                                                <ClientAvatar name={clientName} photoUrl={proposal.client?.photoUrl} size="sm" />
+                                                <h3 className="truncate text-base font-semibold tracking-tight text-zinc-950" title={clientName}>{clientName}</h3>
+                                                <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${isSigned ? "bg-emerald-50 text-emerald-800" : isDeclined ? "bg-rose-50 text-rose-700" : isApproved ? "bg-blue-50 text-blue-800" : "bg-amber-50 text-amber-800"}`}>
+                                                    {isSigned ? "Assinada" : isDeclined ? "Recusada" : isApproved ? "Aprovada" : "Aguardando"}
+                                                </span>
                                             </div>
+                                            <p className="mt-1 truncate text-sm text-zinc-500" title={clientEmail || undefined}>{clientEmail || getProposalTypeDisplay(proposal)}</p>
+                                        </div>
 
-                                            {/* Metrics & Details directly on card */}
-                                            <div className="pt-3.5 border-t border-zinc-200 space-y-2.5">
-                                                <div className="flex items-baseline justify-between gap-2">
-                                                    <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                                                        Valor do Orçamento
-                                                    </span>
-                                                    <span className="text-xl sm:text-2xl font-bold text-zinc-950 tabular-nums">
-                                                        {formatMoney(proposal.total)}
-                                                    </span>
-                                                </div>
-
-                                                <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-zinc-200 text-xs sm:text-sm">
-                                                    <span className="inline-flex items-center rounded-md border border-zinc-300 bg-white px-2.5 py-1 font-medium text-zinc-700 shadow-2xs">
-                                                        {proposalType}
-                                                    </span>
-                                                    {paymentDay ? (
-                                                        <span
-                                                            className="inline-flex items-center gap-1.5 text-zinc-500 font-medium"
-                                                            title={`Vencimento mensal: dia ${paymentDay}`}
-                                                        >
-                                                            <Calendar size={13} />
-                                                            Vencimento: dia {paymentDay}
-                                                        </span>
-                                                    ) : (
-                                                        <span
-                                                            className="inline-flex items-center gap-1.5 text-zinc-500 font-medium"
-                                                            title="Data de criação da proposta"
-                                                        >
-                                                            <Calendar size={13} />
-                                                            {formatDate(proposal.createdAt)}
-                                                        </span>
-                                                    )}
-                                                </div>
+                                        <div className="flex items-center justify-between gap-4 lg:block">
+                                            <div>
+                                                <p className="text-lg font-semibold tabular-nums tracking-tight text-zinc-950">{formatMoney(proposal.total)}</p>
+                                                <p className="mt-0.5 text-xs text-zinc-500">{getProposalTypeDisplay(proposal)} <span className="px-1 text-zinc-300">·</span> {paymentDay ? `Vence dia ${paymentDay}` : formatDate(proposal.createdAt)}</p>
                                             </div>
+                                        </div>
 
-                                            {/* Contract generation alert if approved without contract */}
-                                            {isApproved && !matchedContract && (
-                                                <div className="flex items-center justify-between gap-2 rounded-xl border border-zinc-300 bg-white p-3 text-xs shadow-xs">
-                                                    <span className="text-xs sm:text-sm font-semibold text-zinc-900 truncate">
-                                                        Minuta contratual pendente
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleGenerateContract(proposal.id)}
-                                                        disabled={isProcessing}
-                                                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#0044ff] hover:bg-[#0039d6] px-3 py-1.5 text-xs sm:text-sm font-semibold text-white shadow-2xs transition-colors cursor-pointer disabled:bg-zinc-100 disabled:border disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                                                        title="Preparar assinatura digital"
-                                                        aria-label="Preparar assinatura"
-                                                    >
-                                                        {isProcessing ? (
-                                                            <Loader2 size={13} className="animate-spin text-zinc-400 shrink-0" />
-                                                        ) : (
-                                                            <FileSignature size={13} className="shrink-0" />
-                                                        )}
-                                                        <span>Preparar assinatura</span>
-                                                    </button>
-                                                </div>
+                                        <div className="flex min-w-0 items-center gap-2 lg:justify-end">
+                                            {isPending ? (
+                                                <button type="button" onClick={() => handleApproveProposal(proposal)} disabled={isProcessing} className="inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-[#0758d8] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#064bb8] disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0758d8] lg:flex-none">
+                                                    {isProcessing ? <Loader2 size={15} className="animate-spin" /> : <FileSignature size={15} />}
+                                                    <span className="truncate">Preparar assinatura</span>
+                                                </button>
+                                            ) : isApproved && !matchedContract ? (
+                                                <button type="button" onClick={() => handleGenerateContract(proposal.id)} disabled={isProcessing} className="inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-[#0758d8] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#064bb8] disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0758d8] lg:flex-none">
+                                                    {isProcessing ? <Loader2 size={15} className="animate-spin" /> : <FileSignature size={15} />}
+                                                    <span className="truncate">Gerar contrato</span>
+                                                </button>
+                                            ) : hasSignatureToken ? (
+                                                <a href={`/assinar-contrato/${matchedContract?.signatureToken}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-[#0758d8] px-3 text-sm font-semibold text-white transition-colors hover:bg-[#064bb8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0758d8] lg:flex-none">
+                                                    <FileSignature size={15} /><span>Assinatura</span><ArrowUpRight size={14} />
+                                                </a>
+                                            ) : proposal.publicToken ? (
+                                                <a href={`/proposta/${proposal.publicToken}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-800 transition-colors hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 lg:flex-none">
+                                                    <FileText size={15} /><span>Ver proposta</span><ExternalLink size={13} />
+                                                </a>
+                                            ) : (
+                                                <span className="flex-1 text-right text-sm text-zinc-400 lg:flex-none">Sem ação pendente</span>
                                             )}
+
+                                            <details className="relative shrink-0">
+                                                <summary className="flex h-10 cursor-pointer list-none items-center justify-center rounded-xl border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400">Mais</summary>
+                                                <div className="absolute right-0 top-12 z-20 grid w-52 gap-1 rounded-xl border border-zinc-200 bg-white p-1.5 shadow-xl">
+                                                    <button type="button" onClick={() => handleDownloadProposalPdf(proposal, clientName)} disabled={isDownloadingProposal} className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 disabled:text-zinc-400">
+                                                        {isDownloadingProposal ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Baixar PDF
+                                                    </button>
+                                                    {(hasSignatureToken || proposal.publicToken) && <button type="button" onClick={() => handleCopy(`${window.location.origin}${hasSignatureToken ? `/assinar-contrato/${matchedContract?.signatureToken}` : `/proposta/${proposal.publicToken}`}`, hasSignatureToken ? "Link de assinatura" : "Link da proposta")} className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50">
+                                                        {copiedToken?.includes(hasSignatureToken ? matchedContract?.signatureToken || "" : proposal.publicToken || "") ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />} Copiar link
+                                                    </button>}
+                                                    <Link href={`/admin/proposals/new?edit=${proposal.id}`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"><Pencil size={14} /> Editar oportunidade</Link>
+                                                    <button type="button" disabled={isDeclined || isSigned} onClick={() => matchedContract ? handleOpenEditContract(matchedContract) : handleOpenEditProposalPayment(proposal)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:text-zinc-400"><Calendar size={14} /> Ajustar vencimento</button>
+                                                    <button type="button" onClick={() => setDeleteModal({ type: "proposal", id: proposal.id, title: `Proposta de ${clientName}` })} className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-700 hover:bg-rose-50"><Trash2 size={14} /> Excluir oportunidade</button>
+                                                </div>
+                                            </details>
                                         </div>
-
-                                        {/* Card Actions Footer */}
-                                        <div className="mt-4 pt-3 border-t border-zinc-200 w-full min-w-0 max-w-full flex flex-col gap-2">
-                                            {/* Workflow actions */}
-                                            <div className="grid w-full min-w-0 grid-cols-2 gap-1.5">
-                                                {isPending && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleApproveProposal(proposal)}
-                                                        disabled={isProcessing}
-                                                        className="col-span-2 inline-flex h-8.5 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-600 px-2 text-xs sm:text-sm font-semibold shadow-2xs transition-colors cursor-pointer disabled:bg-zinc-100 disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 whitespace-nowrap"
-                                                        title="Preparar assinatura digital"
-                                                        aria-label="Preparar assinatura"
-                                                    >
-                                                        {isProcessing ? (
-                                                            <Loader2 size={14} className="animate-spin text-zinc-400 shrink-0" />
-                                                        ) : (
-                                                            <FileSignature size={14} className="shrink-0" />
-                                                        )}
-                                                        <span className="min-w-0 truncate">Preparar assinatura</span>
-                                                    </button>
-                                                )}
-
-                                                {hasSignatureToken && (
-                                                    <a
-                                                        href={`/assinar-contrato/${matchedContract?.signatureToken}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex h-8.5 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-600 px-2 text-xs sm:text-sm font-semibold shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 whitespace-nowrap"
-                                                        title="Abrir assinatura digital"
-                                                        aria-label="Abrir assinatura digital"
-                                                    >
-                                                        <FileSignature size={14} className="shrink-0" />
-                                                        <span className="min-w-0 truncate">Assinar</span>
-                                                        <ArrowUpRight size={13} className="shrink-0" />
-                                                    </a>
-                                                )}
-
-                                                {proposal.publicToken && (
-                                                    <a
-                                                        href={`/proposta/${proposal.publicToken}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex h-8.5 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-zinc-300 bg-white hover:bg-zinc-50 hover:border-zinc-400 px-2 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 whitespace-nowrap"
-                                                        title="Visualizar proposta pública"
-                                                        aria-label="Visualizar proposta pública"
-                                                    >
-                                                        <FileText size={14} className="text-zinc-700 shrink-0" />
-                                                        <span className="min-w-0 truncate">Ver Proposta</span>
-                                                        <ExternalLink size={13} className="text-zinc-500 shrink-0" />
-                                                    </a>
-                                                )}
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDownloadProposalPdf(proposal, clientName)}
-                                                    disabled={isDownloadingProposal}
-                                                    className={`${centerProposalDownload ? "col-span-2 w-1/2 min-w-[8rem] justify-self-center" : isPending && !hasSignatureToken && !proposal.publicToken ? "col-span-2 w-full" : "w-full min-w-0"} inline-flex h-8.5 items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-zinc-300 bg-white hover:bg-zinc-50 hover:border-zinc-400 px-2 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs transition-colors cursor-pointer disabled:bg-zinc-100 disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 whitespace-nowrap`}
-                                                    title="Baixar PDF da proposta"
-                                                    aria-label="Baixar PDF da proposta"
-                                                >
-                                                    {isDownloadingProposal ? (
-                                                        <Loader2 size={14} className="animate-spin text-zinc-400 shrink-0" />
-                                                    ) : (
-                                                        <Download size={14} className="text-zinc-700 shrink-0" />
-                                                    )}
-                                                    <span className="min-w-0 truncate">Baixar PDF</span>
-                                                </button>
-                                            </div>
-
-                                             {/* Tool actions */}
-                                            <div className={`grid w-full min-w-0 items-center gap-1.5 ${proposalToolGridCols}`}>
-                                                {hasSignatureToken && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleCopy(
-                                                                `${window.location.origin}/assinar-contrato/${matchedContract?.signatureToken}`,
-                                                                "Link de assinatura"
-                                                            )
-                                                        }
-                                                    className="inline-flex h-8.5 w-8.5 shrink-0 items-center justify-self-start justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 shadow-2xs hover:bg-zinc-50 hover:border-zinc-400 hover:text-zinc-950 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-                                                        title="Copiar link de assinatura"
-                                                        aria-label="Copiar link de assinatura"
-                                                    >
-                                                        {copiedToken?.includes(matchedContract?.signatureToken || "") ? (
-                                                            <Check size={15} className="text-emerald-600 shrink-0" strokeWidth={2.5} />
-                                                        ) : (
-                                                            <Copy size={15} className="text-zinc-700 shrink-0" strokeWidth={2} />
-                                                        )}
-                                                    </button>
-                                                )}
-
-                                                {proposal.publicToken && !hasSignatureToken && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleCopy(
-                                                                `${window.location.origin}/proposta/${proposal.publicToken}`,
-                                                                "Link da proposta"
-                                                            )
-                                                        }
-                                                    className="inline-flex h-8.5 w-8.5 shrink-0 items-center justify-self-start justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 shadow-2xs hover:bg-zinc-50 hover:border-zinc-400 hover:text-zinc-950 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-                                                        title="Copiar link da proposta"
-                                                        aria-label="Copiar link da proposta"
-                                                    >
-                                                        {copiedToken?.includes(proposal.publicToken || "") ? (
-                                                            <Check size={15} className="text-emerald-600 shrink-0" strokeWidth={2.5} />
-                                                        ) : (
-                                                            <Copy size={15} className="text-zinc-700 shrink-0" strokeWidth={2} />
-                                                        )}
-                                                    </button>
-                                                )}
-
-                                                <Link
-                                                    href={`/admin/proposals/new?edit=${proposal.id}`}
-                                                    className="inline-flex h-8.5 w-full min-w-0 items-center justify-center gap-1 overflow-hidden rounded-lg border border-zinc-300 bg-white hover:bg-zinc-50 hover:border-zinc-400 px-2 text-xs font-semibold text-zinc-800 shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 whitespace-nowrap"
-                                                    title="Editar dados da proposta"
-                                                    aria-label="Editar proposta"
-                                                >
-                                                    <Pencil size={13} className="text-zinc-700 shrink-0" aria-hidden="true" />
-                                                    <span className="min-w-0 truncate text-zinc-800 font-semibold">Editar</span>
-                                                </Link>
-
-                                                <button
-                                                    type="button"
-                                                    disabled={proposal.status === "DECLINED" || Boolean(matchedContract?.signedAt)}
-                                                    onClick={() => matchedContract
-                                                        ? handleOpenEditContract(matchedContract)
-                                                        : handleOpenEditProposalPayment(proposal)}
-                                                    className="inline-flex h-8.5 w-full min-w-0 items-center justify-center gap-1 overflow-hidden rounded-lg border border-zinc-300 bg-white hover:bg-zinc-50 hover:border-zinc-400 px-2 text-xs font-semibold text-zinc-800 shadow-2xs transition-colors cursor-pointer disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 disabled:hover:border-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 whitespace-nowrap"
-                                                    title={matchedContract?.signedAt
-                                                        ? "Contrato assinado: alteração exige aditivo"
-                                                        : "Ajustar dia de pagamento"}
-                                                    aria-label="Ajustar dia de pagamento"
-                                                >
-                                                    <Calendar size={12} className="text-zinc-700 shrink-0" aria-hidden="true" />
-                                                    <span className="min-w-0 truncate text-zinc-800 font-semibold">Pagamento</span>
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setDeleteModal({
-                                                            type: "proposal",
-                                                            id: proposal.id,
-                                                            title: `Proposta de ${clientName}`,
-                                                        })
-                                                    }
-                                                    className="inline-flex h-8.5 w-full min-w-0 items-center justify-center gap-1 overflow-hidden rounded-lg border border-rose-600 bg-rose-600 px-2 text-xs font-semibold text-white shadow-2xs hover:bg-rose-700 hover:border-rose-700 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 whitespace-nowrap"
-                                                    title="Excluir proposta"
-                                                    aria-label="Excluir proposta"
-                                                >
-                                                    <Trash2 size={14} className="text-white shrink-0" aria-hidden="true" />
-                                                    <span className="min-w-0 truncate text-white font-semibold">Excluir</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    </article>
                                 );
                             })}
                         </div>
+
                     )
                 ) : (
                     /* Contracts View */
@@ -1500,14 +1251,23 @@ export default function CommercialHubPage() {
                             <h3 className="mt-3 text-sm font-semibold text-zinc-900">
                                 Nenhum contrato encontrado
                             </h3>
-                            <p className="mt-1 text-xs text-zinc-500 max-w-sm mx-auto">
+                            <p className="mx-auto mt-1 max-w-sm text-sm text-zinc-500">
                                 {searchQuery || contractFilter !== "ALL"
                                     ? "Nenhum contrato corresponde aos filtros selecionados."
                                     : "Gere contratos a partir das propostas aprovadas para gerenciar minutas e assinaturas."}
                             </p>
+                            {(searchQuery || contractFilter !== "ALL") && (
+                                <button
+                                    type="button"
+                                    onClick={() => { setSearchQuery(""); setContractFilter("ALL"); }}
+                                    className="mt-4 inline-flex items-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-2xs transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                                >
+                                    Limpar busca e filtros
+                                </button>
+                            )}
                         </div>
                     ) : (
-                        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
                             {paginatedContracts.map((contract) => {
                                 const clientName =
                                     contract.client?.name ||
@@ -1515,6 +1275,7 @@ export default function CommercialHubPage() {
                                     "Contratante não informado";
                                 const isSigned = Boolean(contract.signedAt);
                                 const hasToken = Boolean(contract.signatureToken);
+                                const canSign = hasToken && !isSigned;
                                 const isDownloadingContract = downloadingContractId === contract.id;
                                 const linkedProposal =
                                     contract.proposalId != null
@@ -1527,7 +1288,7 @@ export default function CommercialHubPage() {
                                 return (
                                     <div
                                         key={contract.id}
-                                        className="group flex flex-col justify-between rounded-2xl border border-zinc-300 bg-white p-5.5 sm:p-6 shadow-sm hover:border-zinc-400 hover:shadow-md transition-all h-full min-w-0 max-w-full overflow-hidden"
+                                        className="group flex flex-col justify-between rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition-all hover:border-blue-200 hover:shadow-md sm:p-5 min-w-0 max-w-full overflow-hidden"
                                     >
                                         {/* Card Top & Information */}
                                         <div className="space-y-4">
@@ -1571,7 +1332,17 @@ export default function CommercialHubPage() {
                                             {/* Scope & Contract details directly on card */}
                                             <div className="pt-3.5 border-t border-zinc-200 space-y-2.5">
                                                 <div>
-                                                    <p className="text-xs font-semibold text-zinc-900 truncate" title={contract.scope || ""}>
+                                                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-400">Escopo do contrato</span>
+                                                    <p
+                                                        className="text-xs font-medium leading-5 text-zinc-700"
+                                                        title={contract.scope || "Prestação de Serviços Especializados"}
+                                                        style={{
+                                                            display: "-webkit-box",
+                                                            WebkitBoxOrient: "vertical",
+                                                            WebkitLineClamp: 2,
+                                                            overflow: "hidden",
+                                                        }}
+                                                    >
                                                         {contract.scope || "Prestação de Serviços Especializados"}
                                                     </p>
                                                     <p className="text-[11px] text-zinc-500 mt-0.5">
@@ -1612,18 +1383,18 @@ export default function CommercialHubPage() {
                                         {/* Card Actions Footer */}
                                         <div className="mt-4 pt-3 border-t border-zinc-200 w-full min-w-0 max-w-full flex flex-col gap-2">
                                             {/* Workflow actions */}
-                                            <div className={`grid w-full min-w-0 gap-1.5 ${hasToken || linkedProposal ? "grid-cols-2" : "grid-cols-1"}`}>
-                                                {hasToken && (
+                                            <div className={`grid w-full min-w-0 gap-1.5 ${canSign || linkedProposal ? "grid-cols-2" : "grid-cols-1"}`}>
+                                                {canSign && (
                                                     <a
                                                         href={`/assinar-contrato/${contract.signatureToken}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="inline-flex h-8 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-600 px-2 text-xs font-semibold shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 whitespace-nowrap"
+                                                        className="commercial-signature-link inline-flex h-8 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-[#0758d8] hover:bg-[#064bb8] text-white border border-[#0758d8] px-2 text-xs font-semibold shadow-2xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0758d8] whitespace-nowrap"
                                                         title="Abrir tela de assinatura digital"
                                                         aria-label="Abrir assinatura digital"
                                                     >
                                                         <FileSignature size={13} className="shrink-0" />
-                                                        <span className="min-w-0 truncate">Assinar</span>
+                                                        <span className="min-w-0 truncate">Abrir assinatura</span>
                                                         <ArrowUpRight size={12} className="shrink-0" />
                                                     </a>
                                                 )}
@@ -1649,7 +1420,7 @@ export default function CommercialHubPage() {
                                                         type="button"
                                                         onClick={() => handleDownloadProposalPdf(linkedProposal, clientName)}
                                                         disabled={isDownloadingProposal}
-                                                        className={`${hasToken ? "col-span-2 w-1/2 min-w-[8rem] justify-self-center" : "w-full"} inline-flex h-8 items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-zinc-300 bg-white px-2 text-xs font-semibold text-zinc-800 shadow-2xs transition-colors hover:bg-zinc-50 hover:border-zinc-400 cursor-pointer disabled:bg-zinc-100 disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 whitespace-nowrap`}
+                                                        className={`${canSign ? "col-span-2 w-1/2 min-w-[8rem] justify-self-center" : "w-full"} inline-flex h-8 items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-zinc-300 bg-white px-2 text-xs font-semibold text-zinc-800 shadow-2xs transition-colors hover:bg-zinc-50 hover:border-zinc-400 cursor-pointer disabled:bg-zinc-100 disabled:border-zinc-200 disabled:text-zinc-400 disabled:shadow-none disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 whitespace-nowrap`}
                                                         title="Baixar PDF da proposta vinculada"
                                                         aria-label="Baixar proposta PDF"
                                                     >
@@ -1728,12 +1499,12 @@ export default function CommercialHubPage() {
                                                                 description: "Cobranças existentes serão mantidas, mas ficarão sem vínculo com este contrato. O registro da assinatura digital será removido, se existir.",
                                                             })
                                                         }
-                                                        className="inline-flex h-8 w-auto items-center justify-center gap-1.5 rounded-lg border border-rose-600 bg-rose-600 px-2.5 text-xs font-semibold text-white shadow-2xs hover:bg-rose-700 hover:border-rose-700 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 whitespace-nowrap"
+                                                        className="commercial-delete-action inline-flex h-8 w-auto items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-white px-2.5 text-xs font-semibold text-rose-700 shadow-2xs transition-all hover:border-rose-300 hover:bg-rose-50 active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 whitespace-nowrap"
                                                         title="Excluir contrato"
                                                         aria-label="Excluir contrato"
                                                     >
-                                                        <Trash2 size={13} className="text-white shrink-0" aria-hidden="true" />
-                                                        <span className="text-white font-semibold">Excluir contrato</span>
+                                                        <Trash2 size={13} className="shrink-0" aria-hidden="true" />
+                                                        <span className="font-semibold">Excluir contrato</span>
                                                     </button>
                                                 )}
 
@@ -1752,12 +1523,12 @@ export default function CommercialHubPage() {
                                                                 description: "A proposta sairá da lista comercial; o contrato vinculado será mantido.",
                                                             })
                                                         }
-                                                        className="inline-flex h-8 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-rose-600 bg-rose-600 px-2 text-xs font-semibold text-white shadow-2xs hover:bg-rose-700 hover:border-rose-700 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 whitespace-nowrap"
+                                                        className="commercial-delete-action inline-flex h-8 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-rose-200 bg-white px-2 text-xs font-semibold text-rose-700 shadow-2xs transition-all hover:border-rose-300 hover:bg-rose-50 active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 whitespace-nowrap"
                                                         title="Excluir a proposta vinculada; manter o contrato"
                                                         aria-label="Excluir proposta vinculada"
                                                     >
-                                                        <Trash2 size={13} className="text-white shrink-0" aria-hidden="true" />
-                                                        <span className="min-w-0 truncate text-white font-semibold">Excluir proposta</span>
+                                                        <Trash2 size={13} className="shrink-0" aria-hidden="true" />
+                                                        <span className="min-w-0 truncate font-semibold">Excluir proposta</span>
                                                     </button>
                                                 )}
                                                 <button
@@ -1774,12 +1545,12 @@ export default function CommercialHubPage() {
                                                             ].filter(Boolean).join(" "),
                                                         })
                                                     }
-                                                    className={`inline-flex h-8 ${linkedProposal ? "w-full min-w-0 px-2" : "w-auto px-4"} items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-rose-600 bg-rose-600 text-xs font-semibold text-white shadow-2xs hover:bg-rose-700 hover:border-rose-700 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 whitespace-nowrap`}
+                                                    className={`commercial-delete-action inline-flex h-8 ${linkedProposal ? "w-full min-w-0 px-2" : "w-auto px-4"} items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-rose-200 bg-white text-xs font-semibold text-rose-700 shadow-2xs transition-all hover:border-rose-300 hover:bg-rose-50 active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 whitespace-nowrap`}
                                                     title="Excluir contrato"
                                                     aria-label="Excluir contrato"
                                                 >
-                                                    <Trash2 size={13} className="text-white shrink-0" aria-hidden="true" />
-                                                    <span className="min-w-0 truncate text-white font-semibold">Excluir contrato</span>
+                                                    <Trash2 size={13} className="shrink-0" aria-hidden="true" />
+                                                    <span className="min-w-0 truncate font-semibold">Excluir contrato</span>
                                                 </button>
                                             </div>}
                                         </div>

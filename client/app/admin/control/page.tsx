@@ -206,155 +206,177 @@ export default function AdminControlPage() {
 
     if (loading) {
         return (
-            <div className="admin-loading-card flex h-[70vh] items-center justify-center">
-                <div className="flex flex-col items-center gap-4 text-center">
-                    <Loader2 className="h-9 w-9 animate-spin text-[#0a72ef]" />
-                    <p className="admin-microcopy">Carregando central de controle</p>
+            <div className="flex min-h-[60vh] items-center justify-center">
+                <div className="flex flex-col items-center gap-3 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#0a72ef]" />
+                    <p className="text-sm text-zinc-500">Carregando visão geral…</p>
                 </div>
             </div>
         );
     }
 
+    const metricCards = [
+        {
+            label: "Entradas do mês",
+            value: currency.format(stats.incomes),
+            note: `${control.pendingIncomes.length} lançamento(s) pendentes`,
+            icon: TrendingUp,
+            tone: "emerald",
+        },
+        {
+            label: "Saídas do mês",
+            value: currency.format(stats.expenses),
+            note: `${control.pendingExpenses.length} lançamento(s) pendentes`,
+            icon: TrendingDown,
+            tone: "rose",
+        },
+        {
+            label: "Saldo realizado",
+            value: currency.format(stats.balance),
+            note: `Previsão: ${currency.format(stats.forecast)}`,
+            icon: Wallet,
+            tone: stats.balance >= 0 ? "blue" : "amber",
+        },
+        {
+            label: "Demandas ativas",
+            value: String(control.activeDemands.length),
+            note: `${control.completedDemands} concluída(s)`,
+            icon: ListChecks,
+            tone: "violet",
+        },
+    ] as const;
+
     return (
-        <div className="admin-page-stack pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="admin-page-stack space-y-6 pb-12 animate-in fade-in duration-500">
             {error && (
-                <div className="admin-warning-banner">
-                    <div className="flex gap-3">
-                        <div className="admin-warning-icon">
-                            <AlertTriangle size={18} />
-                        </div>
+                <div className="flex items-start justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-amber-950">
+                    <div className="flex items-start gap-3">
+                        <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-700" />
                         <div>
-                            <p className="text-sm font-medium text-white">Dados parciais</p>
-                            <p className="mt-1 text-sm text-slate-400">{error}</p>
+                            <p className="text-sm font-semibold">Dados parciais</p>
+                            <p className="mt-1 text-sm text-amber-800">{error}</p>
                         </div>
                     </div>
+                    <button type="button" onClick={() => window.location.reload()} className="shrink-0 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-100">
+                        Tentar novamente
+                    </button>
                 </div>
             )}
-            <section className="border-b border-zinc-200 px-6 py-7 md:px-8 md:py-8">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                    <div>
-                        <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Central operacional</span>
-                    </div>
 
-                    <div className="grid gap-2 sm:grid-cols-3">
-                        <Link href="/admin/finance" className="admin-secondary-button">
-                            <Banknote size={16} />
-                            Financeiro
-                        </Link>
-                        <Link href="/admin/debts" className="admin-secondary-button">
-                            <ShieldAlert size={16} />
-                            Dívidas
-                        </Link>
-                        <Link href="/admin/demands" className="admin-secondary-button">
-                            <ClipboardCheck size={16} />
-                            Demandas
-                        </Link>
-                    </div>
+            <section className="flex flex-col gap-5 rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_2px_10px_rgba(30,41,59,0.035)] sm:p-7 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0758d8]">Painel administrativo</span>
+                    <h1 className="mt-2 text-3xl font-semibold tracking-[-0.045em] text-zinc-950 sm:text-[34px]">Visão geral</h1>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">Financeiro, rotina da equipe e pontos que precisam da sua atenção.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <Link href="/admin/finance" className="inline-flex h-10 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3.5 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50">
+                        <Banknote size={16} /> Financeiro
+                    </Link>
+                    <Link href="/admin/demands" className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0758d8] px-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#064bb8]">
+                        <ClipboardCheck size={16} /> Abrir demandas
+                    </Link>
                 </div>
             </section>
 
-            <section className="grid overflow-hidden border border-zinc-200 bg-white md:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-zinc-200">
-                <article className="metric-tone-green border-b border-zinc-200 p-5 md:p-6 xl:border-b-0">
-                    <div className="metric-icon-green">
-                        <TrendingUp size={18} />
-                    </div>
-                    <div className="mt-6">
-                        <p className="admin-metric-label">Entradas do mês</p>
-                        <p className="metric-value-green mt-2 truncate text-3xl font-semibold tracking-[-0.05em]">{currency.format(stats.incomes)}</p>
-                        <p className="mt-3 text-sm text-slate-500">{control.pendingIncomes.length} pendente(s)</p>
-                    </div>
-                </article>
-
-                <article className="metric-tone-red border-b border-zinc-200 p-5 md:p-6 xl:border-b-0">
-                    <div className="metric-icon-red">
-                        <TrendingDown size={18} />
-                    </div>
-                    <div className="mt-6">
-                        <p className="admin-metric-label">Saídas do mês</p>
-                        <p className="metric-value-red mt-2 truncate text-3xl font-semibold tracking-[-0.05em]">{currency.format(stats.expenses)}</p>
-                        <p className="mt-3 text-sm text-slate-500">{control.pendingExpenses.length} pendente(s)</p>
-                    </div>
-                </article>
-
-                <article className={`metric-tone-blue border-b border-zinc-200 p-5 md:p-6 xl:border-b-0 ${stats.balance >= 0 ? "" : "metric-tone-amber"}`}>
-                    <div className={stats.balance >= 0 ? "metric-icon-blue" : "metric-icon-amber"}>
-                        <Wallet size={18} />
-                    </div>
-                    <div className="mt-6">
-                        <p className="admin-metric-label">Saldo realizado</p>
-                        <p className={`mt-2 truncate text-3xl font-semibold tracking-[-0.05em] ${stats.balance >= 0 ? "metric-value-blue" : "metric-value-amber"}`}>{currency.format(stats.balance)}</p>
-                        <p className="mt-3 text-sm text-slate-500">Previsão: {currency.format(stats.forecast)}</p>
-                    </div>
-                </article>
-
-                <article className="metric-tone-purple p-5 md:p-6">
-                    <div className="metric-icon-purple">
-                        <ListChecks size={18} />
-                    </div>
-                    <div className="mt-6">
-                        <p className="admin-metric-label">Demandas ativas</p>
-                        <p className="metric-value-purple mt-2 truncate text-3xl font-semibold tracking-[-0.05em]">{control.activeDemands.length}</p>
-                        <p className="mt-3 text-sm text-slate-500">{control.completedDemands} concluída(s)</p>
-                    </div>
-                </article>
-            </section>
-
-            <section className="grid border border-zinc-200 bg-white xl:grid-cols-[minmax(0,1fr)_400px]">
-                <div className="p-5 md:p-6">
-                    <div className="mb-6 flex items-center justify-between gap-4">
-                        <div>
-                            <span className="admin-kicker">Prioridades</span>
-                            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.045em] text-white">Fila de controle</h2>
-                        </div>
-                        <Link href="/admin/demands" className="admin-pill hover:border-blue-400/40 hover:text-white">
-                            Ver tudo
-                            <ArrowRight size={13} />
-                        </Link>
-                    </div>
-
-                    <div className="mt-2">
-                        {control.activeDemands.slice(0, 5).map((demand) => (
-                            <Link key={demand.id} href="/admin/demands" className="group flex items-center justify-between gap-4 border-b border-zinc-200 py-4 last:border-b-0 hover:bg-zinc-50">
-                                <span className="min-w-0">
-                                    <strong className="block truncate text-sm font-semibold text-zinc-950">{demand.action}</strong>
-                                    <small className="mt-1 block text-xs text-zinc-500">{demand.area || "Sem área"} · {demand.responsible || "Sem responsável"} · {demand.deadline || "Sem prazo"}</small>
-                                </span>
-                                <span className={`admin-pill ${isUrgentDemand(demand) ? "border-amber-400/30 text-amber-200" : ""}`}>{demand.status || "Pendente"}</span>
-                            </Link>
-                        ))}
-
-                        {control.activeDemands.length === 0 && (
-                            <div className="admin-empty-state mx-auto">
-                                <CheckCircle2 className="mx-auto mb-3 text-emerald-300" size={28} />
-                                <p className="text-sm font-medium text-white">Sem demandas abertas</p>
-                                <p className="mt-1 text-xs leading-5 text-slate-500">A fila de controle está limpa.</p>
+            <section aria-label="Indicadores do mês" className="admin-metric-grid grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 xl:gap-6">
+                {metricCards.map((metric) => {
+                    const Icon = metric.icon;
+                    const toneClasses = {
+                        emerald: "bg-emerald-50 text-emerald-700",
+                        rose: "bg-rose-50 text-rose-700",
+                        blue: "bg-blue-50 text-blue-700",
+                        amber: "bg-amber-50 text-amber-700",
+                        violet: "bg-violet-50 text-violet-700",
+                    }[metric.tone];
+                    const cardToneClasses = {
+                        emerald: "border-zinc-300 bg-white hover:border-zinc-400",
+                        rose: "border-zinc-300 bg-white hover:border-zinc-400",
+                        blue: "border-zinc-300 bg-white hover:border-zinc-400",
+                        amber: "border-zinc-300 bg-white hover:border-zinc-400",
+                        violet: "border-zinc-300 bg-white hover:border-zinc-400",
+                    }[metric.tone];
+                    return (
+                        <article key={metric.label} className={`min-w-0 rounded-2xl border-2 p-4 shadow-[0_6px_18px_rgba(30,41,59,0.09)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(30,41,59,0.14)] sm:p-5 ${cardToneClasses}`}>
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="text-sm font-medium text-zinc-500">{metric.label}</p>
+                                <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${toneClasses}`}><Icon size={17} /></span>
                             </div>
-                        )}
+                            <p className="mt-5 truncate text-[26px] font-semibold tracking-[-0.045em] text-zinc-950">{metric.value}</p>
+                            <p className="mt-1.5 truncate text-xs text-zinc-500">{metric.note}</p>
+                        </article>
+                    );
+                })}
+            </section>
+
+            <section className="admin-dashboard-panels grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.85fr)]">
+                <div className="min-w-0 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_2px_10px_rgba(30,41,59,0.035)]">
+                    <div className="flex items-center justify-between gap-4 border-b border-zinc-100 px-5 py-4 sm:px-6">
+                        <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">Rotina</p>
+                            <h2 className="mt-1 text-lg font-semibold tracking-tight text-zinc-900">Demandas em andamento</h2>
+                        </div>
+                        <Link href="/admin/demands" className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-[#0758d8] transition hover:bg-blue-50">
+                            Ver todas <ArrowRight size={14} />
+                        </Link>
                     </div>
+
+                    {control.activeDemands.length > 0 ? (
+                        <div className="divide-y divide-zinc-100">
+                            {control.activeDemands.slice(0, 6).map((demand) => (
+                                <Link key={demand.id} href="/admin/demands" className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 py-4 transition hover:bg-zinc-50 sm:px-6 sm:grid-cols-[minmax(0,1fr)_minmax(110px,0.55fr)_auto]">
+                                    <span className="min-w-0">
+                                        <strong className="block truncate text-sm font-semibold text-zinc-800 group-hover:text-[#0758d8]">{demand.action}</strong>
+                                        <small className="mt-1 block truncate text-xs text-zinc-500">{demand.area || "Sem área"} · {demand.responsible || "Sem responsável"}</small>
+                                    </span>
+                                    <span className="hidden min-w-0 truncate text-xs text-zinc-500 sm:block">{demand.deadline || "Sem prazo"}</span>
+                                    <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${isUrgentDemand(demand) ? "border-amber-200 bg-amber-50 text-amber-800" : "border-zinc-200 bg-zinc-50 text-zinc-600"}`}>
+                                        {demand.status || "Pendente"}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="px-6 py-12 text-center">
+                            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-700"><CheckCircle2 size={21} /></span>
+                            <p className="mt-3 text-sm font-semibold text-zinc-800">Tudo em dia</p>
+                            <p className="mt-1 text-xs text-zinc-500">Não há demandas abertas no momento.</p>
+                        </div>
+                    )}
+                    {control.activeDemands.length > 6 && (
+                        <Link href="/admin/demands" className="block border-t border-zinc-100 px-6 py-3 text-center text-xs font-semibold text-zinc-500 transition hover:bg-zinc-50 hover:text-[#0758d8]">
+                            + {control.activeDemands.length - 6} demandas
+                        </Link>
+                    )}
                 </div>
 
-                <aside className="border-t border-zinc-200 p-5 md:p-6 xl:border-t-0 xl:border-l">
-                    <span className="admin-kicker">Sinais</span>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-[-0.045em] text-white">Alertas do controle</h2>
-
-                    <div className="mt-4">
-                        {alerts.map((alert) => (
-                            <Link key={alert.title} href={alert.href} className="flex items-center justify-between gap-4 border-b border-zinc-200 py-4 last:border-b-0 hover:bg-zinc-50">
-                                <span>
-                                    <strong className="block text-sm font-semibold text-zinc-950">{alert.title}</strong>
-                                    <small className="mt-1 block text-xs leading-5 text-zinc-500">{alert.detail}</small>
-                                </span>
-                                <AlertTriangle
-                                    size={16}
-                                    className={
-                                        alert.tone === "red" ? "text-red-300" :
-                                        alert.tone === "amber" ? "text-amber-300" :
-                                        alert.tone === "green" ? "text-emerald-300" :
-                                        "text-[#9ecbff]"
-                                    }
-                                />
-                            </Link>
-                        ))}
+                <aside className="min-w-0 rounded-2xl border border-zinc-200 bg-white shadow-[0_2px_10px_rgba(30,41,59,0.035)]">
+                    <div className="border-b border-zinc-100 px-5 py-4 sm:px-6">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">Acompanhar</p>
+                        <h2 className="mt-1 text-lg font-semibold tracking-tight text-zinc-900">Pontos de atenção</h2>
+                    </div>
+                    <div className="divide-y divide-zinc-100 px-5 sm:px-6">
+                        {alerts.map((alert) => {
+                            const accent = alert.tone === "red" ? "bg-rose-50 text-rose-700" : alert.tone === "amber" ? "bg-amber-50 text-amber-700" : alert.tone === "green" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700";
+                            return (
+                                <Link key={alert.title} href={alert.href} className="flex items-center gap-3 py-4 transition hover:translate-x-0.5">
+                                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${accent}`}><AlertTriangle size={16} /></span>
+                                    <span className="min-w-0 flex-1">
+                                        <strong className="block truncate text-sm font-semibold text-zinc-800">{alert.title}</strong>
+                                        <small className="mt-1 block text-xs leading-5 text-zinc-500">{alert.detail}</small>
+                                    </span>
+                                    <ArrowRight size={15} className="shrink-0 text-zinc-400" />
+                                </Link>
+                            );
+                        })}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 border-t border-zinc-100 p-4 sm:p-5">
+                        <Link href="/admin/debts" className="flex items-center gap-2 rounded-xl border border-zinc-200 p-3 text-xs font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50">
+                            <ShieldAlert size={15} className="text-zinc-500" /> Dívidas
+                        </Link>
+                        <Link href="/admin/finance" className="flex items-center gap-2 rounded-xl border border-zinc-200 p-3 text-xs font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50">
+                            <Banknote size={15} className="text-zinc-500" /> Financeiro
+                        </Link>
                     </div>
                 </aside>
             </section>

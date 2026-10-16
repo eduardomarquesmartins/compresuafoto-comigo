@@ -4,8 +4,9 @@ import React from 'react';
 export default function SettingsPage() {
     return (
         <div className="max-w-4xl mx-auto">
-            <p className="mb-5 text-sm font-extrabold uppercase tracking-[0.2em] text-blue-600">Configurações</p>
-            <p className="text-slate-400 mb-8">Gerencie as preferências do sistema</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">Preferências do painel</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">Configurações</h1>
+            <p className="mb-8 mt-2 text-sm leading-6 text-slate-500">Consulte os recursos disponíveis para esta conta.</p>
 
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 border border-slate-700/50 shadow-xl">
                 <div className="space-y-8">

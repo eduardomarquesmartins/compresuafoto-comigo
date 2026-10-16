@@ -156,6 +156,7 @@ model Client {
   cityState      String?
   signerName     String?
   signerDocument String?
+  photoUrl       String?
   status         String            @default("ACTIVE")
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
@@ -293,6 +294,12 @@ model MentoriaDemand {
   obs         String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model KontiState {
+  key       String   @id
+  data      Json
+  updatedAt DateTime @updatedAt
 }
 
 model ServiceDefinition {

@@ -69,7 +69,7 @@ export default function AdminImportsPage() {
             <section className="admin-card p-5 md:p-7">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Importar histórico da planilha</span>
+                        <div><span className="text-xs font-semibold tracking-[0.16em] uppercase text-blue-600">Migração de dados</span><h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">Importar histórico</h1><p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">Traga clientes, lançamentos e demandas de uma planilha Excel para o painel.</p></div>
                     </div>
 
                     <Link href={importedFinanceHref} className="admin-secondary-button">

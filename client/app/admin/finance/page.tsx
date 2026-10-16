@@ -543,6 +543,8 @@ export default function AdminFinancePage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
                     <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Gestão financeira</span>
+                    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">Financeiro</h1>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">Entradas, despesas e cobranças reunidas por período.</p>
                 </div>
                 <div className="flex flex-wrap gap-4 items-center">
                     <button

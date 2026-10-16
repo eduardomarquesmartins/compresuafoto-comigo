@@ -52,8 +52,9 @@ export default function ProfilePage() {
 
     return (
         <div className="mx-auto max-w-4xl">
-            <p className="mb-5 text-sm font-extrabold uppercase tracking-[0.2em] text-blue-600">Meu perfil</p>
-            <p className="mb-8 text-slate-500">Atualize seus dados e sua senha de acesso.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">Conta e acesso</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">Meu perfil</h1>
+            <p className="mb-8 mt-2 text-sm leading-6 text-slate-500">Atualize seus dados e sua senha de acesso.</p>
             <form onSubmit={save} className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <label className="text-sm font-medium text-slate-700">Nome

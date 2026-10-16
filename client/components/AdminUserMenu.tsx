@@ -8,10 +8,29 @@ import { adminLoginPath, adminPath } from "@/lib/adminPath";
 
 export default function AdminUserMenu() {
     const [isOpen, setIsOpen] = useState(false);
+    const [adminName, setAdminName] = useState("Administrador");
+    const [adminInitials, setAdminInitials] = useState("AD");
     const dropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
     useEffect(() => {
+        try {
+            const savedUser = localStorage.getItem("user");
+            const user = savedUser ? JSON.parse(savedUser) : null;
+            const name = String(user?.name || user?.fullName || user?.email || "Administrador").trim();
+            const initials = name
+                .split(/[\s@._-]+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part: string) => part.charAt(0).toUpperCase())
+                .join("");
+            setAdminName(name);
+            setAdminInitials(initials || "AD");
+        } catch {
+            setAdminName("Administrador");
+            setAdminInitials("AD");
+        }
+
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
@@ -38,14 +57,14 @@ export default function AdminUserMenu() {
                 aria-label="Abrir menu do administrador"
                 title="Administrador"
             >
-                AD
+                {adminInitials}
             </button>
 
             {isOpen && (
                 <div className="absolute right-0 z-50 mt-3 w-60 overflow-hidden rounded-lg border border-white/10 bg-[#0b0b0d]/96 shadow-[0_24px_80px_-36px_rgba(0,0,0,1)] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
                     <div className="border-b border-white/10 p-4">
-                        <p className="text-sm font-semibold text-white">Administrador</p>
-                        <p className="mt-1 truncate text-xs text-zinc-500">Painel operacional</p>
+                        <p className="truncate text-sm font-semibold text-white">{adminName}</p>
+                        <p className="mt-1 truncate text-xs text-zinc-500">Acesso administrativo</p>
                     </div>
 
                     <div className="space-y-1 p-2">
@@ -63,7 +82,7 @@ export default function AdminUserMenu() {
                             onClick={() => setIsOpen(false)}
                         >
                             <Settings size={15} />
-                            Configuracoes
+                            Configurações
                         </Link>
                         <div className="my-1 h-px bg-white/10" />
                         <button

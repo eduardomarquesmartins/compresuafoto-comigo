@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, Users, Mail, Phone, FileText, Trash2, Edit2, Check, Loader2, Calendar, ShieldAlert, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, Users, Mail, Phone, FileText, Trash2, Edit2, Check, Loader2, Calendar, ShieldAlert, Search, Camera } from "lucide-react";
+import ClientAvatar from "@/components/ClientAvatar";
 import { 
     getClients, createClient, updateClient, deleteClient, 
-    createContract, deleteContract
+    createContract, deleteContract, uploadClientPhoto
 } from "@/lib/api";
 
 export default function AdminClientsPage() {
@@ -13,6 +14,9 @@ export default function AdminClientsPage() {
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [clientPhotoFile, setClientPhotoFile] = useState<File | null>(null);
+    const [clientPhotoPreview, setClientPhotoPreview] = useState<string | null>(null);
+    const clientPhotoInput = useRef<HTMLInputElement>(null);
 
     // Modais
     const [clientModalOpen, setClientModalOpen] = useState(false);
@@ -32,6 +36,12 @@ export default function AdminClientsPage() {
         signerDocument: "",
         status: "ACTIVE"
     });
+
+    useEffect(() => {
+        return () => {
+            if (clientPhotoPreview?.startsWith("blob:")) URL.revokeObjectURL(clientPhotoPreview);
+        };
+    }, [clientPhotoPreview]);
 
     const [contractForm, setContractForm] = useState({
         scope: "gestão de redes sociais, incluindo planejamento, criação de conteúdo, publicações, acompanhamento estratégico e serviços de marketing digital conforme proposta aprovada",
@@ -83,6 +93,8 @@ export default function AdminClientsPage() {
     }, []);
 
     const handleOpenClientModal = (client: any | null = null) => {
+        setClientPhotoFile(null);
+        setClientPhotoPreview(client?.photoUrl || null);
         if (client) {
             setEditingClient(normalizeClient(client));
             setClientForm({
@@ -122,12 +134,17 @@ export default function AdminClientsPage() {
 
         try {
             setActionLoading("client");
+            let savedClient: any;
             if (editingClient) {
-                await updateClient(editingClient.id, clientForm);
+                savedClient = await updateClient(editingClient.id, clientForm);
             } else {
-                await createClient(clientForm);
+                savedClient = await createClient(clientForm);
+            }
+            if (clientPhotoFile && savedClient?.id) {
+                await uploadClientPhoto(savedClient.id, clientPhotoFile);
             }
             setClientModalOpen(false);
+            setClientPhotoFile(null);
             fetchClients();
         } catch (error: any) {
             console.error("Erro ao salvar cliente:", error);
@@ -222,7 +239,9 @@ export default function AdminClientsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Clientes ativos</span>
+                    <span className="text-xs font-semibold tracking-[0.14em] uppercase text-blue-600">Relacionamento</span>
+                    <h1 className="mt-2 text-3xl font-bold tracking-tight text-zinc-950">Clientes</h1>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">Consulte os contatos, contratos e informações de cada cliente.</p>
                 </div>
                 <button
                     onClick={() => handleOpenClientModal()}
@@ -311,30 +330,33 @@ export default function AdminClientsPage() {
                             
                             {/* Client Header Info */}
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                                <div className="space-y-3">
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        <h3 className="text-2xl font-bold text-white tracking-tight">{client.name}</h3>
-                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${client.status === 'ACTIVE' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[inset_0_0_10px_rgba(16,185,129,0.05)]' : 'bg-slate-500/10 border-slate-500/20 text-slate-400'}`}>
-                                            {client.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-400 font-medium">
-                                        {client.email && (
-                                            <span className="flex items-center gap-2 hover:text-white transition-colors">
-                                                <Mail size={13} className="text-blue-500" /> {client.email}
+                                <div className="flex min-w-0 items-center gap-4">
+                                    <ClientAvatar name={client.name} photoUrl={client.photoUrl} size="lg" />
+                                    <div className="min-w-0 space-y-3">
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <h3 className="text-2xl font-bold text-white tracking-tight">{client.name}</h3>
+                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${client.status === 'ACTIVE' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[inset_0_0_10px_rgba(16,185,129,0.05)]' : 'bg-slate-500/10 border-slate-500/20 text-slate-400'}`}>
+                                                {client.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}
                                             </span>
-                                        )}
-                                        {client.phone && (
-                                            <span className="flex items-center gap-2 hover:text-white transition-colors">
-                                                <Phone size={13} className="text-blue-500" /> {client.phone}
-                                            </span>
-                                        )}
-                                        {client.document && (
-                                            <span className="text-slate-500">Documento: <strong className="text-slate-400 font-semibold">{client.document}</strong></span>
-                                        )}
-                                        {client.cityState && (
-                                            <span className="text-slate-500">Localização: <strong className="text-slate-400 font-semibold">{client.cityState}</strong></span>
-                                        )}
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-400 font-medium">
+                                            {client.email && (
+                                                <span className="flex items-center gap-2 hover:text-white transition-colors">
+                                                    <Mail size={13} className="text-blue-500" /> {client.email}
+                                                </span>
+                                            )}
+                                            {client.phone && (
+                                                <span className="flex items-center gap-2 hover:text-white transition-colors">
+                                                    <Phone size={13} className="text-blue-500" /> {client.phone}
+                                                </span>
+                                            )}
+                                            {client.document && (
+                                                <span className="text-slate-500">Documento: <strong className="text-slate-400 font-semibold">{client.document}</strong></span>
+                                            )}
+                                            {client.cityState && (
+                                                <span className="text-slate-500">Localização: <strong className="text-slate-400 font-semibold">{client.cityState}</strong></span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -426,8 +448,36 @@ export default function AdminClientsPage() {
                             <h3 className="text-xl font-bold text-white">{editingClient ? "Editar Cliente" : "Cadastrar Cliente"}</h3>
                             <button onClick={() => setClientModalOpen(false)} className="text-slate-400 hover:text-white text-2xl font-light cursor-pointer">&times;</button>
                         </div>
-                        <form onSubmit={handleSaveClient} className="p-8 space-y-6">
+                        <form onSubmit={handleSaveClient} className="max-h-[calc(90dvh-76px)] overflow-y-auto p-8 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="md:col-span-2 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                                    <ClientAvatar name={clientForm.name || "Cliente"} photoUrl={clientPhotoPreview} size="lg" />
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-semibold text-white">Foto do cliente</p>
+                                        <p className="mt-1 text-xs text-slate-400">JPG, PNG ou WEBP. Até 15 MB.</p>
+                                    </div>
+                                    <input
+                                        ref={clientPhotoInput}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        className="hidden"
+                                        onChange={(event) => {
+                                            const file = event.target.files?.[0];
+                                            if (!file) return;
+                                            if (!file.type.match(/^image\/(jpeg|png|webp)$/) || file.size > 15 * 1024 * 1024) {
+                                                alert("Escolha uma imagem JPG, PNG ou WEBP de até 15 MB.");
+                                                event.target.value = "";
+                                                return;
+                                            }
+                                            setClientPhotoFile(file);
+                                            setClientPhotoPreview(URL.createObjectURL(file));
+                                        }}
+                                    />
+                                    <button type="button" onClick={() => clientPhotoInput.current?.click()} className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10">
+                                        <Camera size={14} />
+                                        {clientPhotoPreview ? "Trocar foto" : "Adicionar foto"}
+                                    </button>
+                                </div>
                                 <label className="flex flex-col gap-2">
                                     <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Nome / Razão Social</span>
                                     <input required value={clientForm.name} onChange={e => setClientForm({...clientForm, name: e.target.value})} className="w-full bg-[#0f111a] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 text-sm focus:ring-1 focus:ring-blue-500/35 transition-all" placeholder="Nome da empresa" />
