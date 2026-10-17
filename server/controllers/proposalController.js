@@ -268,7 +268,16 @@ exports.getProposals = async (req, res) => {
         const proposals = await prisma.proposal.findMany({
             where: { status: { not: 'DELETED' } },
             include: {
-                client: true
+                // Keep this read compatible with databases where the additive
+                // Client.photoUrl migration has not been applied yet.
+                client: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        document: true
+                    }
+                }
             },
             orderBy: {
                 createdAt: 'desc'
@@ -276,6 +285,7 @@ exports.getProposals = async (req, res) => {
         });
         const formattedProposals = proposals.map(p => ({
             ...p,
+            client: p.client ? { ...p.client, photoUrl: null } : null,
             selectedServices: typeof p.selectedServices === 'string' ? JSON.parse(p.selectedServices) : p.selectedServices
         }));
         res.json(formattedProposals);
