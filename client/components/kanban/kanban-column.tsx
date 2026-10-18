@@ -521,3 +521,4 @@ export function KanbanColumn({ list }: KanbanColumnProps) {
     </div>
   );
 }
+

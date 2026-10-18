@@ -431,3 +431,4 @@ export function KanbanCard({ card }: KanbanCardProps) {
     </div>
   );
 }
+

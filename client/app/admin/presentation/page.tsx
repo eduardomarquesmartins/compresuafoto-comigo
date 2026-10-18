@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal, flushSync } from "react-dom";
-import { ArrowLeft, ArrowRight, Expand, Megaphone, Monitor, Pause, Play, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Expand, MonitorPlay, Pause, Play, RotateCcw, X } from "lucide-react";
 import { motion } from "framer-motion";
 
 const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfAkyeXUOrtnlk0QTrBMGkleWwEryJTlIRLEKcya1_e53d2bQ/viewform";
@@ -959,13 +959,39 @@ export default function AdminPresentationPage() {
 
     return (
         <div className="admin-page-stack pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <section className="admin-card overflow-hidden p-5 md:p-7">
-                <div className="min-w-0">
-                    <span className="text-sm font-extrabold tracking-[0.2em] uppercase text-blue-600">Apresentação comercial</span>
-                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                        <button type="button" onClick={startPresentation} className="admin-primary-button">
-                            <Play size={17} fill="currentColor" /> Iniciar apresentação
-                        </button>
+            <section className="admin-hero-card admin-card">
+                <div className="admin-hero-grid" aria-hidden="true" />
+                <div className="relative z-10 grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:items-center">
+                    <div className="min-w-0">
+                        <p className="admin-kicker flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                            <MonitorPlay size={16} aria-hidden="true" /> Apresentação comercial
+                        </p>
+                        <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight text-zinc-950 sm:text-4xl">
+                            História, resultados e portfólio da &amp;CONTI.
+                        </h1>
+                        <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base sm:leading-7">
+                            Abra a apresentação institucional em tela cheia e navegue pelo conteúdo com as setas do teclado.
+                        </p>
+                        <div className="mt-7 flex flex-wrap items-center gap-4">
+                            <button type="button" onClick={startPresentation} className="admin-primary-button">
+                                <Play size={17} fill="currentColor" aria-hidden="true" /> Iniciar apresentação
+                            </button>
+                            <span className="text-xs text-zinc-500">← → navegar · Esc sair</span>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-zinc-200 bg-[#f8f8f6] p-5 sm:p-6">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Roteiro</p>
+                        <ol className="mt-4 space-y-3">
+                            {["Nossa trajetória", "Cases e portfólio", "Conteúdos do mês"].map((item, index) => (
+                                <li key={item} className="flex items-center gap-3 border-b border-zinc-200/80 pb-3 last:border-0 last:pb-0">
+                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-xs font-semibold text-[#0758d8]">
+                                        {String(index + 1).padStart(2, "0")}
+                                    </span>
+                                    <span className="text-sm font-medium text-zinc-800">{item}</span>
+                                </li>
+                            ))}
+                        </ol>
                     </div>
                 </div>
             </section>

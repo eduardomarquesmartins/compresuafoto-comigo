@@ -1,1 +1,1 @@
-ALTER TABLE "Client" ADD COLUMN "photoUrl" TEXT;
+ALTER TABLE "Client" ADD COLUMN IF NOT EXISTS "photoUrl" TEXT;

@@ -152,3 +152,4 @@ export interface BoardFilterState {
   priorities: CardPriority[];
   dueFilter: 'all' | 'no_due' | 'overdue' | 'due_today' | 'due_week' | 'completed';
 }
+

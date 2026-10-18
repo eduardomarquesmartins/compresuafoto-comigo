@@ -5,8 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
-import AdminUserMenu from "@/components/AdminUserMenu";
-import logoAdmin from "./logo-admin.jpg";
 import {
     Activity,
     ArrowUpRight,
@@ -55,35 +53,6 @@ const econtiNavSections: NavSection[] = [
     {
         label: "Operação",
         items: [
-            { href: "/admin/clients", label: "Clientes", icon: Users },
-            { href: "/admin/commercial", label: "Comercial", icon: Briefcase },
-            { href: "/admin/emails", label: "E-mails", icon: Mail },
-            { href: "/admin/presentation", label: "Apresentação", icon: MonitorPlay }
-        ]
-    },
-    {
-        label: "Gestão",
-        items: [
-            { href: "/admin/finance", label: "Financeiro", icon: DollarSign },
-            { href: "/admin/debts", label: "Dívidas", icon: ShieldAlert },
-            { href: "/admin/demands", label: "Demandas", icon: ClipboardCheck },
-            { href: "/admin/collaborators", label: "Colaboradores", icon: Users },
-            { href: "/admin/imports", label: "Importações", icon: FileSpreadsheet }
-        ]
-    },
-    {
-        label: "Ferramentas",
-        items: [
-            { href: "/konti", label: "KONTI", icon: Activity, external: true }
-        ]
-    }
-];
-
-const econtiPresentationNavSections: NavSection[] = [
-    {
-        label: "Operação",
-        items: [
-            { href: "/admin/control", label: "Visão geral", icon: LayoutDashboard },
             { href: "/admin/clients", label: "Clientes", icon: Users },
             { href: "/admin/commercial", label: "Comercial", icon: Briefcase },
             { href: "/admin/emails", label: "E-mails", icon: Mail },
@@ -161,23 +130,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const pathname = usePathname();
     const router = useRouter();
     const isPhotoAdmin = pathname.startsWith("/compresuafoto/admin");
-    const isPresentationPage = pathname === "/admin/presentation";
     const isContractsPage = pathname.startsWith("/admin/contracts");
-    const isGeneralAdminExperience = !isPhotoAdmin && !isPresentationPage && !isContractsPage && !pathname.startsWith("/admin/commercial") && pathname !== "/admin/login";
+    const isGeneralAdminExperience = !isPhotoAdmin && !isContractsPage && !pathname.startsWith("/admin/commercial") && pathname !== "/admin/login";
     const adminBasePath = isPhotoAdmin ? "/compresuafoto/admin" : "/admin";
     const loginPath = `${adminBasePath}/login`;
     const dashboardPath = isPhotoAdmin ? "/compresuafoto/admin/dashboard" : "/admin/control";
-    const publicSitePath = isPhotoAdmin ? "/compresuafoto" : "/";
-    const navSections = isPhotoAdmin
-        ? photoNavSections
-        : isPresentationPage
-            ? econtiPresentationNavSections
-            : econtiNavSections;
+    const navSections = isPhotoAdmin ? photoNavSections : econtiNavSections;
     const [isAuthorized, setIsAuthorized] = useState(pathname === loginPath);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [activeRequests, setActiveRequests] = useState(0);
     const routeMeta = useMemo(() => getRouteMeta(pathname, navSections), [pathname, navSections]);
-    const RouteIcon = routeMeta.icon;
 
     useEffect(() => {
         const handleApiLoading = (event: Event) => {
@@ -253,7 +215,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     return (
-        <div className={`admin-shell min-h-dvh text-zinc-900 selection:bg-[#0044ff]/20 ${isPresentationPage ? "admin-presentation-shell" : ""} ${isGeneralAdminExperience ? "admin-general-shell" : ""}`}>
+        <div className={`admin-shell min-h-dvh text-zinc-900 selection:bg-[#0044ff]/20 ${isGeneralAdminExperience ? "admin-general-shell" : ""}`}>
             <div className="admin-grid-background fixed inset-0 -z-10 pointer-events-none" />
                 {activeRequests > 0 && (
                     <div className="admin-global-loading" role="status" aria-live="polite">
@@ -262,32 +224,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 )}
 
             <header className="xl:hidden sticky top-0 z-40 border-b border-zinc-200 bg-white/92 px-4 py-3 backdrop-blur-xl">
-                {isPresentationPage ? (
-                    <div className="relative flex h-12 items-center justify-between">
-                        <Link href={dashboardPath} className="absolute left-1/2 top-1/2 flex h-12 w-48 -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden">
-                            <Image src={logoAdmin} alt="Econti admin" className="h-28 w-auto object-contain" />
-                        </Link>
-                        <button type="button" onClick={() => setSidebarOpen(!sidebarOpen)} className="admin-icon-button" title={sidebarOpen ? "Fechar menu" : "Abrir menu"} aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}>
-                            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
-                        </button>
+                <div className="flex min-h-12 items-center gap-3">
+                    <button type="button" onClick={() => setSidebarOpen(!sidebarOpen)} className="admin-icon-button shrink-0" title={sidebarOpen ? "Fechar menu" : "Abrir menu"} aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}>
+                        {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+                    </button>
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">{routeMeta.section}</p>
+                        <p className="truncate text-sm font-semibold text-zinc-950">{routeMeta.label}</p>
                     </div>
-                ) : (
-                    <div className="flex min-h-12 items-center gap-3">
-                        <button type="button" onClick={() => setSidebarOpen(!sidebarOpen)} className="admin-icon-button shrink-0" title={sidebarOpen ? "Fechar menu" : "Abrir menu"} aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}>
-                            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
-                        </button>
-                        <div className="min-w-0 flex-1">
-                            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">{routeMeta.section}</p>
-                            <p className="truncate text-sm font-semibold text-zinc-950">{routeMeta.label}</p>
-                        </div>
-                        <Link href={dashboardPath} className="admin-mobile-brand" aria-label="Ir ao início do painel">
-                            {isPhotoAdmin ? "CSF" : "E&C"}
-                        </Link>
-                    </div>
-                )}
+                    <Link href={dashboardPath} className="admin-mobile-brand" aria-label="Ir ao início do painel">
+                        {isPhotoAdmin ? "CSF" : "E&C"}
+                    </Link>
+                    <Link href={dashboardPath} className="admin-home-mobile" title="Voltar para Home" aria-label="Voltar para Home">
+                        <Home size={15} />
+                        <span>Home</span>
+                    </Link>
+                </div>
             </header>
 
-            <div className={`relative flex min-h-dvh ${isPresentationPage ? "xl:pl-[292px]" : "xl:pl-[264px]"}`}>
+            <div className="relative flex min-h-dvh xl:pl-[264px]">
                 {sidebarOpen && (
                     <button
                         type="button"
@@ -302,16 +257,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         admin-sidebar
                         fixed inset-y-0 left-0 z-50 flex h-dvh max-w-[86vw] flex-col
                         border-r border-zinc-200 bg-white/94 backdrop-blur-2xl
-                        ${isPresentationPage ? "w-[292px]" : "w-[264px]"}
+                        w-[264px]
                         transition-transform duration-300 ease-out
                         ${sidebarOpen ? "translate-x-0" : "-translate-x-full xl:translate-x-0"}
                     `}
                 >
-                    <div className={`${isPresentationPage ? "h-20 border-b border-zinc-200 flex justify-center items-center overflow-hidden" : "admin-brand flex h-20 items-center overflow-hidden border-b border-zinc-200 px-6"}`}>
-                        <Link href={dashboardPath} className={isPresentationPage ? "relative flex h-full w-full items-center justify-center" : "relative flex h-full w-full items-center"}>
-                            {isPresentationPage ? (
-                                <Image src={logoAdmin} alt="Econti" className="absolute h-48 w-auto object-contain transition-transform duration-200 hover:scale-105" />
-                            ) : isPhotoAdmin ? (
+                    <div className="admin-brand flex h-20 items-center overflow-hidden border-b border-zinc-200 px-6">
+                        <Link href={dashboardPath} className="relative flex h-full w-full items-center">
+                            {isPhotoAdmin ? (
                                 <span className="admin-brand-wordmark"><strong>COMPRE SUA FOTO</strong><small>PAINEL DE VENDAS</small></span>
                             ) : isContractsPage ? (
                                 <span className="admin-brand-wordmark"><strong>E<span>&</span>CONTI</strong><small>MARKETING DIGITAL</small></span>
@@ -379,27 +332,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <LogOut size={16} />
                             <span>Sair do Admin</span>
                         </button>
-                        <Link href={publicSitePath} className="admin-nav-link">
+                        <Link href={dashboardPath} className="admin-nav-link">
                             <Home size={16} />
-                            <span>Voltar ao site</span>
+                            <span>Voltar para Home</span>
                         </Link>                    </div>
                 </aside>
 
                 <main className="relative z-10 min-w-0 flex-1 px-4 py-5 md:px-6 md:py-6 xl:px-9">
                     <div className="mx-auto w-full max-w-[1500px]">
-                        {!isPresentationPage && (
-                            <header className="admin-context-bar mb-8 hidden items-center justify-between border-b border-zinc-200 pb-4 xl:flex">
-                                <div className="flex items-center gap-3">
-                                    <span className="admin-context-icon"><RouteIcon size={17} /></span>
-                                    <div>
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500">{routeMeta.section}</p>
-                                        <p className="mt-0.5 text-sm font-semibold text-zinc-900">{routeMeta.label}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xs text-zinc-500">Área administrativa</span>
-                                    <AdminUserMenu />
-                                </div>
+                        {pathname !== loginPath && (
+                            <header className="admin-context-bar mb-6 hidden items-center justify-end gap-2 border-b border-zinc-200 pb-3 xl:flex">
+                                <Link
+                                    href={dashboardPath}
+                                    className="admin-home-link"
+                                    title="Voltar para Home"
+                                >
+                                    <Home size={15} />
+                                    <span>Voltar para Home</span>
+                                </Link>
                             </header>
                         )}
                         {children}
@@ -1759,14 +1709,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         line-height: 1.02 !important;
                     }
 
-                    .admin-shell.admin-presentation-shell main [class*="xl:grid-cols-"],
-                    .admin-shell.admin-presentation-shell main [class*="lg:grid-cols-3"],
-                    .admin-shell.admin-presentation-shell main [class*="lg:grid-cols-4"] {
-                        grid-template-columns: minmax(0, 1fr) !important;
-                    }
                 }
 
-                /* A bespoke workspace for the operational admin; Presentation keeps its existing layout. */
+                /* A consistent workspace for operational admin pages. */
                 .admin-shell:not(.admin-presentation-shell) {
                     --workspace-paper: #f3f2ee;
                     --workspace-panel: #fffefa;
@@ -1914,6 +1859,41 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 .admin-context-bar {
                     min-height: 56px;
                     border-color: #deddd6 !important;
+                }
+
+                .admin-home-link,
+                .admin-home-mobile {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    border: 1px solid #d8d7d0;
+                    background: #fffefa;
+                    color: #25272b;
+                    font-size: 12px;
+                    font-weight: 650;
+                    transition: border-color .16s ease, background .16s ease, color .16s ease;
+                }
+
+                .admin-home-link {
+                    min-height: 36px;
+                    border-radius: 10px;
+                    padding: 0 12px;
+                }
+
+                .admin-home-mobile {
+                    height: 36px;
+                    flex-shrink: 0;
+                    border-radius: 8px;
+                    padding: 0 9px;
+                    font-size: 11px;
+                }
+
+                .admin-home-link:hover,
+                .admin-home-mobile:hover {
+                    border-color: rgba(7, 88, 216, 0.35);
+                    background: #f1f6ff;
+                    color: #0758d8;
                 }
 
                 .admin-context-icon {

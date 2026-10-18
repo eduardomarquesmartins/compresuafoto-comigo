@@ -91,7 +91,7 @@ export function BoardCalendarView() {
           ))}
         </div>
 
-
+        
         <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-border/40 min-h-[550px]">
           {days.map((dItem, index) => {
             const isCurrentMonth = isSameMonth(dItem, monthStart);

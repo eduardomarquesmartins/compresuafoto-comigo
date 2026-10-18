@@ -4,40 +4,23 @@ const path = require('path');
 
 // Assets locais — lidos do disco
 const LOGO_PATH = path.join(__dirname, '../../client/public/logo.png');
-const BACKGROUND_PATH = path.join(__dirname, '../../client/public/background.jpg');
 
 const PROPOSAL_TYPES = {
     empresarial: {
         label: 'Empresarial',
-        title: 'PROPOSTA COMERCIAL',
-        coverBackground: BACKGROUND_PATH,
-        closingBackground: BACKGROUND_PATH,
-        coverOverlay: { color: '#000000', opacity: 0.68 },
-        closingOverlay: { color: '#ffffff', opacity: 0.82 }
+        title: 'PROPOSTA COMERCIAL'
     },
     casamento: {
         label: 'Casamento',
-        title: 'PROPOSTA CASAMENTO',
-        coverBackground: path.join(__dirname, '../../client/public/proposals/wedding-closing.jpg'),
-        closingBackground: path.join(__dirname, '../../client/public/proposals/wedding-cover.jpg'),
-        coverOverlay: { color: '#000000', opacity: 0.55 },
-        closingOverlay: { color: '#ffffff', opacity: 0.72 }
+        title: 'PROPOSTA CASAMENTO'
     },
     '15anos': {
         label: '15 anos',
-        title: 'PROPOSTA 15 ANOS',
-        coverBackground: path.join(__dirname, '../../client/public/proposals/quinze-anos-cover.jpg'),
-        closingBackground: path.join(__dirname, '../../client/public/proposals/quinze-anos-closing.jpg'),
-        coverOverlay: { color: '#000000', opacity: 0.52 },
-        closingOverlay: { color: '#ffffff', opacity: 0.70 }
+        title: 'PROPOSTA 15 ANOS'
     },
     aniversario: {
         label: 'Aniversários e Chás',
-        title: 'PROPOSTA ANIVERSÁRIO',
-        coverBackground: BACKGROUND_PATH,
-        closingBackground: BACKGROUND_PATH,
-        coverOverlay: { color: '#000000', opacity: 0.68 },
-        closingOverlay: { color: '#ffffff', opacity: 0.82 }
+        title: 'PROPOSTA ANIVERSÁRIO'
     }
 };
 
@@ -64,22 +47,9 @@ const SLATE_500 = '#64748b';
 const SLATE_400 = '#94a3b8';
 const SLATE_200 = '#e2e8f0';
 
-// Helper: Desenha imagem de fundo em página inteira com overlay
-const drawPageBackground = (doc, backgroundPath = BACKGROUND_PATH, overlayColor = '#000000', overlayOpacity = 0.55) => {
-    if (fs.existsSync(backgroundPath)) {
-        doc.save();
-        doc.image(backgroundPath, 0, 0, {
-            cover: [doc.page.width, doc.page.height],
-            align: 'center',
-            valign: 'center'
-        });
-        doc.restore();
-    }
-
+const drawPageBackground = (doc, color) => {
     doc.save();
-    doc.fillColor(overlayColor).opacity(overlayOpacity)
-        .rect(0, 0, doc.page.width, doc.page.height)
-        .fill();
+    doc.fillColor(color).rect(0, 0, doc.page.width, doc.page.height).fill();
     doc.restore();
     doc.opacity(1);
 };
@@ -134,7 +104,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
             // ──────────────────────────────────────────────────────────
             // PAGINA 1: CAPA
             // ──────────────────────────────────────────────────────────
-            drawPageBackground(doc, theme.coverBackground, theme.coverOverlay.color, theme.coverOverlay.opacity);
+            drawPageBackground(doc, '#0f172a');
             if (fs.existsSync(LOGO_PATH)) {
                 doc.image(LOGO_PATH, doc.page.width / 2 - 130, 80, { width: 260 });
             }
@@ -281,7 +251,7 @@ exports.generatePDFBuffer = (clientName, selectedServices, total, proposalType =
             // PAGINA 3: FECHAMENTO
             // ──────────────────────────────────────────────────────────
             doc.addPage({ margin: 0 });
-            drawPageBackground(doc, theme.closingBackground, theme.closingOverlay.color, theme.closingOverlay.opacity);
+            drawPageBackground(doc, '#ffffff');
             doc.fillColor('#000000').opacity(0.03).fontSize(400).font('Helvetica-Bold')
                 .text('&', 0, doc.page.height / 2 - 200, { align: 'center' });
             doc.opacity(1);

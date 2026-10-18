@@ -264,3 +264,4 @@ export function CardComments({ card }: CardCommentsProps) {
     </div>
   );
 }
+
